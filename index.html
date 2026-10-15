@@ -4,26 +4,41 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="./logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#0b0e14" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Change" />
     <meta name="application-name" content="Change" />
-    <meta name="description" content="Change - Social & Personal Workout Tracker. Reverse-engineered from Hevy." />
+    <meta name="description" content="Change - Treinos e rotinas de musculação." />
     <link rel="manifest" href="./manifest.json" />
     <link rel="apple-touch-icon" href="./logo.svg" />
-    <title>Change - Workout Tracker</title>
-    <script type="module" crossorigin src="./assets/index-BJMPp-3L.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BxYtNsWU.css">
+    <title>Change</title>
+    <script type="module" crossorigin src="./assets/index-CMxHap1C.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BfGpr5y-.css">
   </head>
-  <body class="bg-[#0b0e14] text-white">
+  <body class="bg-black text-white">
     <div id="root"></div>
     <script>
-      // Register Service Worker for offline PWA installation
+      // Registro do Service Worker para suporte PWA offline
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').catch(() => {});
+          navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
         });
+      }
+      // Preservar modo Standalone no iPhone (iOS Safari)
+      if (('standalone' in window.navigator) && window.navigator.standalone) {
+        var noddy;
+        document.addEventListener('click', function(event) {
+          noddy = event.target;
+          while (noddy && noddy.nodeName !== 'A' && noddy.nodeName !== 'HTML') {
+            noddy = noddy.parentNode;
+          }
+          if (noddy && 'href' in noddy && noddy.href.indexOf('http') !== -1 && noddy.href.indexOf(document.location.host) !== -1) {
+            event.preventDefault();
+            document.location.href = noddy.href;
+          }
+        }, false);
       }
     </script>
   </body>

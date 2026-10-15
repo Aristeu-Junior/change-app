@@ -1,18 +1,20 @@
 {
   "short_name": "Change",
-  "name": "Change Workout Tracker",
-  "description": "Track workouts, routines, sets, and personal records with complete offline support.",
+  "name": "Change",
+  "description": "Rastreador de treinos e rotinas de musculação.",
   "icons": [
     {
-      "src": "/logo.svg",
+      "src": "./logo.svg",
       "type": "image/svg+xml",
       "sizes": "192x192 512x512",
       "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
-  "background_color": "#0b0e14",
-  "theme_color": "#0b0e14",
+  "start_url": "./",
+  "scope": "./",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "display": "standalone",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "lang": "pt-BR"
 }
