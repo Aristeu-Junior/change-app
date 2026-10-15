@@ -83,3 +83,132 @@ input, textarea, select {
 .pt-safe {
   padding-top: max(12px, env(safe-area-inset-top));
 }
+
+/* =========================================================
+   REGRAS ESPECÍFICAS PARA O MODO CLARO (BRANCO E PRETO PURO)
+   ========================================================= */
+
+.theme-light {
+  color-scheme: light;
+}
+
+/* Superfícies principais */
+.theme-light,
+.theme-light body,
+.theme-light .min-h-screen,
+.theme-light [class*="bg-[#0b0e14]"],
+.theme-light [class*="bg-[#0b0b0d]"],
+.theme-light [class*="bg-black"],
+.theme-light .bg-black {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Superfícies secundárias e cartões */
+.theme-light [class*="bg-[#121214]"],
+.theme-light [class*="bg-[#141416]"],
+.theme-light [class*="bg-[#18181b]"],
+.theme-light [class*="bg-[#0d0d0f]"],
+.theme-light [class*="bg-[#16181d]"],
+.theme-light [class*="bg-zinc-900"],
+.theme-light [class*="bg-zinc-950"] {
+  background-color: #f4f4f5 !important;
+  color: #000000 !important;
+}
+
+/* Cartões destacados e elementos interativos secundários */
+.theme-light [class*="bg-[#1c1c1f]"],
+.theme-light [class*="bg-[#1f1f23]"],
+.theme-light [class*="bg-[#27272a]"],
+.theme-light [class*="bg-zinc-800"] {
+  background-color: #e4e4e7 !important;
+  color: #000000 !important;
+}
+
+/* Bordas em modo claro */
+.theme-light [class*="border-[#1c2331]"],
+.theme-light [class*="border-[#27272a]"],
+.theme-light [class*="border-[#3f3f46]"],
+.theme-light [class*="border-zinc-800"],
+.theme-light [class*="border-zinc-700"] {
+  border-color: #e4e4e7 !important;
+}
+
+/* Tipografia de alto contraste */
+.theme-light .text-white,
+.theme-light [class*="text-white"] {
+  color: #000000 !important;
+}
+
+.theme-light .text-zinc-400,
+.theme-light [class*="text-zinc-400"],
+.theme-light .text-zinc-300,
+.theme-light [class*="text-zinc-300"] {
+  color: #52525b !important;
+}
+
+.theme-light .text-zinc-500,
+.theme-light [class*="text-zinc-500"] {
+  color: #71717a !important;
+}
+
+/* Botões primários no Modo Claro: Fundo Preto com Texto Branco */
+.theme-light button.bg-white,
+.theme-light button[class*="bg-white"],
+.theme-light [class*="bg-white"][class*="text-black"] {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.theme-light button.bg-white svg,
+.theme-light button[class*="bg-white"] svg,
+.theme-light [class*="bg-white"][class*="text-black"] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.theme-light button.bg-white svg.fill-black,
+.theme-light [class*="bg-white"][class*="text-black"] svg.fill-black {
+  fill: #ffffff !important;
+}
+
+/* Botões secundários no Modo Claro */
+.theme-light button[class*="bg-[#1c1c1f]"],
+.theme-light button[class*="bg-[#27272a]"],
+.theme-light button[class*="bg-zinc-800"] {
+  background-color: #e4e4e7 !important;
+  color: #000000 !important;
+}
+
+/* Formulários, Inputs e Selects */
+.theme-light input,
+.theme-light textarea,
+.theme-light select {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #d4d4d8 !important;
+}
+
+.theme-light input::placeholder,
+.theme-light textarea::placeholder {
+  color: #a1a1aa !important;
+}
+
+/* Overlays de modais com opacidade elegante */
+.theme-light .bg-black\/85,
+.theme-light .bg-black\/80,
+.theme-light .bg-black\/70,
+.theme-light .bg-black\/60 {
+  background-color: rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Barra inferior no Modo Claro */
+.theme-light nav[class*="bg-[#0b0b0d]"] {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-top-color: #e4e4e7 !important;
+}
+
+/* Linhas de séries concluídas */
+.theme-light .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
