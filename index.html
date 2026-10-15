@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./logo.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0e14" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Change" />
+    <meta name="application-name" content="Change" />
+    <meta name="description" content="Change - Social & Personal Workout Tracker. Reverse-engineered from Hevy." />
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="apple-touch-icon" href="./logo.svg" />
+    <title>Change - Workout Tracker</title>
+    <script type="module" crossorigin src="./assets/index-lnJUwm1j.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BUYqtrre.css">
+  </head>
+  <body class="bg-[#0b0e14] text-white">
+    <div id="root"></div>
+    <script>
+      // Register Service Worker for offline PWA installation
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>
