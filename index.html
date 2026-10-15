@@ -13,8 +13,8 @@
     <link rel="manifest" href="./manifest.json" />
     <link rel="apple-touch-icon" href="./logo.svg" />
     <title>Change - Workout Tracker</title>
-    <script type="module" crossorigin src="./assets/index-D6kTEhgz.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CUzJLdVc.css">
+    <script type="module" crossorigin src="./assets/index-BJMPp-3L.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BxYtNsWU.css">
   </head>
   <body class="bg-[#0b0e14] text-white">
     <div id="root"></div>
@@ -22,7 +22,7 @@
       // Register Service Worker for offline PWA installation
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
+          navigator.serviceWorker.register('./sw.js').catch(() => {});
         });
       }
     </script>
