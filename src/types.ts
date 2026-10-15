@@ -1,0 +1,136 @@
+export type MuscleGroup =
+  | 'chest'
+  | 'back'
+  | 'lats'
+  | 'upper_back'
+  | 'lower_back'
+  | 'traps'
+  | 'shoulders'
+  | 'biceps'
+  | 'triceps'
+  | 'forearms'
+  | 'quadriceps'
+  | 'hamstrings'
+  | 'calves'
+  | 'glutes'
+  | 'abdominals'
+  | 'cardio'
+  | 'full_body'
+  | 'other';
+
+export type EquipmentCategory =
+  | 'barbell'
+  | 'dumbbell'
+  | 'machine'
+  | 'cable'
+  | 'kettlebell'
+  | 'bodyweight'
+  | 'resistance_band'
+  | 'plate'
+  | 'other';
+
+export type ExerciseType =
+  | 'weight_reps'
+  | 'reps_only'
+  | 'bodyweight_reps'
+  | 'bodyweight_assisted_reps'
+  | 'duration'
+  | 'weight_duration'
+  | 'distance_duration';
+
+export type SetType = 'normal' | 'warmup' | 'dropset' | 'failure';
+
+export interface ExerciseTemplate {
+  id: string;
+  title: string;
+  primary_muscle_group: MuscleGroup;
+  secondary_muscle_groups?: MuscleGroup[];
+  equipment: EquipmentCategory;
+  type: ExerciseType;
+  is_custom?: boolean;
+  instructions?: string;
+}
+
+export interface WorkoutSet {
+  id: string;
+  index: number;
+  type: SetType;
+  weight_kg: number | null;
+  reps: number | null;
+  distance_meters?: number | null;
+  duration_seconds?: number | null;
+  rpe?: number | null;
+  completed: boolean;
+  previousGhost?: string; // e.g. "80 kg x 8"
+}
+
+export interface WorkoutExercise {
+  id: string;
+  exercise_template_id: string;
+  title: string;
+  notes?: string;
+  superset_id?: number | null;
+  rest_seconds?: number | null;
+  sets: WorkoutSet[];
+}
+
+export interface Workout {
+  id: string;
+  title: string;
+  routine_id?: string | null;
+  description?: string;
+  start_time: string; // ISO string
+  end_time?: string;   // ISO string
+  exercises: WorkoutExercise[];
+  total_volume_kg: number;
+  total_sets: number;
+  prs_hit?: number;
+}
+
+export interface Routine {
+  id: string;
+  title: string;
+  folder_id: number | null;
+  notes?: string;
+  exercises: WorkoutExercise[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RoutineFolder {
+  id: number;
+  title: string;
+  index: number;
+}
+
+export interface UserSettings {
+  weight_unit: 'kg' | 'lbs';
+  distance_unit: 'kilometers' | 'miles';
+  default_rest_seconds: number;
+  sound_enabled: boolean;
+  haptics_enabled: boolean;
+  wake_lock_enabled: boolean;
+  theme: 'dark' | 'light';
+  user_name: string;
+}
+
+export interface PersonalRecord {
+  exercise_template_id: string;
+  exercise_title: string;
+  max_weight_kg: number;
+  max_reps: number;
+  best_1rm_kg: number;
+  date: string;
+}
+
+export interface BodyMeasurement {
+  date: string; // YYYY-MM-DD
+  weight_kg?: number | null;
+  fat_percent?: number | null;
+  chest_cm?: number | null;
+  waist_cm?: number | null;
+  arms_cm?: number | null;
+  thighs_cm?: number | null;
+  calves_cm?: number | null;
+  notes?: string;
+}
