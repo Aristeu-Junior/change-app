@@ -8,13 +8,19 @@ import {
   History,
   X,
   Trash2,
-  PlaySquare
+  Sparkles,
+  ChevronRight,
+  Check,
+  BookmarkPlus,
+  FolderPlus
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { ExerciseTemplate, MuscleGroup } from '../../types';
+import { ExerciseTemplate, MuscleGroup, Routine, WorkoutExercise } from '../../types';
 import { displayWeight } from '../../utils/calc';
 import { ExerciseSearchModal } from '../ExerciseSearchModal';
 import { ExerciseVisualDemo } from '../ExerciseVisualDemo';
+import { RoutineEditorModal } from './RoutineEditorModal';
+import { POPULAR_ROUTINE_PRESETS, RoutinePreset } from '../../data/defaultRoutines';
 
 const MUSCLE_FILTERS: { label: string; value: MuscleGroup | 'all' }[] = [
   { label: 'Todos', value: 'all' },
@@ -50,12 +56,33 @@ const getMuscleBadge = (muscle: string) => {
 };
 
 export const ExercisesView: React.FC = () => {
-  const { exercises, personalRecords, workouts, settings, deleteCustomExercise } = useApp();
+  const {
+    exercises,
+    personalRecords,
+    workouts,
+    settings,
+    deleteCustomExercise,
+    routines,
+    saveRoutine
+  } = useApp();
 
   const [query, setQuery] = useState('');
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
   const [selectedDetailExercise, setSelectedDetailExercise] = useState<ExerciseTemplate | null>(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+
+  // Estados de Montagem de Treino
+  const [isRoutineEditorOpen, setIsRoutineEditorOpen] = useState(false);
+  const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
+  const [exerciseToAddToRoutine, setExerciseToAddToRoutine] = useState<ExerciseTemplate | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3200);
+  };
 
   const filteredExercises = useMemo(() => {
     return exercises.filter((ex) => {
@@ -92,7 +119,7 @@ export const ExercisesView: React.FC = () => {
 
   // Trava a rolagem da página de fundo para impedir que a barra lateral externa role
   useEffect(() => {
-    if (selectedDetailExercise) {
+    if (selectedDetailExercise || isRoutineEditorOpen || exerciseToAddToRoutine) {
       const scrollY = window.scrollY;
       const originalBodyOverflow = document.body.style.overflow;
       const originalHtmlOverflow = document.documentElement.style.overflow;
@@ -115,10 +142,106 @@ export const ExercisesView: React.FC = () => {
         window.scrollTo(0, scrollY);
       };
     }
-  }, [selectedDetailExercise]);
+  }, [selectedDetailExercise, isRoutineEditorOpen, exerciseToAddToRoutine]);
+
+  // Handler: Usar Palpite Pré-configurado
+  const handleUsePreset = (preset: RoutinePreset) => {
+    const routineFromPreset: Routine = {
+      id: `routine-${Date.now()}`,
+      title: preset.title,
+      notes: `${preset.subtitle}. ${preset.description}`,
+      folder_id: null,
+      exercises: preset.exercises.map((pEx, idx) => ({
+        id: `pe-${Date.now()}-${idx}`,
+        exercise_template_id: pEx.exercise_template_id,
+        title: pEx.title,
+        rest_seconds: 90,
+        sets: Array.from({ length: pEx.setsCount }).map((_, sIdx) => ({
+          id: `ps-${Date.now()}-${idx}-${sIdx}`,
+          index: sIdx,
+          type: 'normal',
+          weight_kg: pEx.weightKg,
+          reps: pEx.reps,
+          completed: false
+        }))
+      })),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    setEditingRoutine(routineFromPreset);
+    setIsRoutineEditorOpen(true);
+  };
+
+  // Handler: Montar Treino do Zero
+  const handleCreateRoutineEmpty = () => {
+    setEditingRoutine(null);
+    setIsRoutineEditorOpen(true);
+  };
+
+  // Handler: Adicionar Exercício Selecionado a uma Rotina Existente
+  const handleAddExerciseToExistingRoutine = (targetRoutine: Routine, exercise: ExerciseTemplate) => {
+    const newEx: WorkoutExercise = {
+      id: `re-${Date.now()}`,
+      exercise_template_id: exercise.id,
+      title: exercise.title,
+      rest_seconds: 90,
+      sets: [
+        { id: `rs-${Date.now()}-0`, index: 0, type: 'normal', weight_kg: 20, reps: 10, completed: false },
+        { id: `rs-${Date.now()}-1`, index: 1, type: 'normal', weight_kg: 20, reps: 10, completed: false },
+        { id: `rs-${Date.now()}-2`, index: 2, type: 'normal', weight_kg: 20, reps: 10, completed: false }
+      ]
+    };
+
+    const updatedRoutine: Routine = {
+      ...targetRoutine,
+      exercises: [...targetRoutine.exercises, newEx],
+      updated_at: new Date().toISOString()
+    };
+
+    saveRoutine(updatedRoutine);
+    setExerciseToAddToRoutine(null);
+    showToast(`✓ "${exercise.title}" adicionado a "${targetRoutine.title}"!`);
+  };
+
+  // Handler: Criar Nova Rotina com esse Exercício
+  const handleCreateRoutineFromExercise = (exercise: ExerciseTemplate) => {
+    const newRoutine: Routine = {
+      id: `routine-${Date.now()}`,
+      title: `Treino de ${exercise.primary_muscle_group.toUpperCase()}`,
+      notes: '',
+      folder_id: null,
+      exercises: [
+        {
+          id: `re-${Date.now()}`,
+          exercise_template_id: exercise.id,
+          title: exercise.title,
+          rest_seconds: 90,
+          sets: [
+            { id: `rs-${Date.now()}-0`, index: 0, type: 'normal', weight_kg: 20, reps: 10, completed: false },
+            { id: `rs-${Date.now()}-1`, index: 1, type: 'normal', weight_kg: 20, reps: 10, completed: false },
+            { id: `rs-${Date.now()}-2`, index: 2, type: 'normal', weight_kg: 20, reps: 10, completed: false }
+          ]
+        }
+      ],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    setExerciseToAddToRoutine(null);
+    setEditingRoutine(newRoutine);
+    setIsRoutineEditorOpen(true);
+  };
 
   return (
     <div className="flex flex-col min-h-full px-4 pt-4 pb-28 space-y-4 text-white">
+      {/* Toast Notificação */}
+      {toastMessage && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-white text-black font-black text-xs px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4 duration-200 border border-zinc-300">
+          <Check className="w-4 h-4 text-black" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Cabeçalho */}
       <div className="flex items-center justify-between">
         <div>
@@ -134,15 +257,83 @@ export const ExercisesView: React.FC = () => {
         </button>
       </div>
 
-      {/* Busca */}
+      {/* SEÇÃO: MONTAR PLANO DE TREINO (COM PALPITES PRONTOS E PESQUISA) */}
+      <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-3.5 space-y-3 shadow-md">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center font-black shrink-0 shadow-sm">
+              <Sparkles className="w-4 h-4 text-black" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-sm font-black text-white leading-tight truncate">Montar Plano de Treino</h2>
+              <p className="text-[11px] text-zinc-400 truncate">Use um modelo pronto ou monte do zero com os 112 exercícios</p>
+            </div>
+          </div>
+          <button
+            onClick={handleCreateRoutineEmpty}
+            className="px-3 py-1.5 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-black transition flex items-center gap-1 active:scale-95 shrink-0 shadow-sm"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Montar do Zero</span>
+          </button>
+        </div>
+
+        {/* Carrossel de Palpites Mais Utilizados na Academia */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+              Palpites Rápidos Mais Utilizados
+            </span>
+            <span className="text-[10px] text-zinc-500 font-semibold">
+              {POPULAR_ROUTINE_PRESETS.length} divisões
+            </span>
+          </div>
+
+          <div className="flex gap-2.5 overflow-x-auto pb-1.5 no-scrollbar -mx-1 px-1">
+            {POPULAR_ROUTINE_PRESETS.map((preset) => (
+              <div
+                key={preset.id}
+                onClick={() => handleUsePreset(preset)}
+                className="min-w-[220px] max-w-[240px] bg-[#18181b] border border-[#27272a] hover:border-zinc-400 rounded-xl p-3 flex flex-col justify-between shrink-0 transition active:scale-98 cursor-pointer group shadow-sm"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1.5">
+                    <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white text-black">
+                      {preset.tag}
+                    </span>
+                    <span className="text-[10px] text-zinc-400 font-medium">
+                      {preset.exercises.length} exercícios
+                    </span>
+                  </div>
+                  <h3 className="text-xs font-black text-white group-hover:text-zinc-200 line-clamp-1">
+                    {preset.title}
+                  </h3>
+                  <p className="text-[10px] text-zinc-400 line-clamp-2 mt-1 leading-relaxed">
+                    {preset.description}
+                  </p>
+                </div>
+
+                <div className="mt-3 pt-2 border-t border-[#27272a] flex items-center justify-between">
+                  <span className="text-[10px] text-zinc-400">Personalizar</span>
+                  <span className="text-[11px] font-black text-white flex items-center gap-0.5 group-hover:translate-x-0.5 transition">
+                    Usar <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Busca de Exercícios */}
       <div className="relative">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Pesquisar exercício, músculo..."
-          className="w-full bg-[#141416] border border-[#27272a] rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white"
+          placeholder="Pesquisar entre os 112 exercícios, músculos ou movimentos..."
+          className="w-full bg-[#141416] border border-[#27272a] rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white transition"
         />
         {query && (
           <button
@@ -209,10 +400,10 @@ export const ExercisesView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Recorde e Botão Ver 3D */}
-              <div className="flex items-center gap-2.5 shrink-0">
+              {/* Botões de Ação: Adicionar ao Treino e Ver 3D */}
+              <div className="flex items-center gap-2 shrink-0">
                 {pr && (
-                  <div className="flex flex-col items-end">
+                  <div className="hidden sm:flex flex-col items-end mr-1">
                     <div className="flex items-center gap-1 text-xs font-black text-white">
                       <Trophy className="w-3.5 h-3.5 text-zinc-300" />
                       <span>{displayWeight(pr.max_weight_kg, settings.weight_unit)}</span>
@@ -220,6 +411,19 @@ export const ExercisesView: React.FC = () => {
                     <span className="text-[10px] text-zinc-400">1RM: {displayWeight(pr.best_1rm_kg, settings.weight_unit)}</span>
                   </div>
                 )}
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExerciseToAddToRoutine(ex);
+                  }}
+                  className="p-1.5 sm:px-2 sm:py-1 rounded-lg bg-[#18181b] hover:bg-zinc-800 border border-[#27272a] text-zinc-300 hover:text-white text-[10px] font-bold flex items-center gap-1 transition active:scale-95"
+                  title="Adicionar a um treino"
+                >
+                  <BookmarkPlus className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">+ Treino</span>
+                </button>
+
                 <span className="text-[10px] text-zinc-400 font-bold uppercase px-2 py-1 rounded bg-[#1c1c1f] border border-[#27272a] group-hover:text-white group-hover:border-zinc-600 transition">
                   Ver 3D
                 </span>
@@ -270,6 +474,17 @@ export const ExercisesView: React.FC = () => {
                 touchAction: 'pan-y'
               }}
             >
+              {/* Botão de Adicionar ao Treino */}
+              <button
+                onClick={() => {
+                  setExerciseToAddToRoutine(selectedDetailExercise);
+                }}
+                className="w-full py-2.5 bg-white text-black hover:bg-zinc-200 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition shadow-sm active:scale-98"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Adicionar ao Meu Treino</span>
+              </button>
+
               {/* PLAYER DE ANIMAÇÃO / DEMONSTRAÇÃO VISUAL */}
               <ExerciseVisualDemo exercise={selectedDetailExercise} />
 
@@ -366,7 +581,82 @@ export const ExercisesView: React.FC = () => {
         </div>
       )}
 
-      {/* Modal de Busca / Criação */}
+      {/* Modal: Escolher a Qual Treino Adicionar Este Exercício */}
+      {exerciseToAddToRoutine && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setExerciseToAddToRoutine(null);
+          }}
+        >
+          <div className="w-full max-w-sm bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl flex flex-col max-h-[80vh] text-white animate-in slide-in-from-bottom duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-[#27272a]">
+              <div>
+                <h3 className="text-sm font-black text-white">Adicionar a um Treino</h3>
+                <p className="text-[11px] text-zinc-400 truncate max-w-[240px]">{exerciseToAddToRoutine.title}</p>
+              </div>
+              <button
+                onClick={() => setExerciseToAddToRoutine(null)}
+                className="p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-3 space-y-2">
+              <button
+                onClick={() => handleCreateRoutineFromExercise(exerciseToAddToRoutine)}
+                className="w-full p-3 rounded-xl bg-white text-black font-black text-xs flex items-center justify-between hover:bg-zinc-200 transition shadow-sm active:scale-98"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Plus className="w-4 h-4" />
+                  Criar Novo Treino com este Exercício
+                </span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              <div className="pt-2">
+                <span className="text-[10px] font-black uppercase text-zinc-400 tracking-wider block mb-2">
+                  Ou adicione aos seus planos existentes:
+                </span>
+                {routines.length === 0 ? (
+                  <p className="text-xs text-zinc-500 italic py-2">Você ainda não tem treinos salvos.</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {routines.map((r) => (
+                      <button
+                        key={r.id}
+                        onClick={() => handleAddExerciseToExistingRoutine(r, exerciseToAddToRoutine)}
+                        className="w-full p-2.5 rounded-xl bg-[#18181b] hover:bg-[#202024] border border-[#27272a] hover:border-zinc-500 text-left flex items-center justify-between transition group"
+                      >
+                        <div>
+                          <h4 className="text-xs font-bold text-white group-hover:text-zinc-200">{r.title}</h4>
+                          <span className="text-[10px] text-zinc-400">{r.exercises.length} exercícios</span>
+                        </div>
+                        <span className="w-6 h-6 rounded-lg bg-zinc-800 text-white flex items-center justify-center font-bold text-xs group-hover:bg-white group-hover:text-black transition">
+                          +
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Editor Completo de Treinos (RoutineEditorModal) */}
+      <RoutineEditorModal
+        isOpen={isRoutineEditorOpen}
+        routineToEdit={editingRoutine}
+        onClose={() => {
+          setIsRoutineEditorOpen(false);
+          setEditingRoutine(null);
+        }}
+      />
+
+      {/* Modal de Busca / Criação de Exercício Customizado */}
       <ExerciseSearchModal
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
