@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   Plus,
@@ -72,6 +72,33 @@ export const ExercisesView: React.FC = () => {
 
     return list;
   }, [selectedDetailExercise, workouts]);
+
+  // Trava a rolagem da página de fundo para impedir que a barra lateral externa role
+  useEffect(() => {
+    if (selectedDetailExercise) {
+      const scrollY = window.scrollY;
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalHtmlOverflow = document.documentElement.style.overflow;
+      const originalBodyPosition = document.body.style.position;
+      const originalBodyTop = document.body.style.top;
+      const originalBodyWidth = document.body.style.width;
+
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+
+      return () => {
+        document.body.style.overflow = originalBodyOverflow;
+        document.documentElement.style.overflow = originalHtmlOverflow;
+        document.body.style.position = originalBodyPosition;
+        document.body.style.top = originalBodyTop;
+        document.body.style.width = originalBodyWidth;
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [selectedDetailExercise]);
 
   return (
     <div className="flex flex-col min-h-full px-4 pt-4 pb-28 space-y-4 text-white">
@@ -193,107 +220,137 @@ export const ExercisesView: React.FC = () => {
 
       {/* Modal Completo com Vídeo / Demonstração Visual */}
       {selectedDetailExercise && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto text-white">
-            {/* Topo */}
-            <div className="flex items-start justify-between pb-2 border-b border-[#27272a]">
-              <div>
-                <h2 className="text-base font-black text-white">{selectedDetailExercise.title}</h2>
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 overflow-hidden animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedDetailExercise(null);
+          }}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
+        >
+          <div
+            className="w-full max-w-md bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col h-[88vh] sm:h-[84vh] max-h-[88dvh] sm:max-h-[84dvh] text-white overflow-hidden animate-in slide-in-from-bottom duration-200"
+            onWheel={(e) => e.stopPropagation()}
+          >
+            {/* Topo FIXO (Título e Fechar sempre visíveis) */}
+            <div className="flex items-start justify-between p-4 pb-3 border-b border-[#27272a] shrink-0 bg-[#121214] z-10">
+              <div className="pr-3">
+                <h2 className="text-base font-black text-white line-clamp-1">{selectedDetailExercise.title}</h2>
                 <span className="text-xs text-zinc-400 capitalize">
                   {selectedDetailExercise.primary_muscle_group} • {selectedDetailExercise.equipment}
                 </span>
               </div>
               <button
                 onClick={() => setSelectedDetailExercise(null)}
-                className="p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800 transition"
+                className="p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800 transition shrink-0 active:scale-95"
+                aria-label="Fechar"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* PLAYER DE ANIMAÇÃO / DEMONSTRAÇÃO VISUAL */}
-            <ExerciseVisualDemo exercise={selectedDetailExercise} />
+            {/* Área ROLÁVEL Interna Isolada (Não afeta a página de fundo) */}
+            <div
+              className="modal-scroll-content flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 pb-12 space-y-4 touch-pan-y"
+              style={{
+                WebkitOverflowScrolling: 'touch',
+                overscrollBehavior: 'contain',
+                touchAction: 'pan-y'
+              }}
+            >
+              {/* PLAYER DE ANIMAÇÃO / DEMONSTRAÇÃO VISUAL */}
+              <ExerciseVisualDemo exercise={selectedDetailExercise} />
 
-            {/* Caixa de Recorde Pessoal */}
-            <div className="bg-[#18181b] p-3 rounded-xl border border-[#27272a]">
-              <span className="text-xs uppercase text-zinc-400 font-bold block mb-2 flex items-center gap-1.5">
-                <Trophy className="w-4 h-4 text-white" />
-                Seu Recorde Pessoal (PR)
-              </span>
-              {personalRecords[selectedDetailExercise.id] ? (
-                <div className="grid grid-cols-2 gap-2 text-center">
-                  <div className="bg-[#121214] p-2 rounded-lg border border-[#27272a]">
-                    <span className="text-[10px] uppercase text-zinc-500 font-semibold block">
-                      Carga Máxima
-                    </span>
-                    <span className="text-sm font-black text-white">
-                      {displayWeight(
-                        personalRecords[selectedDetailExercise.id].max_weight_kg,
-                        settings.weight_unit
-                      )}
-                    </span>
-                  </div>
-                  <div className="bg-[#121214] p-2 rounded-lg border border-[#27272a]">
-                    <span className="text-[10px] uppercase text-zinc-500 font-semibold block">
-                      1RM Estimado
-                    </span>
-                    <span className="text-sm font-black text-white">
-                      {displayWeight(
-                        personalRecords[selectedDetailExercise.id].best_1rm_kg,
-                        settings.weight_unit
-                      )}
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs text-zinc-500 italic">Nenhuma série registrada ainda</p>
-              )}
-            </div>
-
-            {/* Histórico Recente */}
-            {exerciseHistory.length > 0 && (
-              <div className="space-y-1.5">
-                <span className="text-xs uppercase text-zinc-400 font-bold block flex items-center gap-1.5">
-                  <History className="w-4 h-4 text-white" />
-                  Sessões Anteriores
+              {/* Caixa de Recorde Pessoal */}
+              <div className="bg-[#18181b] p-3.5 rounded-xl border border-[#27272a]">
+                <span className="text-xs uppercase text-zinc-400 font-bold block mb-2 flex items-center gap-1.5">
+                  <Trophy className="w-4 h-4 text-white" />
+                  Seu Recorde Pessoal (PR)
                 </span>
-                <div className="space-y-1">
-                  {exerciseHistory.slice(0, 3).map((h, idx) => (
-                    <div
-                      key={idx}
-                      className="p-2.5 bg-[#18181b] rounded-xl border border-[#27272a] text-xs flex justify-between items-center"
-                    >
-                      <div>
-                        <span className="font-bold text-white block">{h.workoutTitle}</span>
-                        <span className="text-[10px] text-zinc-500">
-                          {new Date(h.date).toLocaleDateString('pt-BR')}
-                        </span>
-                      </div>
-                      <div className="text-right text-zinc-300">
-                        {h.sets.map((s, sIdx) => (
-                          <span key={sIdx} className="font-semibold block text-[11px]">
-                            {s.weight_kg}kg × {s.reps} reps
-                          </span>
-                        ))}
-                      </div>
+                {personalRecords[selectedDetailExercise.id] ? (
+                  <div className="grid grid-cols-2 gap-2 text-center">
+                    <div className="bg-[#121214] p-2 rounded-lg border border-[#27272a]">
+                      <span className="text-[10px] uppercase text-zinc-500 font-semibold block">
+                        Carga Máxima
+                      </span>
+                      <span className="text-sm font-black text-white">
+                        {displayWeight(
+                          personalRecords[selectedDetailExercise.id].max_weight_kg,
+                          settings.weight_unit
+                        )}
+                      </span>
                     </div>
-                  ))}
-                </div>
+                    <div className="bg-[#121214] p-2 rounded-lg border border-[#27272a]">
+                      <span className="text-[10px] uppercase text-zinc-500 font-semibold block">
+                        1RM Estimado
+                      </span>
+                      <span className="text-sm font-black text-white">
+                        {displayWeight(
+                          personalRecords[selectedDetailExercise.id].best_1rm_kg,
+                          settings.weight_unit
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-zinc-500 italic">Nenhuma série registrada ainda</p>
+                )}
               </div>
-            )}
 
-            {/* Excluir se customizado */}
-            {selectedDetailExercise.is_custom && (
+              {/* Histórico Recente */}
+              {exerciseHistory.length > 0 && (
+                <div className="space-y-1.5">
+                  <span className="text-xs uppercase text-zinc-400 font-bold block flex items-center gap-1.5">
+                    <History className="w-4 h-4 text-white" />
+                    Sessões Anteriores
+                  </span>
+                  <div className="space-y-1">
+                    {exerciseHistory.slice(0, 3).map((h, idx) => (
+                      <div
+                        key={idx}
+                        className="p-2.5 bg-[#18181b] rounded-xl border border-[#27272a] text-xs flex justify-between items-center"
+                      >
+                        <div>
+                          <span className="font-bold text-white block">{h.workoutTitle}</span>
+                          <span className="text-[10px] text-zinc-500">
+                            {new Date(h.date).toLocaleDateString('pt-BR')}
+                          </span>
+                        </div>
+                        <div className="text-right text-zinc-300">
+                          {h.sets.map((s, sIdx) => (
+                            <span key={sIdx} className="font-semibold block text-[11px]">
+                              {s.weight_kg}kg × {s.reps} reps
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Excluir se customizado */}
+              {selectedDetailExercise.is_custom && (
+                <button
+                  onClick={() => {
+                    deleteCustomExercise(selectedDetailExercise.id);
+                    setSelectedDetailExercise(null);
+                  }}
+                  className="w-full py-2.5 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition flex items-center justify-center gap-1.5 border border-red-500/20"
+                >
+                  <Trash2 className="w-4 h-4" /> Excluir Exercício Personalizado
+                </button>
+              )}
+
+              {/* Botão de Fechar no rodapé do scroll */}
               <button
-                onClick={() => {
-                  deleteCustomExercise(selectedDetailExercise.id);
-                  setSelectedDetailExercise(null);
-                }}
-                className="w-full py-2 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition flex items-center justify-center gap-1.5"
+                onClick={() => setSelectedDetailExercise(null)}
+                className="w-full py-3 bg-[#18181b] hover:bg-[#222226] border border-[#27272a] text-zinc-300 hover:text-white rounded-xl text-xs font-bold transition active:scale-98"
               >
-                <Trash2 className="w-4 h-4" /> Excluir Exercício Personalizado
+                Fechar Detalhes
               </button>
-            )}
+            </div>
           </div>
         </div>
       )}

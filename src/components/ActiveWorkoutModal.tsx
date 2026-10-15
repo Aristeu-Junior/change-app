@@ -118,7 +118,7 @@ export const ActiveWorkoutModal: React.FC = () => {
       </div>
 
       {/* Área de Exercícios e Séries */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-36">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4 pb-36">
         {/* Título do Treino */}
         <div>
           <input

@@ -126,8 +126,8 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
         </div>
 
         {/* Formulário */}
-        <form onSubmit={handleSave} className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto space-y-4 py-3 pr-1">
+        <form onSubmit={handleSave} className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-4 py-3 pr-1">
             {/* Nome do Plano */}
             <div>
               <label className="text-xs uppercase text-zinc-400 font-bold mb-1 block">

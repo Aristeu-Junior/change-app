@@ -70,14 +70,14 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
             setGifError(true);
             setGifLoaded(true);
           }}
-          className={`w-full h-full object-contain transition-opacity duration-300 ${
+          className={`w-full h-full object-contain pointer-events-none select-none transition-opacity duration-300 ${
             gifLoaded ? 'opacity-100' : 'opacity-0'
           }`}
           loading="lazy"
         />
 
         {/* Badge do Boneco Hevy */}
-        <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-[10px] font-black text-white">
+        <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-[10px] font-black text-white pointer-events-none select-none">
           <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
           <span>Boneco 3D • Músculo Alvo em Destaque</span>
         </div>
@@ -98,7 +98,7 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
       const quadFill = isPrimary('pernas') || isPrimary('quadriceps') ? '#EF4444' : '#E4E4E7';
 
       return (
-        <svg viewBox="0 0 240 240" className="w-full h-56 select-none drop-shadow-md">
+        <svg viewBox="0 0 240 240" className="w-full h-56 select-none drop-shadow-md pointer-events-none">
           <line x1="30" y1="222" x2="210" y2="222" stroke="#3F3F46" strokeWidth="3" strokeDasharray="4 4" />
           <circle cx="120" cy={barY - 18} r="15" fill="#FFFFFF" stroke="#D4D4D8" strokeWidth="2" />
           <path
@@ -130,7 +130,7 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
       const backFill = isPrimary('costas') ? '#EF4444' : '#E4E4E7';
 
       return (
-        <svg viewBox="0 0 240 240" className="w-full h-56 select-none drop-shadow-md">
+        <svg viewBox="0 0 240 240" className="w-full h-56 select-none drop-shadow-md pointer-events-none">
           <line x1="30" y1="222" x2="210" y2="222" stroke="#3F3F46" strokeWidth="3" strokeDasharray="4 4" />
           <circle cx={shoulderX} cy={shoulderY - 18} r="14" fill="#FFFFFF" stroke="#D4D4D8" strokeWidth="2" />
           <path
@@ -153,7 +153,7 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
     const chestFill = isPrimary('peito') ? '#EF4444' : '#E4E4E7';
 
     return (
-      <svg viewBox="0 0 240 240" className="w-full h-56 select-none drop-shadow-md">
+      <svg viewBox="0 0 240 240" className="w-full h-56 select-none drop-shadow-md pointer-events-none">
         <rect x="25" y="166" width="180" height="10" rx="3" fill="#27272A" />
         <circle cx="62" cy="154" r="14" fill="#FFFFFF" stroke="#D4D4D8" strokeWidth="2" />
         <path
@@ -179,7 +179,7 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
           <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
             Visão Frontal
           </span>
-          <svg viewBox="0 0 120 220" className="w-32 h-56 select-none drop-shadow">
+          <svg viewBox="0 0 120 220" className="w-32 h-56 select-none drop-shadow pointer-events-none">
             <circle cx="60" cy="22" r="13" fill="#FFFFFF" stroke="#D4D4D8" strokeWidth="1.5" />
             <circle cx="38" cy="44" r="8" fill={getMuscleFill('ombros')} stroke="#A1A1AA" strokeWidth="1" />
             <circle cx="82" cy="44" r="8" fill={getMuscleFill('ombros')} stroke="#A1A1AA" strokeWidth="1" />
@@ -200,7 +200,7 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
           <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">
             Visão Posterior
           </span>
-          <svg viewBox="0 0 120 220" className="w-32 h-56 select-none drop-shadow">
+          <svg viewBox="0 0 120 220" className="w-32 h-56 select-none drop-shadow pointer-events-none">
             <circle cx="60" cy="22" r="13" fill="#FFFFFF" stroke="#D4D4D8" strokeWidth="1.5" />
             <polygon points="60,35 44,48 76,48" fill={getMuscleFill('trapezio')} stroke="#A1A1AA" strokeWidth="1" />
             <circle cx="38" cy="45" r="7" fill={getMuscleFill('ombros')} stroke="#A1A1AA" strokeWidth="1" />

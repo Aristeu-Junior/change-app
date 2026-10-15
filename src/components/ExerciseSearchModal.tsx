@@ -221,7 +221,7 @@ export const ExerciseSearchModal: React.FC<ExerciseSearchModalProps> = ({
             </div>
 
             {/* Lista dos Exercícios */}
-            <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
+            <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1">
               {filteredExercises.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-48 text-center text-zinc-500">
                   <Dumbbell className="w-8 h-8 mb-2 opacity-40" />
@@ -244,26 +244,42 @@ export const ExerciseSearchModal: React.FC<ExerciseSearchModalProps> = ({
                       onSelectExercise(ex);
                       onClose();
                     }}
-                    className="w-full text-left p-3 rounded-xl bg-[#18181b] hover:bg-[#222226] border border-[#27272a] transition flex items-center justify-between group active:scale-98"
+                    className="w-full text-left p-2.5 rounded-xl bg-[#18181b] hover:bg-[#222226] border border-[#27272a] transition flex items-center justify-between group active:scale-98 gap-3"
                   >
-                    <div>
-                      <h4 className="text-xs font-bold text-white group-hover:text-zinc-200 transition">
-                        {ex.title}
-                      </h4>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] font-semibold text-zinc-400 capitalize">
-                          {ex.primary_muscle_group}
-                        </span>
-                        <span className="text-zinc-600">•</span>
-                        <span className="text-[10px] text-zinc-500 capitalize">{ex.equipment}</span>
-                        {ex.is_custom && (
-                          <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-zinc-700 text-white">
-                            Personalizado
+                    <div className="flex items-center gap-3 min-w-0">
+                      {ex.gif_id ? (
+                        <div className="w-10 h-10 rounded-lg bg-black border border-[#27272a] overflow-hidden flex items-center justify-center shrink-0">
+                          <img
+                            src={`https://raw.githubusercontent.com/omercotkd/exercises-gifs/main/assets/${ex.gif_id}.gif`}
+                            alt={ex.title}
+                            className="w-full h-full object-contain pointer-events-none select-none"
+                            loading="lazy"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-[#1c1c1f] border border-[#27272a] flex items-center justify-center shrink-0">
+                          <Dumbbell className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-bold text-white group-hover:text-zinc-200 transition truncate">
+                          {ex.title}
+                        </h4>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] font-semibold text-zinc-400 capitalize">
+                            {ex.primary_muscle_group}
                           </span>
-                        )}
+                          <span className="text-zinc-600">•</span>
+                          <span className="text-[10px] text-zinc-500 capitalize">{ex.equipment}</span>
+                          {ex.is_custom && (
+                            <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-zinc-700 text-white">
+                              Custom
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <Plus className="w-4 h-4 text-zinc-400 group-hover:text-white transition" />
+                    <Plus className="w-4 h-4 text-zinc-400 group-hover:text-white transition shrink-0" />
                   </button>
                 ))
               )}
