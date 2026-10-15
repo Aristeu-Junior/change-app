@@ -326,6 +326,14 @@ export const SettingsView: React.FC = () => {
         </div>
       </div>
 
+      {/* Rodapé com Logo e Informações do Change */}
+      <div className="pt-2 pb-6 flex flex-col items-center justify-center text-center space-y-1 text-zinc-500">
+        <div className="flex items-center gap-1.5 font-black text-sm tracking-widest text-white">
+          <span>CHANGE</span>
+        </div>
+        <p className="text-[10px]">Aplicativo pessoal de musculação • 100% Offline e Privado</p>
+      </div>
+
       {/* Modal de Gestão de Usuários */}
       <UserAccountModal
         isOpen={isAccountModalOpen}

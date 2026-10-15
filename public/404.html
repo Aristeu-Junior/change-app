@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <title>Change</title>
+    <script>
+      // Redirecionamento SPA para GitHub Pages sem erro 404
+      // Salva o caminho original e redireciona para a raiz da aplicação
+      var segmentCount = 1;
+      var location = window.location;
+      var path = location.pathname;
+      var repoBase = path.split('/')[1] ? '/' + path.split('/')[1] + '/' : '/';
+      
+      // Se estiver no GitHub Pages com /change-app/
+      if (path.indexOf('/change-app') !== -1) {
+        window.location.replace('/change-app/');
+      } else {
+        window.location.replace('./');
+      }
+    </script>
+  </head>
+  <body style="background-color: #000000; color: #ffffff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+    <div style="text-align: center;">
+      <h1 style="font-size: 24px; font-weight: 900; letter-spacing: 2px;">CHANGE</h1>
+      <p style="color: #a1a1aa; font-size: 14px;">Carregando seu treino...</p>
+    </div>
+  </body>
+</html>

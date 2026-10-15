@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, FolderPlus } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Routine, WorkoutExercise, ExerciseTemplate } from '../../types';
@@ -17,13 +17,24 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
 }) => {
   const { folders, createFolder, saveRoutine } = useApp();
 
-  const [title, setTitle] = useState(routineToEdit?.title || '');
-  const [folderId, setFolderId] = useState<number | null>(routineToEdit?.folder_id ?? null);
-  const [notes, setNotes] = useState(routineToEdit?.notes || '');
-  const [exercises, setExercises] = useState<WorkoutExercise[]>(routineToEdit?.exercises || []);
+  const [title, setTitle] = useState('');
+  const [folderId, setFolderId] = useState<number | null>(null);
+  const [notes, setNotes] = useState('');
+  const [exercises, setExercises] = useState<WorkoutExercise[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderTitle, setNewFolderTitle] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setTitle(routineToEdit?.title || '');
+      setFolderId(routineToEdit?.folder_id ?? null);
+      setNotes(routineToEdit?.notes || '');
+      setExercises(routineToEdit?.exercises ? JSON.parse(JSON.stringify(routineToEdit.exercises)) : []);
+      setIsCreatingFolder(false);
+      setNewFolderTitle('');
+    }
+  }, [isOpen, routineToEdit]);
 
   if (!isOpen) return null;
 

@@ -9,19 +9,40 @@ import {
   Trash2,
   Edit2,
   Copy,
-  AlertTriangle
+  AlertTriangle,
+  Sun,
+  Moon,
+  Users,
+  FolderPlus
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Routine } from '../../types';
 import { RoutineEditorModal } from './RoutineEditorModal';
+import { UserAccountModal } from '../UserAccountModal';
 
 export const RoutinesView: React.FC = () => {
-  const { routines, folders, startWorkout, deleteRoutine, saveRoutine, deleteFolder } = useApp();
+  const {
+    routines,
+    folders,
+    startWorkout,
+    deleteRoutine,
+    saveRoutine,
+    deleteFolder,
+    createFolder,
+    currentUser,
+    theme,
+    toggleTheme
+  } = useApp();
 
   const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [activeMenuRoutineId, setActiveMenuRoutineId] = useState<string | null>(null);
   const [routineToDelete, setRoutineToDelete] = useState<Routine | null>(null);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [newFolderTitle, setNewFolderTitle] = useState('');
+
+  const isLight = theme === 'light';
 
   const handleStartRoutine = (routineId: string) => {
     startWorkout(routineId);
@@ -44,6 +65,14 @@ export const RoutinesView: React.FC = () => {
       deleteRoutine(routineToDelete.id);
       setRoutineToDelete(null);
     }
+  };
+
+  const handleCreateNewFolder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFolderTitle.trim()) return;
+    createFolder(newFolderTitle.trim());
+    setNewFolderTitle('');
+    setIsCreatingFolder(false);
   };
 
   // Agrupamento por pasta
@@ -74,19 +103,20 @@ export const RoutinesView: React.FC = () => {
           </p>
         </div>
 
-        {/* Menu de 3 pontinhos */}
+        {/* Menu de Opções (Editar, Duplicar, Excluir) */}
         <div className="relative">
           <button
             onClick={() =>
               setActiveMenuRoutineId(activeMenuRoutineId === r.id ? null : r.id)
             }
             className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition"
+            title="Mais opções do plano"
           >
             <MoreVertical className="w-4 h-4" />
           </button>
 
           {activeMenuRoutineId === r.id && (
-            <div className="absolute right-0 top-8 z-30 w-40 bg-[#1c1c1f] border border-[#3f3f46] rounded-xl shadow-2xl py-1 text-xs text-zinc-200 animate-in fade-in duration-100">
+            <div className="absolute right-0 top-8 z-30 w-44 bg-[#1c1c1f] border border-[#3f3f46] rounded-xl shadow-2xl py-1 text-xs text-zinc-200 animate-in fade-in duration-100">
               <button
                 onClick={() => {
                   setEditingRoutine(r);
@@ -103,12 +133,13 @@ export const RoutinesView: React.FC = () => {
               >
                 <Copy className="w-3.5 h-3.5" /> Duplicar Plano
               </button>
+              <div className="h-px bg-[#27272a] my-1" />
               <button
                 onClick={() => {
                   setRoutineToDelete(r);
                   setActiveMenuRoutineId(null);
                 }}
-                className="w-full px-3 py-2 text-left hover:bg-red-500/20 text-red-400 flex items-center gap-2"
+                className="w-full px-3 py-2 text-left text-red-400 hover:bg-red-950/40 flex items-center gap-2"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Excluir Plano
               </button>
@@ -117,11 +148,23 @@ export const RoutinesView: React.FC = () => {
         </div>
       </div>
 
-      {/* Rodapé do Card com Botão Iniciar */}
+      {/* Rodapé do Card com Botão Iniciar e Editar Rápido */}
       <div className="flex items-center justify-between pt-2 border-t border-[#27272a]">
-        <span className="text-[11px] text-zinc-500 font-semibold">
-          {r.exercises.length} {r.exercises.length === 1 ? 'Exercício' : 'Exercícios'}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-zinc-500 font-semibold">
+            {r.exercises.length} {r.exercises.length === 1 ? 'Exercício' : 'Exercícios'}
+          </span>
+          <button
+            onClick={() => {
+              setEditingRoutine(r);
+              setIsEditorOpen(true);
+            }}
+            className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 font-semibold underline"
+          >
+            <Edit2 className="w-3 h-3" /> Editar
+          </button>
+        </div>
+
         <button
           onClick={() => handleStartRoutine(r.id)}
           className="px-4 py-2 bg-white text-black font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-md active:scale-95 transition"
@@ -134,53 +177,133 @@ export const RoutinesView: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col min-h-full px-4 pt-4 pb-28 space-y-5 text-white">
-      {/* Topo */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black text-white">Treinos</h1>
-          <p className="text-xs text-zinc-400">Planos de treino montados & divisões</p>
+    <div className="flex flex-col min-h-full px-4 pt-3 pb-28 space-y-4 text-white">
+      {/* Topo Superior: Marca CHANGE, Perfil Ativo e Botão Modo Claro/Escuro */}
+      <div className="flex items-center justify-between pt-1 pb-1">
+        <div className="flex items-center gap-2.5">
+          {/* Logo CHANGE */}
+          <div className="w-8 h-8 rounded-xl bg-white text-black font-black flex items-center justify-center text-xs shadow-md">
+            C
+          </div>
+          <div>
+            <h1 className="text-lg font-black tracking-wider text-white">CHANGE</h1>
+            <button
+              onClick={() => setIsAccountModalOpen(true)}
+              className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-white transition"
+            >
+              <span>Atleta: <strong>{currentUser.name}</strong></span>
+              <Users className="w-3 h-3" />
+            </button>
+          </div>
         </div>
+
+        {/* Botão de Alternância de Tema P&B (Sol / Lua) */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            className="p-2 bg-[#18181b] hover:bg-[#27272a] border border-[#27272a] rounded-xl text-white transition active:scale-95 flex items-center gap-1.5 text-xs font-bold"
+            title="Alternar entre Modo Escuro e Claro"
+          >
+            {isLight ? (
+              <>
+                <Moon className="w-4 h-4 fill-white" />
+                <span className="text-[11px]">Escuro</span>
+              </>
+            ) : (
+              <>
+                <Sun className="w-4 h-4 fill-white text-white" />
+                <span className="text-[11px]">Claro</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* BOTÃO HERO: MONTAR NOVO PLANO DE TREINO (Ação Primária em Destaque) */}
+      <div className="grid grid-cols-1 gap-2.5">
         <button
           onClick={() => {
             setEditingRoutine(null);
             setIsEditorOpen(true);
           }}
-          className="p-2.5 bg-[#141416] hover:bg-[#1e1e24] border border-[#27272a] text-white rounded-xl flex items-center gap-1.5 text-xs font-bold transition active:scale-95"
+          className="w-full p-4 bg-white text-black rounded-2xl shadow-xl flex items-center justify-between active:scale-98 transition group border border-zinc-200"
         >
-          <Plus className="w-4 h-4" />
-          <span>Novo Plano</span>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center shadow-md">
+              <Plus className="w-6 h-6 stroke-[3] text-white" />
+            </div>
+            <div className="text-left">
+              <span className="text-sm font-black block">Montar Novo Plano de Treino</span>
+              <span className="text-xs text-zinc-700">Crie rotinas com exercícios, séries e cargas</span>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-zinc-800 group-hover:translate-x-1 transition" />
+        </button>
+
+        {/* Treino Livre Rápido (Secundário) */}
+        <button
+          onClick={() => startWorkout(undefined, 'Treino Livre')}
+          className="w-full py-2.5 px-3.5 bg-[#141416] hover:bg-[#1a1a1d] border border-[#27272a] rounded-xl flex items-center justify-between text-xs font-bold transition active:scale-98"
+        >
+          <div className="flex items-center gap-2 text-zinc-300">
+            <Dumbbell className="w-4 h-4 text-white" />
+            <span>Iniciar Treino Vazio Rápido</span>
+          </div>
+          <span className="text-[11px] text-zinc-500">Sem plano prévio →</span>
         </button>
       </div>
 
-      {/* Botão Hero Treino Livre Rápido */}
-      <button
-        onClick={() => startWorkout(undefined, 'Treino Livre')}
-        className="w-full p-4 bg-white text-black rounded-2xl shadow-xl flex items-center justify-between active:scale-98 transition group"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-black/10 flex items-center justify-center">
-            <Plus className="w-6 h-6 stroke-[3] text-black" />
-          </div>
-          <div className="text-left">
-            <span className="text-sm font-black block">Iniciar Treino Vazio</span>
-            <span className="text-xs text-zinc-700">Adicione exercícios na hora</span>
-          </div>
+      {/* Divisões e Planos */}
+      <div className="space-y-5 pt-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-black uppercase tracking-wider text-zinc-400">
+            Seus Planos & Divisões
+          </span>
+          <button
+            onClick={() => setIsCreatingFolder(!isCreatingFolder)}
+            className="text-xs font-bold text-white hover:underline flex items-center gap-1"
+          >
+            <FolderPlus className="w-3.5 h-3.5" />
+            <span>+ Nova Pasta</span>
+          </button>
         </div>
-        <ChevronRight className="w-5 h-5 text-zinc-600 group-hover:translate-x-1 transition" />
-      </button>
 
-      {/* Pastas & Rotinas */}
-      <div className="space-y-6">
+        {/* Formulário de Nova Pasta */}
+        {isCreatingFolder && (
+          <form onSubmit={handleCreateNewFolder} className="p-3 bg-[#18181b] border border-[#27272a] rounded-xl flex items-center gap-2 animate-in fade-in duration-100">
+            <input
+              type="text"
+              value={newFolderTitle}
+              onChange={(e) => setNewFolderTitle(e.target.value)}
+              placeholder="Nome da pasta (Ex: Push Pull Legs)"
+              className="flex-1 bg-[#121214] border border-[#27272a] rounded-lg px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white"
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="px-3 py-1.5 bg-white text-black font-bold text-xs rounded-lg active:scale-95 transition"
+            >
+              Criar
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsCreatingFolder(false)}
+              className="px-2 py-1.5 text-zinc-400 text-xs hover:text-white"
+            >
+              Cancelar
+            </button>
+          </form>
+        )}
+
         {/* Pastas */}
         {folders.map((f) => {
           const list = routinesByFolder[f.id] || [];
           return (
-            <div key={f.id} className="space-y-3">
+            <div key={f.id} className="space-y-2.5">
               <div className="flex items-center justify-between text-xs font-bold text-zinc-300">
                 <div className="flex items-center gap-2">
                   <Folder className="w-4 h-4 text-white" />
-                  <span className="text-sm text-white">{f.title}</span>
+                  <span className="text-sm font-bold text-white">{f.title}</span>
                   <span className="text-xs text-zinc-500 font-normal">({list.length})</span>
                 </div>
                 <button
@@ -191,9 +314,9 @@ export const RoutinesView: React.FC = () => {
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {list.length === 0 ? (
-                  <p className="text-xs text-zinc-500 italic pl-6">Nenhum plano nesta pasta ainda</p>
+                  <p className="text-xs text-zinc-500 italic pl-6">Nenhum plano nesta pasta ainda.</p>
                 ) : (
                   list.map(renderRoutineCard)
                 )}
@@ -202,15 +325,15 @@ export const RoutinesView: React.FC = () => {
           );
         })}
 
-        {/* Planos Soltos */}
+        {/* Planos Soltos (Sem pasta) */}
         {uncategorized.length > 0 && (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <div className="flex items-center gap-2 text-sm font-bold text-white">
               <Dumbbell className="w-4 h-4 text-white" />
-              <span>Meus Planos</span>
+              <span>Rotinas Principais</span>
               <span className="text-xs text-zinc-500 font-normal">({uncategorized.length})</span>
             </div>
-            <div className="space-y-3">{uncategorized.map(renderRoutineCard)}</div>
+            <div className="space-y-2.5">{uncategorized.map(renderRoutineCard)}</div>
           </div>
         )}
       </div>
@@ -254,6 +377,12 @@ export const RoutinesView: React.FC = () => {
           setIsEditorOpen(false);
           setEditingRoutine(null);
         }}
+      />
+
+      {/* Modal de Troca / Cadastro de Usuários */}
+      <UserAccountModal
+        isOpen={isAccountModalOpen}
+        onClose={() => setIsAccountModalOpen(false)}
       />
     </div>
   );
