@@ -135,30 +135,46 @@ export const ExercisesView: React.FC = () => {
             <div
               key={ex.id}
               onClick={() => setSelectedDetailExercise(ex)}
-              className="bg-[#141416] border border-[#27272a] hover:border-zinc-500 rounded-2xl p-3.5 shadow-sm flex items-center justify-between cursor-pointer transition active:scale-98"
+              className="bg-[#141416] border border-[#27272a] hover:border-zinc-500 rounded-2xl p-3 shadow-sm flex items-center justify-between cursor-pointer transition active:scale-98 gap-3"
             >
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="text-xs font-bold text-white transition">{ex.title}</h4>
-                  <PlaySquare className="w-3.5 h-3.5 text-zinc-400" />
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[10px] font-semibold text-zinc-400 capitalize">
-                    {ex.primary_muscle_group}
-                  </span>
-                  <span className="text-zinc-600">•</span>
-                  <span className="text-[10px] text-zinc-500 capitalize">{ex.equipment}</span>
-                  {ex.is_custom && (
-                    <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-zinc-800 text-white">
-                      Custom
+              <div className="flex items-center gap-3 min-w-0">
+                {ex.gif_id ? (
+                  <div className="w-12 h-12 rounded-xl bg-black border border-[#27272a] overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
+                    <img
+                      src={`https://raw.githubusercontent.com/omercotkd/exercises-gifs/main/assets/${ex.gif_id}.gif`}
+                      alt={ex.title}
+                      className="w-full h-full object-contain"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-xl bg-[#1c1c1f] border border-[#27272a] flex items-center justify-center shrink-0">
+                    <Dumbbell className="w-5 h-5 text-white" />
+                  </div>
+                )}
+
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-white truncate">{ex.title}</h4>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[10px] font-semibold text-zinc-400 capitalize">
+                      {ex.primary_muscle_group}
                     </span>
-                  )}
+                    <span className="text-zinc-600">•</span>
+                    <span className="text-[10px] text-zinc-500 capitalize">{ex.equipment}</span>
+                    {ex.is_custom && (
+                      <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-zinc-800 text-white">
+                        Custom
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Recorde se houver */}
               {pr ? (
-                <div className="flex flex-col items-end">
+                <div className="flex flex-col items-end shrink-0">
                   <div className="flex items-center gap-1 text-xs font-black text-white">
                     <Trophy className="w-3.5 h-3.5 text-zinc-300" />
                     <span>{displayWeight(pr.max_weight_kg, settings.weight_unit)}</span>
@@ -166,7 +182,9 @@ export const ExercisesView: React.FC = () => {
                   <span className="text-[10px] text-zinc-400">1RM: {displayWeight(pr.best_1rm_kg, settings.weight_unit)}</span>
                 </div>
               ) : (
-                <span className="text-[10px] text-zinc-600 font-bold uppercase">Ver Demo</span>
+                <span className="text-[10px] text-zinc-400 font-bold uppercase shrink-0 px-2 py-1 rounded bg-[#1c1c1f] border border-[#27272a]">
+                  Ver 3D
+                </span>
               )}
             </div>
           );

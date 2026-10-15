@@ -10,6 +10,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'barra',
     type: 'weight_reps',
     animation_type: 'bench_press',
+    gif_id: '0025',
     muscles_pt: 'Peitoral Maior, Tríceps Braquial, Deltoide Anterior',
     instructions: 'Deite-se no banco com os olhos diretamente abaixo da barra. Mantenha os pés firmes no chão, retraia as escápulas, desça a barra até a altura do peito médio e empurre com potência.',
     steps: [
@@ -31,6 +32,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'halteres',
     type: 'weight_reps',
     animation_type: 'bench_press',
+    gif_id: '0047',
     muscles_pt: 'Porção Clavicular do Peitoral (Superior), Deltoide Anterior',
     instructions: 'Ajuste o banco em uma inclinação de 30° a 45°. Empurre os halteres para cima mantendo os cotovelos alinhados, contraindo a parte superior do peito.',
     steps: [
@@ -52,6 +54,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'polia',
     type: 'weight_reps',
     animation_type: 'bench_press',
+    gif_id: '0188',
     muscles_pt: 'Peitoral Maior (Foco em Fechamento e Pico de Contração)',
     instructions: 'Posicione as polias na altura média ou alta. Una as mãos à frente do peito com uma leve flexão nos cotovelos, espremendo o peitoral no final.',
     steps: [
@@ -75,6 +78,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'barra',
     type: 'weight_reps',
     animation_type: 'deadlift',
+    gif_id: '0032',
     muscles_pt: 'Eretores da Espinha, Trapézio, Grande Dorsal, Glúteos e Posteriores',
     instructions: 'Barra sobre o meio do pé, pegada justa rente às canelas, coluna neutra. Empurre o chão com os pés e projete os quadris para a frente até a extensão total.',
     steps: [
@@ -96,6 +100,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'polia',
     type: 'weight_reps',
     animation_type: 'lat_pulldown',
+    gif_id: '0198',
     muscles_pt: 'Latíssimo do Dorso (Asas), Bíceps, Redondo Maior',
     instructions: 'Segure a barra com pegada ligeiramente maior que os ombros. Incline o tronco sutilmente para trás e puxe a barra na direção do peito superior puxando pelos cotovelos.',
     steps: [
@@ -117,6 +122,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'barra',
     type: 'weight_reps',
     animation_type: 'deadlift',
+    gif_id: '0027',
     muscles_pt: 'Trapézio Médio/Inferior, Romboides, Grande Dorsal',
     instructions: 'Incline o tronco para a frente a cerca de 45° mantendo a lombar firme. Puxe a barra em direção ao umbigo, fechando bem as escápulas.',
     steps: [
@@ -137,6 +143,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'peso_corporal',
     type: 'bodyweight_reps',
     animation_type: 'pull_up',
+    gif_id: '0652',
     muscles_pt: 'Latíssimo do Dorso, Bíceps Braquial, Core',
     instructions: 'Segure a barra com as palmas voltadas para a frente. Puxe seu corpo para cima até que seu queixo passe da linha da barra.',
     steps: [
@@ -159,6 +166,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'barra',
     type: 'weight_reps',
     animation_type: 'bench_press',
+    gif_id: '0091',
     muscles_pt: 'Deltoide Anterior, Deltoide Lateral, Tríceps',
     instructions: 'Em pé, segure a barra nos ombros. Contraia glúteos e abdômen, empurre a barra em linha vertical direta acima da cabeça travando os cotovelos.',
     steps: [
@@ -179,6 +187,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'halteres',
     type: 'weight_reps',
     animation_type: 'curl',
+    gif_id: '0334',
     muscles_pt: 'Deltoide Lateral (Ombro Cabeça Média)',
     instructions: 'Segure halteres ao lado do corpo. Levante os braços até a altura dos ombros liderando pelos cotovelos, com leve inclinação para a frente.',
     steps: [
@@ -202,6 +211,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'barra',
     type: 'weight_reps',
     animation_type: 'squat',
+    gif_id: '0043',
     muscles_pt: 'Quadríceps, Glúteo Máximo, Isquiotibiais e Core',
     instructions: 'Barra posicionada no trapézio. Desça o quadril abaixo da linha dos joelhos mantendo o peito erguido e empurre o chão com os calcanhares para subir.',
     steps: [
@@ -223,6 +233,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'maquina',
     type: 'weight_reps',
     animation_type: 'squat',
+    gif_id: '0739',
     muscles_pt: 'Quadríceps e Glúteos',
     instructions: 'Pés na plataforma na largura dos ombros. Destrave a máquina, desça o trenó até os joelhos formarem 90° e empurre sem travar os joelhos no topo.',
     steps: [
@@ -242,6 +253,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'maquina',
     type: 'weight_reps',
     animation_type: 'squat',
+    gif_id: '0585',
     muscles_pt: 'Quadríceps (Isolamento)',
     instructions: 'Ajuste o rolo sobre a parte inferior da canela. Estenda as pernas totalmente, aperte o quadríceps no topo por 1 segundo e desça com controle.',
     steps: [
@@ -264,6 +276,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'barra',
     type: 'weight_reps',
     animation_type: 'deadlift',
+    gif_id: '0085',
     muscles_pt: 'Isquiotibiais (Posterior de Coxa), Glúteo Máximo',
     instructions: 'Joelhos com leve flexão fixa. Projete o quadril para trás mantendo as costas retas até sentir um alongamento forte nos posteriores de coxa.',
     steps: [
@@ -284,6 +297,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'maquina',
     type: 'weight_reps',
     animation_type: 'squat',
+    gif_id: '1372',
     muscles_pt: 'Gastrocnêmio e Sóleo',
     instructions: 'Apoie a ponta dos pés na borda da plataforma. Desça os calcanhares para alongamento máximo e suba ficando na ponta dos pés, contraindo forte no topo.',
     steps: [
@@ -305,6 +319,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'barra',
     type: 'weight_reps',
     animation_type: 'curl',
+    gif_id: '0031',
     muscles_pt: 'Bíceps Braquial, Braquial',
     instructions: 'Cotovelos colados ao lado do corpo. Flexione os braços subindo a barra sem balançar o tronco e desça lentamente.',
     steps: [
@@ -325,6 +340,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'halteres',
     type: 'weight_reps',
     animation_type: 'curl',
+    gif_id: '0165',
     muscles_pt: 'Braquiorradial, Braquial e Bíceps',
     instructions: 'Palmas voltadas uma para a outra durante todo o movimento para desenvolver a espessura do braço e antebraço.',
     steps: [
@@ -346,6 +362,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'polia',
     type: 'weight_reps',
     animation_type: 'lat_pulldown',
+    gif_id: '0201',
     muscles_pt: 'Tríceps (Cabeça Lateral e Medial)',
     instructions: 'Cotovelos fixos ao lado das costelas. Empurre a corda para baixo abrindo as pontas no final do movimento para contração máxima.',
     steps: [
@@ -368,6 +385,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'peso_corporal',
     type: 'bodyweight_reps',
     animation_type: 'pull_up',
+    gif_id: '0472',
     muscles_pt: 'Reto Abdominal (Foco Inferior) e Flexores do Quadril',
     instructions: 'Pendure-se na barra e eleve as pernas retas ou dobradas até a altura da cintura sem embalo.',
     steps: [
@@ -387,6 +405,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     equipment: 'maquina',
     type: 'distance_duration',
     animation_type: 'squat',
+    gif_id: '3656',
     muscles_pt: 'Sistema Cardiovascular, Resistência Muscular',
     instructions: 'Corrida contínua ou intervalada (HIIT) para queima de gordura e condicionamento aeróbico.',
     steps: [

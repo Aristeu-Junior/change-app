@@ -47,6 +47,8 @@ export interface ExerciseTemplate {
   tips?: string[];
   muscles_pt?: string;
   animation_type?: string; // used for animated visual diagram
+  gif_id?: string; // ID da animação 3D dos bonecos
+  gif_url?: string; // URL direta do GIF/WebP da animação
 }
 
 export interface WorkoutSet {
