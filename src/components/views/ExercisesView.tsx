@@ -32,6 +32,21 @@ const MUSCLE_FILTERS: { label: string; value: MuscleGroup | 'all' }[] = [
   { label: 'Cárdio', value: 'cardio' }
 ];
 
+const getMuscleBadge = (muscle: string) => {
+  const m = muscle.toLowerCase();
+  if (m.includes('peito')) return 'PEITO';
+  if (m.includes('costas') || m.includes('lats')) return 'COSTAS';
+  if (m.includes('ombros')) return 'OMBROS';
+  if (m.includes('biceps')) return 'BÍCEPS';
+  if (m.includes('triceps')) return 'TRÍCEPS';
+  if (m.includes('quadriceps') || m.includes('isquiotibiais') || m.includes('pernas')) return 'PERNAS';
+  if (m.includes('gluteos')) return 'GLÚTEO';
+  if (m.includes('panturrilha')) return 'PANTURR';
+  if (m.includes('abdomen')) return 'ABS';
+  if (m.includes('cardio')) return 'CARDIO';
+  return 'GERAL';
+};
+
 export const ExercisesView: React.FC = () => {
   const { exercises, personalRecords, workouts, settings, deleteCustomExercise } = useApp();
 
@@ -162,23 +177,16 @@ export const ExercisesView: React.FC = () => {
             <div
               key={ex.id}
               onClick={() => setSelectedDetailExercise(ex)}
-              className="bg-[#141416] border border-[#27272a] hover:border-zinc-500 rounded-2xl p-3 shadow-sm flex items-center justify-between cursor-pointer transition active:scale-98 gap-3"
+              className="bg-[#141416] border border-[#27272a] hover:border-zinc-500 rounded-2xl p-3 shadow-sm flex items-center justify-between cursor-pointer transition active:scale-98 gap-3 group"
             >
               <div className="flex items-center gap-3 min-w-0">
-                {ex.gif_id ? (
-                  <div className="w-12 h-12 rounded-xl bg-black border border-[#27272a] overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
-                    <img
-                      src={`https://raw.githubusercontent.com/omercotkd/exercises-gifs/main/assets/${ex.gif_id}.gif`}
-                      alt={ex.title}
-                      className="w-full h-full object-contain"
-                      loading="lazy"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-12 h-12 rounded-xl bg-[#1c1c1f] border border-[#27272a] flex items-center justify-center shrink-0">
-                    <Dumbbell className="w-5 h-5 text-white" />
-                  </div>
-                )}
+                <div className="w-12 h-12 rounded-xl bg-[#18181b] border border-[#27272a] group-hover:border-zinc-600 flex flex-col items-center justify-center shrink-0 relative overflow-hidden shadow-inner transition">
+                  <Dumbbell className="w-4 h-4 text-white" />
+                  <span className="text-[8px] font-black text-zinc-400 tracking-tighter mt-0.5 uppercase">
+                    {getMuscleBadge(ex.primary_muscle_group)}
+                  </span>
+                  <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 shadow-sm" />
+                </div>
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
@@ -199,20 +207,21 @@ export const ExercisesView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Recorde se houver */}
-              {pr ? (
-                <div className="flex flex-col items-end shrink-0">
-                  <div className="flex items-center gap-1 text-xs font-black text-white">
-                    <Trophy className="w-3.5 h-3.5 text-zinc-300" />
-                    <span>{displayWeight(pr.max_weight_kg, settings.weight_unit)}</span>
+              {/* Recorde e Botão Ver 3D */}
+              <div className="flex items-center gap-2.5 shrink-0">
+                {pr && (
+                  <div className="flex flex-col items-end">
+                    <div className="flex items-center gap-1 text-xs font-black text-white">
+                      <Trophy className="w-3.5 h-3.5 text-zinc-300" />
+                      <span>{displayWeight(pr.max_weight_kg, settings.weight_unit)}</span>
+                    </div>
+                    <span className="text-[10px] text-zinc-400">1RM: {displayWeight(pr.best_1rm_kg, settings.weight_unit)}</span>
                   </div>
-                  <span className="text-[10px] text-zinc-400">1RM: {displayWeight(pr.best_1rm_kg, settings.weight_unit)}</span>
-                </div>
-              ) : (
-                <span className="text-[10px] text-zinc-400 font-bold uppercase shrink-0 px-2 py-1 rounded bg-[#1c1c1f] border border-[#27272a]">
+                )}
+                <span className="text-[10px] text-zinc-400 font-bold uppercase px-2 py-1 rounded bg-[#1c1c1f] border border-[#27272a] group-hover:text-white group-hover:border-zinc-600 transition">
                   Ver 3D
                 </span>
-              )}
+              </div>
             </div>
           );
         })}

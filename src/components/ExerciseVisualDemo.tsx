@@ -13,25 +13,34 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
   const [gifLoaded, setGifLoaded] = useState(false);
   const [gifError, setGifError] = useState(false);
 
-  // URL do GIF de animação 3D do boneco real com ativação muscular em vermelho
+  // URL de ultra-alta performance via CDN Edge (com cache permanente e HTTP/3)
   const gifUrl = exercise.gif_id
-    ? `https://raw.githubusercontent.com/omercotkd/exercises-gifs/main/assets/${exercise.gif_id}.gif`
+    ? `https://cdn.jsdelivr.net/gh/omercotkd/exercises-gifs@main/assets/${exercise.gif_id}.gif`
     : exercise.gif_url || null;
 
-  // Loop de animação contínua para o modo vetorial
+  // Loop de animação contínua otimizado via requestAnimationFrame para cadência
   useEffect(() => {
     if (!isPlaying || viewMode !== 'vector') return;
+    let animId: number;
+    let lastTime = performance.now();
     let direction = 1;
-    const interval = setInterval(() => {
-      setFrame((prev) => {
-        if (prev >= 1) direction = -1;
-        if (prev <= 0) direction = 1;
-        const next = prev + direction * 0.045;
-        return Math.max(0, Math.min(1, next));
-      });
-    }, 50);
 
-    return () => clearInterval(interval);
+    const tick = (now: number) => {
+      const delta = now - lastTime;
+      if (delta >= 45) {
+        lastTime = now;
+        setFrame((prev) => {
+          if (prev >= 1) direction = -1;
+          if (prev <= 0) direction = 1;
+          const next = prev + direction * 0.045;
+          return Math.max(0, Math.min(1, next));
+        });
+      }
+      animId = requestAnimationFrame(tick);
+    };
+
+    animId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animId);
   }, [isPlaying, viewMode]);
 
   const pMuscle = exercise.primary_muscle_group?.toLowerCase() || 'peito';

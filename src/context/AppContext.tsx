@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import {
   Workout,
   WorkoutExercise,
@@ -20,7 +20,6 @@ import {
   requestWakeLock,
   releaseWakeLock
 } from '../utils/calc';
-import confetti from 'canvas-confetti';
 
 interface RestTimerState {
   isActive: boolean;
@@ -381,13 +380,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Contagem regressiva do descanso
+  // Contagem regressiva do descanso otimizada (não recria o timer a cada segundo)
   useEffect(() => {
-    if (!restTimer.isActive || restTimer.remainingSeconds <= 0) return;
+    if (!restTimer.isActive) return;
 
     const interval = setInterval(() => {
       setRestTimer((prev) => {
-        if (!prev.isActive) return prev;
+        if (!prev.isActive || prev.remainingSeconds <= 0) return prev;
         const nextSec = prev.remainingSeconds - 1;
 
         if (nextSec <= 3 && nextSec > 0 && settings.sound_enabled) {
@@ -405,7 +404,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [restTimer.isActive, restTimer.remainingSeconds, settings.sound_enabled, settings.haptics_enabled]);
+  }, [restTimer.isActive, settings.sound_enabled, settings.haptics_enabled]);
 
   // Ações de Treino
   const startWorkout = (routineId?: string, customTitle?: string) => {
@@ -492,11 +491,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCompletedWorkoutSummary(finished);
 
     try {
-      confetti({
-        particleCount: prsHit > 0 ? 100 : 50,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
+      import('canvas-confetti').then((m) => {
+        const conf = m.default || m;
+        conf({
+          particleCount: prsHit > 0 ? 100 : 50,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }).catch(() => {});
     } catch {
       // Ignora se indisponível
     }
@@ -744,55 +746,70 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCompletedWorkoutSummary(null);
   };
 
+  const contextValue = useMemo(() => ({
+    users,
+    currentUser,
+    registerUser,
+    loginUser,
+    switchUser,
+    logoutUser,
+    theme,
+    toggleTheme,
+    workouts,
+    activeWorkout,
+    isWorkoutModalOpen,
+    setWorkoutModalOpen,
+    startWorkout,
+    finishWorkout,
+    discardWorkout,
+    updateWorkoutTitle,
+    addExerciseToWorkout,
+    removeExerciseFromWorkout,
+    addSet,
+    removeSet,
+    updateSet,
+    toggleSetCompleted,
+    restTimer,
+    startRestTimer,
+    adjustRestTimer,
+    skipRestTimer,
+    routines,
+    folders,
+    saveRoutine,
+    deleteRoutine,
+    createFolder,
+    deleteFolder,
+    exercises,
+    addCustomExercise,
+    deleteCustomExercise,
+    personalRecords,
+    measurements,
+    saveMeasurement,
+    settings,
+    updateSettings,
+    exportDataJson,
+    importDataJson,
+    completedWorkoutSummary,
+    closeSummaryModal
+  }), [
+    users,
+    currentUser,
+    theme,
+    workouts,
+    activeWorkout,
+    isWorkoutModalOpen,
+    restTimer,
+    routines,
+    folders,
+    exercises,
+    personalRecords,
+    measurements,
+    settings,
+    completedWorkoutSummary
+  ]);
+
   return (
-    <AppContext.Provider
-      value={{
-        users,
-        currentUser,
-        registerUser,
-        loginUser,
-        switchUser,
-        logoutUser,
-        theme,
-        toggleTheme,
-        workouts,
-        activeWorkout,
-        isWorkoutModalOpen,
-        setWorkoutModalOpen,
-        startWorkout,
-        finishWorkout,
-        discardWorkout,
-        updateWorkoutTitle,
-        addExerciseToWorkout,
-        removeExerciseFromWorkout,
-        addSet,
-        removeSet,
-        updateSet,
-        toggleSetCompleted,
-        restTimer,
-        startRestTimer,
-        adjustRestTimer,
-        skipRestTimer,
-        routines,
-        folders,
-        saveRoutine,
-        deleteRoutine,
-        createFolder,
-        deleteFolder,
-        exercises,
-        addCustomExercise,
-        deleteCustomExercise,
-        personalRecords,
-        measurements,
-        saveMeasurement,
-        settings,
-        updateSettings,
-        exportDataJson,
-        importDataJson,
-        completedWorkoutSummary,
-        closeSummaryModal
-      }}
-    >
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );

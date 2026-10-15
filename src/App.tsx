@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { MobileTabBar, TabType } from './components/MobileTabBar';
-import { RoutinesView } from './components/views/RoutinesView';
-import { ExercisesView } from './components/views/ExercisesView';
-import { HistoryView } from './components/views/HistoryView';
-import { AnalyticsView } from './components/views/AnalyticsView';
-import { SettingsView } from './components/views/SettingsView';
-import { ActiveWorkoutModal } from './components/ActiveWorkoutModal';
-import { WorkoutSummaryModal } from './components/WorkoutSummaryModal';
+
+// Code-splitting de alta performance: carrega cada aba sob demanda
+const RoutinesView = lazy(() => import('./components/views/RoutinesView').then(m => ({ default: m.RoutinesView })));
+const ExercisesView = lazy(() => import('./components/views/ExercisesView').then(m => ({ default: m.ExercisesView })));
+const HistoryView = lazy(() => import('./components/views/HistoryView').then(m => ({ default: m.HistoryView })));
+const AnalyticsView = lazy(() => import('./components/views/AnalyticsView').then(m => ({ default: m.AnalyticsView })));
+const SettingsView = lazy(() => import('./components/views/SettingsView').then(m => ({ default: m.SettingsView })));
+const ActiveWorkoutModal = lazy(() => import('./components/ActiveWorkoutModal').then(m => ({ default: m.ActiveWorkoutModal })));
+const WorkoutSummaryModal = lazy(() => import('./components/WorkoutSummaryModal').then(m => ({ default: m.WorkoutSummaryModal })));
+
+const ViewLoadingFallback: React.FC = () => (
+  <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh] space-y-3">
+    <div className="w-7 h-7 rounded-full border-2 border-zinc-700 border-t-white animate-spin" />
+    <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Carregando...</span>
+  </div>
+);
 
 const AppContent: React.FC = () => {
   const { theme } = useApp();
@@ -21,21 +30,23 @@ const AppContent: React.FC = () => {
       <div className={`w-full max-w-md min-h-screen ${isLight ? 'bg-white border-zinc-200' : 'bg-black border-[#27272a]/60'} border-x flex flex-col relative shadow-2xl transition-colors duration-200`}>
         {/* Main View Area */}
         <main className="flex-1 overflow-x-hidden">
-          {currentTab === 'routines' && <RoutinesView />}
-          {currentTab === 'exercises' && <ExercisesView />}
-          {currentTab === 'history' && <HistoryView />}
-          {currentTab === 'analytics' && <AnalyticsView />}
-          {currentTab === 'settings' && <SettingsView />}
+          <Suspense fallback={<ViewLoadingFallback />}>
+            {currentTab === 'routines' && <RoutinesView />}
+            {currentTab === 'exercises' && <ExercisesView />}
+            {currentTab === 'history' && <HistoryView />}
+            {currentTab === 'analytics' && <AnalyticsView />}
+            {currentTab === 'settings' && <SettingsView />}
+          </Suspense>
         </main>
 
         {/* Bottom Tab Bar with Active Floating Workout Pill */}
         <MobileTabBar currentTab={currentTab} onSelectTab={setCurrentTab} />
 
         {/* Live Active Workout Screen (Fullscreen Modal) */}
-        <ActiveWorkoutModal />
-
-        {/* Post-Workout Summary / Celebration Modal */}
-        <WorkoutSummaryModal />
+        <Suspense fallback={null}>
+          <ActiveWorkoutModal />
+          <WorkoutSummaryModal />
+        </Suspense>
       </div>
     </div>
   );

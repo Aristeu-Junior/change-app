@@ -25,6 +25,21 @@ const MUSCLE_FILTERS: { label: string; value: MuscleGroup | 'all' }[] = [
   { label: 'Cárdio', value: 'cardio' }
 ];
 
+const getMuscleBadge = (muscle: string) => {
+  const m = muscle.toLowerCase();
+  if (m.includes('peito')) return 'PEITO';
+  if (m.includes('costas') || m.includes('lats')) return 'COSTAS';
+  if (m.includes('ombros')) return 'OMBROS';
+  if (m.includes('biceps')) return 'BÍCEPS';
+  if (m.includes('triceps')) return 'TRÍCEPS';
+  if (m.includes('quadriceps') || m.includes('isquiotibiais') || m.includes('pernas')) return 'PERNAS';
+  if (m.includes('gluteos')) return 'GLÚTEO';
+  if (m.includes('panturrilha')) return 'PANTURR';
+  if (m.includes('abdomen')) return 'ABS';
+  if (m.includes('cardio')) return 'CARDIO';
+  return 'GERAL';
+};
+
 export const ExerciseSearchModal: React.FC<ExerciseSearchModalProps> = ({
   isOpen,
   onClose,
@@ -247,20 +262,13 @@ export const ExerciseSearchModal: React.FC<ExerciseSearchModalProps> = ({
                     className="w-full text-left p-2.5 rounded-xl bg-[#18181b] hover:bg-[#222226] border border-[#27272a] transition flex items-center justify-between group active:scale-98 gap-3"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      {ex.gif_id ? (
-                        <div className="w-10 h-10 rounded-lg bg-black border border-[#27272a] overflow-hidden flex items-center justify-center shrink-0">
-                          <img
-                            src={`https://raw.githubusercontent.com/omercotkd/exercises-gifs/main/assets/${ex.gif_id}.gif`}
-                            alt={ex.title}
-                            className="w-full h-full object-contain pointer-events-none select-none"
-                            loading="lazy"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-10 h-10 rounded-lg bg-[#1c1c1f] border border-[#27272a] flex items-center justify-center shrink-0">
-                          <Dumbbell className="w-4 h-4 text-white" />
-                        </div>
-                      )}
+                      <div className="w-10 h-10 rounded-xl bg-[#141416] border border-[#27272a] group-hover:border-zinc-500 flex flex-col items-center justify-center shrink-0 relative shadow-inner transition">
+                        <Dumbbell className="w-3.5 h-3.5 text-white" />
+                        <span className="text-[7px] font-black text-zinc-400 tracking-tighter mt-0.5 uppercase">
+                          {getMuscleBadge(ex.primary_muscle_group)}
+                        </span>
+                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 shadow-sm" />
+                      </div>
                       <div className="min-w-0">
                         <h4 className="text-xs font-bold text-white group-hover:text-zinc-200 transition truncate">
                           {ex.title}
