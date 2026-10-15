@@ -208,7 +208,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [exercises, setExercises] = useState<ExerciseTemplate[]>(() => {
     try {
       const saved = localStorage.getItem(`change_${currentUser.id}_exercises`);
-      return saved ? JSON.parse(saved) : DEFAULT_EXERCISES;
+      if (saved) {
+        const parsed: ExerciseTemplate[] = JSON.parse(saved);
+        const existingIds = new Set(parsed.map((e) => e.id));
+        const missing = DEFAULT_EXERCISES.filter((d) => !existingIds.has(d.id));
+        if (missing.length > 0) {
+          const merged = [...parsed, ...missing];
+          localStorage.setItem(`change_${currentUser.id}_exercises`, JSON.stringify(merged));
+          return merged;
+        }
+        return parsed;
+      }
+      return DEFAULT_EXERCISES;
     } catch {
       return DEFAULT_EXERCISES;
     }
@@ -317,7 +328,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setFolders(savedFolders ? JSON.parse(savedFolders) : DEFAULT_FOLDERS);
 
       const savedExercises = localStorage.getItem(`change_${userId}_exercises`);
-      setExercises(savedExercises ? JSON.parse(savedExercises) : DEFAULT_EXERCISES);
+      if (savedExercises) {
+        const parsed: ExerciseTemplate[] = JSON.parse(savedExercises);
+        const existingIds = new Set(parsed.map((e) => e.id));
+        const missing = DEFAULT_EXERCISES.filter((d) => !existingIds.has(d.id));
+        setExercises(missing.length > 0 ? [...parsed, ...missing] : parsed);
+      } else {
+        setExercises(DEFAULT_EXERCISES);
+      }
 
       const savedPrs = localStorage.getItem(`change_${userId}_prs`);
       setPersonalRecords(savedPrs ? JSON.parse(savedPrs) : {});

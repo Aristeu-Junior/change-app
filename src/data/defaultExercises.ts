@@ -1,417 +1,2532 @@
 import { ExerciseTemplate } from '../types';
 
 export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
-  // PEITO
   {
-    id: 'bench-press-barbell',
-    title: 'Supino Reto (Barra)',
-    primary_muscle_group: 'peito',
-    secondary_muscle_groups: ['triceps', 'ombros'],
-    equipment: 'barra',
-    type: 'weight_reps',
-    animation_type: 'bench_press',
-    gif_id: '0025',
-    muscles_pt: 'Peitoral Maior, Tríceps Braquial, Deltoide Anterior',
-    instructions: 'Deite-se no banco com os olhos diretamente abaixo da barra. Mantenha os pés firmes no chão, retraia as escápulas, desça a barra até a altura do peito médio e empurre com potência.',
-    steps: [
-      'Deite-se no banco com os pés bem firmes e apoiados no chão.',
-      'Aperte as escápulas juntas contra o banco (peito aberto) e segure a barra com pegada ligeiramente mais larga que os ombros.',
-      'Tire a barra do suporte e desça de forma controlada até encostar suavemente na linha dos mamilos.',
-      'Empurre a barra de volta à posição inicial travando os braços sem relaxar a tensão muscular.'
+    "id": "biceps-curl-barbell-straight",
+    "title": "Rosca Direta (Barra Reta)",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [
+      "antebraco"
     ],
-    tips: [
-      'Mantenha os cotovelos em um ângulo de 45° a 75° do tronco, nunca a 90° para proteger os ombros.',
-      'Inspire na descida e expire no ponto máximo de esforço ao empurrar a barra.'
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0031",
+    "muscles_pt": "Bíceps Braquial (Cabeça Curta e Longa), Braquial, Braquiorradial",
+    "instructions": "Fique em pé com os pés na largura dos ombros. Segure a barra reta com as palmas voltadas para a frente e flexione os cotovelos sem movimentar os ombros ou balançar o tronco.",
+    "steps": [
+      "Segure a barra com pegada supinada na largura dos ombros.",
+      "Mantenha os cotovelos fixos junto às laterais do tronco.",
+      "Puxe a barra em arco até a contração máxima do bíceps no topo.",
+      "Desça de maneira controlada até a extensão quase total dos braços."
+    ],
+    "tips": [
+      "Evite projetar os cotovelos para frente durante a subida.",
+      "Não use impulso da lombar; mantenha o abdômen contraído."
     ]
   },
   {
-    id: 'incline-dumbbell-press',
-    title: 'Supino Inclinado (Halteres)',
-    primary_muscle_group: 'peito',
-    secondary_muscle_groups: ['ombros', 'triceps'],
-    equipment: 'halteres',
-    type: 'weight_reps',
-    animation_type: 'bench_press',
-    gif_id: '0047',
-    muscles_pt: 'Porção Clavicular do Peitoral (Superior), Deltoide Anterior',
-    instructions: 'Ajuste o banco em uma inclinação de 30° a 45°. Empurre os halteres para cima mantendo os cotovelos alinhados, contraindo a parte superior do peito.',
-    steps: [
-      'Sente-se no banco inclinado e apoie os halteres sobre os joelhos.',
-      'Use os joelhos para ajudar a subir os pesos na altura do peito enquanto deita.',
-      'Suba os halteres em trajetória ligeiramente convergente, sem encostar um no outro no topo.',
-      'Desça até sentir um bom alongamento no peitoral superior.'
+    "id": "biceps-curl-barbell-ez",
+    "title": "Rosca Direta (Barra W / EZ)",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [
+      "antebraco"
     ],
-    tips: [
-      'Evite inclinar o banco em mais de 45°, pois isso transfere o foco excessivo para os ombros.',
-      'Mantenha o punho reto alinhado com o antebraço.'
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0050",
+    "muscles_pt": "Bíceps Braquial, Braquial, Flexores do Punho",
+    "instructions": "A pegada semi-supinada na barra W alivia a tensão articular nos punhos e cotovelos, permitindo sobrecarga segura com foco nas duas cabeças do bíceps.",
+    "steps": [
+      "Segure a barra W nas curvaturas anatômicas internas.",
+      "Mantenha a postura ereta e escápulas encaixadas.",
+      "Flexione os antebraços erguendo a barra até a altura do peito.",
+      "Controle a descida resistindo à gravidade por 2 a 3 segundos."
+    ],
+    "tips": [
+      "Excelente variação para quem sente dores nos punhos com a barra reta.",
+      "Aperte a barra com firmeza para aumentar a ativação neural."
     ]
   },
   {
-    id: 'cable-crossover',
-    title: 'Crucifixo na Polia (Crossover)',
-    primary_muscle_group: 'peito',
-    secondary_muscle_groups: ['ombros'],
-    equipment: 'polia',
-    type: 'weight_reps',
-    animation_type: 'bench_press',
-    gif_id: '0188',
-    muscles_pt: 'Peitoral Maior (Foco em Fechamento e Pico de Contração)',
-    instructions: 'Posicione as polias na altura média ou alta. Una as mãos à frente do peito com uma leve flexão nos cotovelos, espremendo o peitoral no final.',
-    steps: [
-      'Dê um passo à frente para criar tensão nos cabos, com tronco ligeiramente inclinado.',
-      'Com os cotovelos levemente flexionados, traga os braços para frente em arco.',
-      'Aperte e esprema o peitoral por 1 segundo no centro do movimento.',
-      'Retorne lentamente resistindo ao peso da máquina.'
+    "id": "biceps-curl-dumbbell-simultaneous",
+    "title": "Rosca com Halteres (Simultânea)",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [
+      "antebraco"
     ],
-    tips: [
-      'O movimento deve parecer um abraço em volta de uma árvore grande.',
-      'Não deixe o peso puxar seus ombros para trás de maneira descontrolada.'
-    ]
-  },
-
-  // COSTAS & DORSAL
-  {
-    id: 'deadlift-barbell',
-    title: 'Levantamento Terra (Barra)',
-    primary_muscle_group: 'costas',
-    secondary_muscle_groups: ['isquiotibiais', 'gluteos', 'quadriceps', 'antebraco'],
-    equipment: 'barra',
-    type: 'weight_reps',
-    animation_type: 'deadlift',
-    gif_id: '0032',
-    muscles_pt: 'Eretores da Espinha, Trapézio, Grande Dorsal, Glúteos e Posteriores',
-    instructions: 'Barra sobre o meio do pé, pegada justa rente às canelas, coluna neutra. Empurre o chão com os pés e projete os quadris para a frente até a extensão total.',
-    steps: [
-      'Posicione os pés na largura do quadril, com a barra cortando o meio dos pés.',
-      'Flexione o quadril para trás até alcançar a barra sem arquear as costas.',
-      'Ative as dorsais, trave o abdômen e empurre o chão com força total com as pernas.',
-      'Fique completamente em pé travando os glúteos no topo (sem hiperextender a lombar).'
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0285",
+    "muscles_pt": "Bíceps Braquial, Braquial",
+    "instructions": "Execução simultânea com os dois braços mantendo pegada supinada fixa durante todo o percurso para tensão contínua.",
+    "steps": [
+      "Em pé, segure um par de halteres ao lado do corpo com as palmas para a frente.",
+      "Erga ambos os halteres simultaneamente mantendo os cotovelos imóveis.",
+      "Contraia o pico do bíceps no topo por 1 segundo.",
+      "Desça lentamente até a posição inicial."
     ],
-    tips: [
-      'Pense no levantamento terra como "empurrar o chão para longe", não apenas puxar com as costas.',
-      'A barra deve deslizar rente à sua canela e coxas durante todo o trajeto.'
+    "tips": [
+      "Não balance o tronco para iniciar o movimento.",
+      "Mantenha o peito aberto e ombros para trás."
     ]
   },
   {
-    id: 'lat-pulldown',
-    title: 'Puxada Alta (Polia / Frente)',
-    primary_muscle_group: 'lats',
-    secondary_muscle_groups: ['biceps', 'costas'],
-    equipment: 'polia',
-    type: 'weight_reps',
-    animation_type: 'lat_pulldown',
-    gif_id: '0198',
-    muscles_pt: 'Latíssimo do Dorso (Asas), Bíceps, Redondo Maior',
-    instructions: 'Segure a barra com pegada ligeiramente maior que os ombros. Incline o tronco sutilmente para trás e puxe a barra na direção do peito superior puxando pelos cotovelos.',
-    steps: [
-      'Ajuste o apoio das pernas para travar seus joelhos firmemente.',
-      'Puxe a barra para baixo guiando com os cotovelos até a altura da clavícula.',
-      'Concentre-se em espremer as costas na parte baixa.',
-      'Estenda os braços completamente no retorno permitindo que a dorsal se alongue.'
+    "id": "biceps-curl-cable-low",
+    "title": "Rosca no Cabo / Polia Baixa",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [
+      "antebraco"
     ],
-    tips: [
-      'Não use o impulso do corpo para balançar a carga para trás.',
-      'Foque em puxar com os cotovelos e não com a força dos punhos.'
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0241",
+    "muscles_pt": "Bíceps Braquial, Tensão Contínua em Toda a Amplitude",
+    "instructions": "A polia baixa mantém a tensão constante desde o ponto mais baixo até a contração máxima, eliminando pontos mortos.",
+    "steps": [
+      "Conecte uma barra reta ou barra W ao mosquetão da polia baixa.",
+      "Dê meio passo para trás para manter os cabos sob tensão.",
+      "Puxe a barra flexionando os cotovelos até a altura do queixo.",
+      "Retorne resistindo ao cabo sem deixar as placas baterem."
+    ],
+    "tips": [
+      "Mantenha os joelhos ligeiramente destravados para estabilidade.",
+      "Foque em espremer o bíceps no topo."
     ]
   },
   {
-    id: 'barbell-row',
-    title: 'Remada Curvada (Barra)',
-    primary_muscle_group: 'costas',
-    secondary_muscle_groups: ['lats', 'biceps'],
-    equipment: 'barra',
-    type: 'weight_reps',
-    animation_type: 'deadlift',
-    gif_id: '0027',
-    muscles_pt: 'Trapézio Médio/Inferior, Romboides, Grande Dorsal',
-    instructions: 'Incline o tronco para a frente a cerca de 45° mantendo a lombar firme. Puxe a barra em direção ao umbigo, fechando bem as escápulas.',
-    steps: [
-      'Segure a barra com pegada pronada ou supinada na largura dos ombros.',
-      'Jogue o quadril para trás e mantenha o abdômen totalmente travado.',
-      'Puxe a barra em direção à parte inferior do abdômen/umbigo.',
-      'Desça o peso com controle sem deixar a coluna arredondar.'
+    "id": "biceps-alternating-curl-standing",
+    "title": "Rosca Alternada com Supinação (Em Pé)",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [
+      "antebraco"
     ],
-    tips: [
-      'Mantenha o pescoço em posição neutra alinhado com a coluna vertebral.'
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0285",
+    "muscles_pt": "Bíceps Braquial, Supinador, Braquiorradial",
+    "instructions": "Inicie com pegada neutra e gire o punho para fora (supinação) conforme o peso sobe, recrutando a função primária do bíceps.",
+    "steps": [
+      "Segure os halteres ao lado das coxas com palmas voltadas uma para a outra.",
+      "Inicie a flexão de um braço e gire a palma para cima a partir da metade do percurso.",
+      "No topo, aponte o dedo mínimo ligeiramente para cima para contração extra.",
+      "Desça controlando e repita com o outro braço."
+    ],
+    "tips": [
+      "Faça a supinação deliberada; não gire rápido demais.",
+      "Mantenha o braço que não está subindo firme e estável."
     ]
   },
   {
-    id: 'pull-up',
-    title: 'Barra Fixa (Pronada)',
-    primary_muscle_group: 'lats',
-    secondary_muscle_groups: ['biceps', 'costas'],
-    equipment: 'peso_corporal',
-    type: 'bodyweight_reps',
-    animation_type: 'pull_up',
-    gif_id: '0652',
-    muscles_pt: 'Latíssimo do Dorso, Bíceps Braquial, Core',
-    instructions: 'Segure a barra com as palmas voltadas para a frente. Puxe seu corpo para cima até que seu queixo passe da linha da barra.',
-    steps: [
-      'Comece com os braços completamente estendidos (alongamento total).',
-      'Ative as escápulas puxando-as para baixo e para trás.',
-      'Puxe o corpo para cima até passar o queixo da barra.',
-      'Desça de maneira controlada sem despencar.'
+    "id": "biceps-alternating-curl-seated",
+    "title": "Rosca Alternada Sentado (Banco Reto)",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [
+      "antebraco"
     ],
-    tips: [
-      'Evite cruzar ou chutar as pernas para conseguir impulso.'
-    ]
-  },
-
-  // OMBROS
-  {
-    id: 'overhead-press-barbell',
-    title: 'Desenvolvimento Militar (Barra)',
-    primary_muscle_group: 'ombros',
-    secondary_muscle_groups: ['triceps', 'peito'],
-    equipment: 'barra',
-    type: 'weight_reps',
-    animation_type: 'bench_press',
-    gif_id: '0091',
-    muscles_pt: 'Deltoide Anterior, Deltoide Lateral, Tríceps',
-    instructions: 'Em pé, segure a barra nos ombros. Contraia glúteos e abdômen, empurre a barra em linha vertical direta acima da cabeça travando os cotovelos.',
-    steps: [
-      'Apoie a barra na parte frontal dos ombros com pegada na largura dos ombros.',
-      'Trave os glúteos e o abdômen para proteger a coluna lombar.',
-      'Empurre a barra para cima, passando o rosto e finalizando sobre a cabeça.',
-      'Retorne a barra com controle até o topo do peito.'
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0313",
+    "muscles_pt": "Bíceps Braquial, Braquial",
+    "instructions": "A posição sentada elimina o uso de impulso do quadril e das pernas, tornando o trabalho do bíceps estritamente isolado.",
+    "steps": [
+      "Sente-se na extremidade de um banco reto com os pés firmes no chão.",
+      "Deixe os braços estendidos nas laterais segurando os halteres.",
+      "Suba alternadamente cada halter realizando a supinação completa.",
+      "Desça até a extensão completa antes de iniciar a outra repetição."
     ],
-    tips: [
-      'Não incline a coluna para trás para transformar em supino inclinado.'
+    "tips": [
+      "Mantenha as costas eretas e o core ativado.",
+      "Não jogue os ombros para trás para puxar o halter."
     ]
   },
   {
-    id: 'lateral-raise-dumbbell',
-    title: 'Elevação Lateral (Halteres)',
-    primary_muscle_group: 'ombros',
-    secondary_muscle_groups: ['ombros'],
-    equipment: 'halteres',
-    type: 'weight_reps',
-    animation_type: 'curl',
-    gif_id: '0334',
-    muscles_pt: 'Deltoide Lateral (Ombro Cabeça Média)',
-    instructions: 'Segure halteres ao lado do corpo. Levante os braços até a altura dos ombros liderando pelos cotovelos, com leve inclinação para a frente.',
-    steps: [
-      'Fique em pé com leve inclinação do tronco para a frente.',
-      'Suba os halteres pelas laterais liderando pelos cotovelos.',
-      'Suba até a altura da linha dos ombros.',
-      'Desça devagar controlando a gravidade em 2 a 3 segundos.'
+    "id": "biceps-incline-dumbbell-curl",
+    "title": "Rosca no Banco Inclinado 45º (Incline Curl)",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [
+      "antebraco"
     ],
-    tips: [
-      'Imagine que está despejando duas jarras de água no topo do movimento.',
-      'Evite balançar o tronco ou usar cargas excessivas.'
-    ]
-  },
-
-  // PERNAS - QUADRÍCEPS & GLÚTEOS
-  {
-    id: 'squat-barbell',
-    title: 'Agachamento Livre (Barra)',
-    primary_muscle_group: 'quadriceps',
-    secondary_muscle_groups: ['gluteos', 'isquiotibiais', 'abdomen'],
-    equipment: 'barra',
-    type: 'weight_reps',
-    animation_type: 'squat',
-    gif_id: '0043',
-    muscles_pt: 'Quadríceps, Glúteo Máximo, Isquiotibiais e Core',
-    instructions: 'Barra posicionada no trapézio. Desça o quadril abaixo da linha dos joelhos mantendo o peito erguido e empurre o chão com os calcanhares para subir.',
-    steps: [
-      'Posicione os pés ligeiramente mais largos que os ombros com pontas apontando 15° para fora.',
-      'Inspire profundamente, trave o abdômen e inicie a descida projetando os joelhos na direção das pontas dos pés.',
-      'Agache até que as coxas fiquem pelo menos paralelas ao chão.',
-      'Suba explodindo a força através de todo o pé.'
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0314",
+    "muscles_pt": "Cabeça Longa do Bíceps (Pico do Bíceps), Foco em Alongamento Máximo",
+    "instructions": "O banco inclinado posiciona os braços atrás da linha do tronco, colocando a cabeça longa do bíceps sob alongamento passivo extremo.",
+    "steps": [
+      "Ajuste o banco em inclinação de 45° a 60° e deite com as costas totalmente apoiadas.",
+      "Deixe os braços caírem retos apontando diretamente para o chão.",
+      "Sem movimentar os cotovelos para frente, flexione os braços supinando as mãos.",
+      "Segure a contração no topo e desça sentindo o alongamento profundo."
     ],
-    tips: [
-      'Não deixe os joelhos desabarem para dentro (valgo dinâmico) ao subir.',
-      'Mantenha o peito alto e os olhos focados para frente.'
+    "tips": [
+      "Mantenha a cabeça encostada no banco.",
+      "Use cargas moderadas; o alongamento sob carga é muito intenso."
     ]
   },
   {
-    id: 'leg-press',
-    title: 'Leg Press 45°',
-    primary_muscle_group: 'quadriceps',
-    secondary_muscle_groups: ['gluteos', 'panturrilha'],
-    equipment: 'maquina',
-    type: 'weight_reps',
-    animation_type: 'squat',
-    gif_id: '0739',
-    muscles_pt: 'Quadríceps e Glúteos',
-    instructions: 'Pés na plataforma na largura dos ombros. Destrave a máquina, desça o trenó até os joelhos formarem 90° e empurre sem travar os joelhos no topo.',
-    steps: [
-      'Apoie as costas e o quadril completamente no encosto da máquina.',
-      'Desça o trenó com controle até atingir máxima amplitude sem tirar a lombar do encosto.',
-      'Empurre o peso de volta mantendo a tensão contínua nas pernas.'
+    "id": "biceps-hammer-curl-dumbbell",
+    "title": "Rosca Martelo com Halteres",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [
+      "antebraco"
     ],
-    tips: [
-      'Nunca estenda os joelhos completamente com estalo no topo para evitar lesões articulares.'
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0165",
+    "muscles_pt": "Braquial, Braquiorradial, Cabeça Longa do Bíceps",
+    "instructions": "Pegada neutra mantida durante todo o movimento. Fortalece o músculo braquial, que empurra o bíceps para cima aumentando a espessura do braço.",
+    "steps": [
+      "Segure os halteres com as palmas voltadas uma para a outra.",
+      "Mantenha os cotovelos travados na lateral do tronco.",
+      "Suba os halteres em direção aos ombros como se estivesse batendo um martelo.",
+      "Desça de forma suave e controlada."
+    ],
+    "tips": [
+      "Não deixe os punhos dobrarem para frente no topo.",
+      "Pode ser feito simultâneo ou alternado."
     ]
   },
   {
-    id: 'leg-extension',
-    title: 'Cadeira Extensora',
-    primary_muscle_group: 'quadriceps',
-    secondary_muscle_groups: [],
-    equipment: 'maquina',
-    type: 'weight_reps',
-    animation_type: 'squat',
-    gif_id: '0585',
-    muscles_pt: 'Quadríceps (Isolamento)',
-    instructions: 'Ajuste o rolo sobre a parte inferior da canela. Estenda as pernas totalmente, aperte o quadríceps no topo por 1 segundo e desça com controle.',
-    steps: [
-      'Ajuste o banco de modo que a articulação do joelho fique alinhada com o eixo da máquina.',
-      'Estenda as pernas completamente até o topo.',
-      'Segure a contração isométrica por 1 segundo.',
-      'Desça lentamente controlando a fase excêntrica.'
+    "id": "biceps-pinwheel-hammer-curl",
+    "title": "Rosca Martelo Cruzada no Peito (Pinwheel Curl)",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [
+      "antebraco"
     ],
-    tips: [
-      'Excelente exercício para finalizar o treino de quadríceps com técnica de drop set.'
-    ]
-  },
-
-  // PERNAS - POSTERIOR & GLÚTEO
-  {
-    id: 'romanian-deadlift',
-    title: 'Stiff / RDL (Barra ou Halteres)',
-    primary_muscle_group: 'isquiotibiais',
-    secondary_muscle_groups: ['gluteos'],
-    equipment: 'barra',
-    type: 'weight_reps',
-    animation_type: 'deadlift',
-    gif_id: '0085',
-    muscles_pt: 'Isquiotibiais (Posterior de Coxa), Glúteo Máximo',
-    instructions: 'Joelhos com leve flexão fixa. Projete o quadril para trás mantendo as costas retas até sentir um alongamento forte nos posteriores de coxa.',
-    steps: [
-      'Segure a barra junto às coxas com pés na largura do quadril.',
-      'Empurre o bumbum para trás como se fosse fechar uma porta com o quadril.',
-      'Desça a barra rente à perna até logo abaixo dos joelhos mantendo a lombar neutra.',
-      'Retorne empurrando o quadril para frente contraindo os glúteos.'
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0613",
+    "muscles_pt": "Braquiorradial, Braquial Anterior",
+    "instructions": "Ao invés de subir para frente, o halter sobe em direção ao ombro/peito oposto, isolando com extrema potência o braquiorradial.",
+    "steps": [
+      "Segure os halteres ao lado do corpo em pegada neutra.",
+      "Puxe o halter direito diagonalmente em direção à clavícula esquerda.",
+      "Esprema a lateral do braço e antebraço no topo.",
+      "Desça e repita o movimento com o braço esquerdo cruzando ao peito direito."
     ],
-    tips: [
-      'Não dobre mais os joelhos durante a descida; o movimento é exclusivamente do quadril.'
+    "tips": [
+      "Mantenha o cotovelo apontado para baixo.",
+      "Excelente exercício para espessura do antebraço."
     ]
   },
   {
-    id: 'standing-calf-raise',
-    title: 'Panturrilha em Pé (Máquina)',
-    primary_muscle_group: 'panturrilha',
-    secondary_muscle_groups: [],
-    equipment: 'maquina',
-    type: 'weight_reps',
-    animation_type: 'squat',
-    gif_id: '1372',
-    muscles_pt: 'Gastrocnêmio e Sóleo',
-    instructions: 'Apoie a ponta dos pés na borda da plataforma. Desça os calcanhares para alongamento máximo e suba ficando na ponta dos pés, contraindo forte no topo.',
-    steps: [
-      'Desça o calcanhar o máximo possível sentindo alongar a panturrilha.',
-      'Pause 1 segundo embaixo para eliminar o reflexo elástico.',
-      'Suba com força na ponta dos pés e aperte no topo por 2 segundos.'
+    "id": "biceps-cable-rope-hammer-curl",
+    "title": "Rosca Martelo na Polia com Corda",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [
+      "antebraco"
     ],
-    tips: [
-      'A pausa em cima e embaixo é o verdadeiro segredo para o crescimento das panturrilhas.'
-    ]
-  },
-
-  // BRAÇOS - BÍCEPS
-  {
-    id: 'barbell-curl',
-    title: 'Rosca Direta (Barra W ou Reta)',
-    primary_muscle_group: 'biceps',
-    secondary_muscle_groups: ['antebraco'],
-    equipment: 'barra',
-    type: 'weight_reps',
-    animation_type: 'curl',
-    gif_id: '0031',
-    muscles_pt: 'Bíceps Braquial, Braquial',
-    instructions: 'Cotovelos colados ao lado do corpo. Flexione os braços subindo a barra sem balançar o tronco e desça lentamente.',
-    steps: [
-      'Segure a barra com pegada supinada (palmas para cima).',
-      'Mantenha os cotovelos firmes na linha do tronco.',
-      'Suba a barra até a altura do peito superior contraindo o bíceps.',
-      'Desça estendendo quase completamente o braço.'
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0209",
+    "muscles_pt": "Braquial, Braquiorradial, Bíceps Braquial",
+    "instructions": "A corda na polia baixa permite separar as mãos no topo do movimento, aumentando a contração isométrica do braquial.",
+    "steps": [
+      "Prenda a corda na polia baixa e segure pelas pontas em pegada neutra.",
+      "Dê um passo para trás e flexione os joelhos levemente.",
+      "Puxe a corda para cima e afaste as pontas levemente no topo.",
+      "Desça controlando a descida do cabo."
     ],
-    tips: [
-      'Não jogue os cotovelos para a frente para descansar o peso no topo do movimento.'
+    "tips": [
+      "Mantenha os polegares apontando para cima.",
+      "Não utilize impulso do quadril."
     ]
   },
   {
-    id: 'dumbbell-hammer-curl',
-    title: 'Rosca Martelo (Halteres)',
-    primary_muscle_group: 'biceps',
-    secondary_muscle_groups: ['antebraco'],
-    equipment: 'halteres',
-    type: 'weight_reps',
-    animation_type: 'curl',
-    gif_id: '0165',
-    muscles_pt: 'Braquiorradial, Braquial e Bíceps',
-    instructions: 'Palmas voltadas uma para a outra durante todo o movimento para desenvolver a espessura do braço e antebraço.',
-    steps: [
-      'Segure os halteres com pegada neutra.',
-      'Suba os pesos simultaneamente ou alternadamente.',
-      'Aperte no topo e desça com cadência controlada.'
+    "id": "biceps-reverse-curl-barbell",
+    "title": "Rosca Inversa com Barra",
+    "primary_muscle_group": "antebraco",
+    "secondary_muscle_groups": [
+      "biceps"
     ],
-    tips: [
-      'Excelente exercício para dar aspecto de braço denso e antebraço forte.'
-    ]
-  },
-
-  // BRAÇOS - TRÍCEPS
-  {
-    id: 'triceps-rope-pushdown',
-    title: 'Tríceps Corda (Polia Alta)',
-    primary_muscle_group: 'triceps',
-    secondary_muscle_groups: [],
-    equipment: 'polia',
-    type: 'weight_reps',
-    animation_type: 'lat_pulldown',
-    gif_id: '0201',
-    muscles_pt: 'Tríceps (Cabeça Lateral e Medial)',
-    instructions: 'Cotovelos fixos ao lado das costelas. Empurre a corda para baixo abrindo as pontas no final do movimento para contração máxima.',
-    steps: [
-      'Incline ligeiramente o tronco para a frente.',
-      'Estenda os braços para baixo empurrando a corda.',
-      'No final do percurso, abra as pontas da corda para os lados.',
-      'Retorne até formar um ângulo de 90° no cotovelo.'
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0086",
+    "muscles_pt": "Braquiorradial, Extensores do Punho, Braquial",
+    "instructions": "Pegada pronada (palmas para baixo). Desativa parcialmente o bíceps e transfere quase toda a carga para o braquiorradial e extensores do antebraço.",
+    "steps": [
+      "Segure a barra reta ou W com pegada pronada na largura dos ombros.",
+      "Trave os punhos retos alinhados com o antebraço.",
+      "Suba a barra flexionando os cotovelos sem deixar os punhos flexionarem.",
+      "Desça de forma cadenciada resistindo ao peso."
     ],
-    tips: [
-      'Não deixe os cotovelos subirem ou balançarem para frente e para trás.'
-    ]
-  },
-
-  // ABDÔMEN & CÁRDIO
-  {
-    id: 'hanging-leg-raise',
-    title: 'Elevação de Pernas na Barra Fixa',
-    primary_muscle_group: 'abdomen',
-    secondary_muscle_groups: [],
-    equipment: 'peso_corporal',
-    type: 'bodyweight_reps',
-    animation_type: 'pull_up',
-    gif_id: '0472',
-    muscles_pt: 'Reto Abdominal (Foco Inferior) e Flexores do Quadril',
-    instructions: 'Pendure-se na barra e eleve as pernas retas ou dobradas até a altura da cintura sem embalo.',
-    steps: [
-      'Pendure-se firmemente com as pernas esticadas.',
-      'Enrole a bacia elevando os joelhos ou pernas em direção ao peito.',
-      'Desça lentamente sem balançar o corpo.'
-    ],
-    tips: [
-      'O segredo é enrolar o quadril e não apenas levantar a coxa.'
+    "tips": [
+      "Use menos peso do que na rosca tradicional.",
+      "A barra W alivia desconfortos nos punhos."
     ]
   },
   {
-    id: 'treadmill-running',
-    title: 'Corrida na Esteira (Cárdio)',
-    primary_muscle_group: 'cardio',
-    secondary_muscle_groups: ['quadriceps', 'panturrilha'],
-    equipment: 'maquina',
-    type: 'distance_duration',
-    animation_type: 'squat',
-    gif_id: '3656',
-    muscles_pt: 'Sistema Cardiovascular, Resistência Muscular',
-    instructions: 'Corrida contínua ou intervalada (HIIT) para queima de gordura e condicionamento aeróbico.',
-    steps: [
-      'Inicie com 3 minutos de caminhada rápida para aquecer.',
-      'Aumente a velocidade para o ritmo alvo de corrida.',
-      'Mantenha a postura ereta e respiração cadenciada.'
+    "id": "biceps-reverse-curl-dumbbell",
+    "title": "Rosca Inversa com Halteres",
+    "primary_muscle_group": "antebraco",
+    "secondary_muscle_groups": [
+      "biceps"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0387",
+    "muscles_pt": "Braquiorradial, Extensores do Punho",
+    "instructions": "Permite rotação livre e natural dos punhos com foco em pegada pronada para construção de antebraços densos.",
+    "steps": [
+      "Em pé, segure os halteres com as palmas voltadas para trás.",
+      "Erga os halteres mantendo as palmas para baixo.",
+      "Segure no topo e desça lentamente."
+    ],
+    "tips": [
+      "Mantenha a pegada bem apertada nos halteres."
+    ]
+  },
+  {
+    "id": "biceps-concentration-curl-seated",
+    "title": "Rosca Concentrada com Halter",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0297",
+    "muscles_pt": "Pico do Bíceps (Cabeça Curta e Longa), Isolamento Estrito",
+    "instructions": "Sentado no banco, o cotovelo fica apoiado na parte interna da coxa, impedindo qualquer movimento dos ombros ou tronco.",
+    "steps": [
+      "Sente-se com as pernas afastadas e apoie a parte de trás do braço na parte interna da coxa.",
+      "Estenda o braço segurando o halter.",
+      "Flexione o cotovelo subindo o halter em direção ao ombro.",
+      "Esprema o bíceps no ápice da contração e desça até quase esticar o braço."
+    ],
+    "tips": [
+      "Não encoste a ponta do cotovelo no osso da perna, mas sim o tríceps na coxa.",
+      "Mantenha o tronco parado durante toda a série."
+    ]
+  },
+  {
+    "id": "biceps-arnold-concentration-curl",
+    "title": "Rosca Concentrada Arnold (Em Pé Inclinado)",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0034",
+    "muscles_pt": "Bíceps Braquial (Pico de Contração e Formato)",
+    "instructions": "Técnica favorita de Arnold Schwarzenegger: tronco inclinado à frente sem apoio, deixando o braço pender perpendicular ao solo.",
+    "steps": [
+      "Incline o tronco à frente a 90° apoiando uma das mãos em um banco ou suporte.",
+      "Deixe o braço com o halter pendurado solto verticalmente.",
+      "Flexione o braço erguendo o halter em direção ao queixo sem mover a articulação do ombro.",
+      "No topo, esprema o bíceps ao máximo e desça devagar."
+    ],
+    "tips": [
+      "A gravidade cria tensão máxima diretamente no pico do movimento."
+    ]
+  },
+  {
+    "id": "biceps-preacher-curl-ez-bar",
+    "title": "Rosca Scott com Barra W (Preacher Curl)",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0070",
+    "muscles_pt": "Cabeça Curta do Bíceps (Porção Medial), Braquial",
+    "instructions": "Com os braços apoiados no banco Scott, o bíceps é isolado desde o início da fase excêntrica até a contração concêntrica.",
+    "steps": [
+      "Ajuste a altura do banco para que a axila encaixe confortavelmente no topo do acolchoado.",
+      "Segure a barra W e apoie os braços e peito firmemente contra o estofado.",
+      "Suba a barra até a posição vertical sem perder o contato dos braços.",
+      "Desça de maneira controlada sem hiperestender ou dar tranco nos cotovelos."
+    ],
+    "tips": [
+      "Nunca desça a barra soltando o peso abruptamente para não estressar os tendões.",
+      "Mantenha os punhos alinhados."
+    ]
+  },
+  {
+    "id": "biceps-preacher-curl-single-dumbbell",
+    "title": "Rosca Scott Unilateral com Halter",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0308",
+    "muscles_pt": "Bíceps Braquial (Correção de Assimetrias)",
+    "instructions": "Executada um braço de cada vez no banco Scott para equilibrar força e volume muscular entre os lados.",
+    "steps": [
+      "Apoie um braço no banco Scott segurando o halter com a palma para cima.",
+      "Desça o halter até quase estender o cotovelo.",
+      "Flexione o antebraço concentrando toda a força no bíceps.",
+      "Repita o mesmo número de repetições no outro braço."
+    ],
+    "tips": [
+      "Comece sempre pelo braço mais fraco."
+    ]
+  },
+  {
+    "id": "biceps-preacher-curl-machine",
+    "title": "Rosca Scott na Máquina",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0599",
+    "muscles_pt": "Bíceps Braquial com Tensão Guiada Constante",
+    "instructions": "A máquina elimina pontos de alívio e garante curva de torque estável em toda a amplitude de movimento.",
+    "steps": [
+      "Ajuste o assento para alinhar os cotovelos com o eixo rotacional da máquina.",
+      "Segure as manoplas e encoste o peito no acolchoado.",
+      "Flexione os braços puxando até a flexão máxima.",
+      "Retorne devagar sem deixar os tijolos de peso colidirem."
+    ],
+    "tips": [
+      "Excelente para dropsets no final do treino de braço."
+    ]
+  },
+  {
+    "id": "biceps-spider-curl-incline-barbell",
+    "title": "Rosca Spider com Barra no Banco Inclinado",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0087",
+    "muscles_pt": "Cabeça Curta do Bíceps, Braquial, Pico de Contração Isométrica",
+    "instructions": "Deite-se de bruços em um banco inclinado a 45° com o peito apoiado. Os braços ficam suspensos na vertical, impedindo qualquer assistência das costas.",
+    "steps": [
+      "Deite de bruços no banco inclinado e segure a barra reta ou W suspensa.",
+      "Puxe a barra para cima flexionando apenas os cotovelos.",
+      "Segure por 1 a 2 segundos no ponto mais alto espremendo o bíceps.",
+      "Desça suavemente até estender completamente."
+    ],
+    "tips": [
+      "Não deixe o tronco se erguer do banco durante a subida."
+    ]
+  },
+  {
+    "id": "biceps-spider-curl-dumbbell",
+    "title": "Rosca Spider com Halteres",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0398",
+    "muscles_pt": "Bíceps Braquial, Supinação Livre",
+    "instructions": "Variação da rosca spider com halteres que permite girar os punhos e alcançar contração ainda mais densa.",
+    "steps": [
+      "Apoie o peito no encosto do banco inclinado.",
+      "Segure os halteres pendurados verticalmente.",
+      "Suba os halteres supinando e aproximando os mindinhos no ápice.",
+      "Controle o retorno até a extensão total."
+    ],
+    "tips": [
+      "Excelente para evitar sobrecarga na coluna lombar."
+    ]
+  },
+  {
+    "id": "biceps-21s-barbell",
+    "title": "Rosca 21 (Rosca Baiana)",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [
+      "antebraco"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0031",
+    "muscles_pt": "Bíceps Braquial, Congestão Sanguínea (Pump Máximo)",
+    "instructions": "Técnica clássica de 21 repetições contínuas: 7 reps na metade inferior (0° a 90°), 7 reps na metade superior (90° a 140°) e 7 reps na amplitude completa.",
+    "steps": [
+      "Execute 7 repetições subindo a barra da base até a linha do abdômen/paralela.",
+      "Sem descansar, realize 7 repetições da linha paralela até o topo junto ao peito.",
+      "Imediatamente execute 7 repetições na amplitude completa de baixo até em cima.",
+      "Descanse após completar as 21 repetições ininterruptas."
+    ],
+    "tips": [
+      "Utilize entre 50% e 60% da carga que usaria em uma série normal.",
+      "Mantenha a postura estrita mesmo com a queimação extrema."
+    ]
+  },
+  {
+    "id": "biceps-zottman-curl",
+    "title": "Rosca Zottman (Rosca Africana)",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [
+      "antebraco"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0447",
+    "muscles_pt": "Bíceps na Subida (Supinada), Braquiorradial na Descida (Pronada)",
+    "instructions": "Combina a força do bíceps na subida (palmas para cima) com a sobrecarga excêntrica no antebraço e braquiorradial na descida (palmas para baixo).",
+    "steps": [
+      "Segure os halteres e suba em pegada supinada como uma rosca direta.",
+      "No topo do movimento, gire os punhos 180° para que as palmas fiquem voltadas para baixo.",
+      "Desça lentamente na pegada pronada até estender os braços.",
+      "Gire os punhos de volta para a posição inicial e repita."
+    ],
+    "tips": [
+      "A fase excêntrica pronada deve ser bem lenta (3 segundos)."
+    ]
+  },
+  {
+    "id": "biceps-drag-curl",
+    "title": "Rosca Drag (Drag Curl)",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0150",
+    "muscles_pt": "Cabeça Longa do Bíceps, Isolamento Sem Deltoide Anterior",
+    "instructions": "Ao invés de descrever um arco, a barra sobe raspando o tronco enquanto os cotovelos são empurrados ativamente para trás.",
+    "steps": [
+      "Segure a barra com pegada supinada encostada nas coxas.",
+      "Puxe a barra para cima arrastando-a em contato constante pelo abdômen e peito.",
+      "Puxe os cotovelos para trás e para cima conforme a barra sobe.",
+      "Desça a barra raspando o tronco até a posição inicial."
+    ],
+    "tips": [
+      "Elimina completamente a participação do ombro frontal."
+    ]
+  },
+  {
+    "id": "biceps-high-cable-curl-christ",
+    "title": "Rosca Cruzada no Cabo (Cristo Redentor)",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0215",
+    "muscles_pt": "Pico de Contração do Bíceps (Pose de Duplo Bíceps)",
+    "instructions": "Posicione-se no centro do crossover com as polias ajustadas na altura dos ombros ou ligeiramente acima.",
+    "steps": [
+      "Segure os pegadores em polia alta com os braços esticados em forma de T.",
+      "Mantenha os cotovelos elevados e alinhados com os ombros.",
+      "Puxe as manoplas em direção às orelhas flexionando os bíceps ao máximo.",
+      "Segure a contração isométrica por 1 segundo e retorne estendendo os braços."
+    ],
+    "tips": [
+      "Não deixe os cotovelos caírem para baixo durante o movimento."
+    ]
+  },
+  {
+    "id": "biceps-waiter-curl",
+    "title": "Rosca Garçom (Waiter Curl)",
+    "primary_muscle_group": "biceps",
+    "secondary_muscle_groups": [],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0432",
+    "muscles_pt": "Bíceps Braquial (Cabeça Curta), Tensão Isométrica nos Punhos",
+    "instructions": "Segura-se a anilha superior de um halter verticalmente com ambas as mãos sob o topo, como um garçom segurando uma bandeja.",
+    "steps": [
+      "Coloque as duas palmas das mãos espalmadas sob a anilha de cima do halter.",
+      "Mantenha os cotovelos juntos e apontando para a frente.",
+      "Flexione os braços erguendo o halter até a altura do queixo mantendo a bandeja plana.",
+      "Desça de forma controlada."
+    ],
+    "tips": [
+      "Excelente estímulo para quem tem dificuldade de sentir a cabeça curta do bíceps."
+    ]
+  },
+  {
+    "id": "forearm-wrist-curl-barbell",
+    "title": "Rosca Punho no Banco (Flexão de Punho)",
+    "primary_muscle_group": "antebraco",
+    "secondary_muscle_groups": [],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0095",
+    "muscles_pt": "Flexores Profundos e Superficiais do Punho",
+    "instructions": "Antebraços apoiados sobre o banco com as mãos para fora. Realize a flexão total dos punhos com barra ou halteres.",
+    "steps": [
+      "Ajoelhe-se ao lado do banco e apoie os antebraços sobre o estofado, deixando os punhos suspensos.",
+      "Segure a barra com palmas voltadas para cima.",
+      "Deixe a barra descer suavemente estendendo o punho (podendo abrir levemente os dedos).",
+      "Flexione o punho puxando a barra o mais alto possível."
+    ],
+    "tips": [
+      "Movimento curto e estritamente controlado; não faça com trancos."
+    ]
+  },
+  {
+    "id": "forearm-reverse-wrist-curl",
+    "title": "Rosca Punho Inversa (Extensão de Punho)",
+    "primary_muscle_group": "antebraco",
+    "secondary_muscle_groups": [],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bicep_curl",
+    "gif_id": "0104",
+    "muscles_pt": "Extensores Radiais e Ulnar do Carpo, Braquiorradial",
+    "instructions": "Com os antebraços apoiados e palmas para baixo, erga o dorso das mãos estendendo a articulação do punho.",
+    "steps": [
+      "Apoie os antebraços no banco com as palmas viradas para baixo.",
+      "Segure a barra reta com os punhos estendidos para fora da borda.",
+      "Deixe os punhos caírem suavemente e depois estenda-os para cima com força.",
+      "Segure 1 segundo no topo e repita."
+    ],
+    "tips": [
+      "Utilize cargas leves; os músculos extensores são menores e mais delicados."
+    ]
+  },
+  {
+    "id": "forearm-wrist-roller",
+    "title": "Rolo de Punho (Wrist Roller)",
+    "primary_muscle_group": "antebraco",
+    "secondary_muscle_groups": [
+      "ombros"
+    ],
+    "equipment": "outro",
+    "type": "duration",
+    "animation_type": "bicep_curl",
+    "gif_id": "0857",
+    "muscles_pt": "Toda a Musculatura do Antebraço e Força de Preensão",
+    "instructions": "Segure um bastão com corda e peso acoplado e enrole a corda para cima alternando os movimentos de flexão e extensão das mãos.",
+    "steps": [
+      "Segure o rolo de punho à frente com os braços esticados na altura dos ombros.",
+      "Gire uma mão de cada vez para cima enrolando a corda no bastão até o peso subir.",
+      "Desenrole lentamente o peso de volta sem soltar o bastão.",
+      "Repita enrolando na direção oposta."
+    ],
+    "tips": [
+      "Produz queimação e pump vascular imediato no antebraço."
+    ]
+  },
+  {
+    "id": "forearm-pinch-grip",
+    "title": "Pegada de Pinça (Pinch Grip)",
+    "primary_muscle_group": "antebraco",
+    "secondary_muscle_groups": [],
+    "equipment": "outro",
+    "type": "duration",
+    "animation_type": "deadlift",
+    "gif_id": "0858",
+    "muscles_pt": "Força de Pinça, Músculos Intrínsecos da Mão e Dedos",
+    "instructions": "Junte duas anilhas lisas face a face e segure-as apenas com a ponta dos dedos e o polegar em suspensão estática.",
+    "steps": [
+      "Posicione duas anilhas juntas no chão com a face lisa para fora.",
+      "Abaixe-se e pinte as anilhas com o polegar de um lado e os 4 dedos do outro.",
+      "Fique em pé ereto sustentando o peso sem deixar as anilhas deslizarem.",
+      "Mantenha por 20 a 45 segundos por série."
+    ],
+    "tips": [
+      "Excelente para atletas de escalada, jiu-jitsu e levantamento de peso."
+    ]
+  },
+  {
+    "id": "triceps-skullcrusher-ez-bar",
+    "title": "Tríceps Testa com Barra W (Skullcrusher)",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0060",
+    "muscles_pt": "Cabeça Longa e Cabeça Medial do Tríceps",
+    "instructions": "Deite-se no banco plano segurando a barra W com os braços estendidos. Flexione os cotovelos descendo a barra em direção à testa ou topo da cabeça.",
+    "steps": [
+      "Deite-se no banco e segure a barra W com pegada pronada fechada.",
+      "Incline levemente os braços para trás (cerca de 10° a 15°) para manter tensão constante.",
+      "Flexione os cotovelos descendo a barra controladamente até rente à testa.",
+      "Estenda os antebraços com potência sem mover a articulação dos ombros."
+    ],
+    "tips": [
+      "Mantenha os cotovelos apontados para o teto e não os abra para fora.",
+      "A descida atrás da cabeça alonga ainda mais a cabeça longa do tríceps."
+    ]
+  },
+  {
+    "id": "triceps-skullcrusher-dumbbells",
+    "title": "Tríceps Testa com Halteres",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0344",
+    "muscles_pt": "Tríceps Braquial (Equilíbrio Unilateral)",
+    "instructions": "Com halteres e pegada neutra (palmas se encarando), você tem amplitude livre sem estresse nos punhos e cotovelos.",
+    "steps": [
+      "Deite-se com um halter em cada mão apontando para cima com palmas neutras.",
+      "Dobre os cotovelos descendo os halteres pelas laterais da cabeça.",
+      "Estenda os cotovelos empurrando os pesos de volta ao topo."
+    ],
+    "tips": [
+      "Excelente para prevenir assimetrias entre os braços."
+    ]
+  },
+  {
+    "id": "triceps-overhead-dumbbell-two-hands",
+    "title": "Tríceps Francês com Halter (Duas Mãos)",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0347",
+    "muscles_pt": "Cabeça Longa do Tríceps (Maior Alongamento)",
+    "instructions": "Sentado ou em pé, segure um halter pesado por dentro da anilha superior acima da cabeça e desça por trás da nuca.",
+    "steps": [
+      "Sente-se com as costas firmes e erga o halter verticalmente com ambas as mãos apoiadas sob a anilha superior.",
+      "Mantenha os cotovelos apontados para a frente e próximos à cabeça.",
+      "Desça o halter por trás da nuca até sentir o tríceps esticar totalmente.",
+      "Estenda os braços voltando ao topo contraindo o tríceps."
+    ],
+    "tips": [
+      "Não deixe a lombar arquear; mantenha o abdômen travado."
+    ]
+  },
+  {
+    "id": "triceps-french-press-cable-rope",
+    "title": "Tríceps Francês na Polia com Corda",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0187",
+    "muscles_pt": "Cabeça Longa do Tríceps com Tensão Contínua dos Cabos",
+    "instructions": "De costas para a polia baixa ou média, puxe a corda por trás da cabeça e estenda para a frente.",
+    "steps": [
+      "Prenda a corda na polia e fique de costas para o aparelho com um pé à frente para estabilidade.",
+      "Segure a corda com os cotovelos flexionados ao lado da cabeça.",
+      "Estenda os braços para a frente e para o alto, separando as pontas da corda no final.",
+      "Retorne controladamente sentindo o alongamento da cabeça longa."
+    ],
+    "tips": [
+      "Incline o tronco levemente para a frente para manter a linha de ação do cabo."
+    ]
+  },
+  {
+    "id": "triceps-tate-press",
+    "title": "Tríceps Tate Press com Halteres",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0418",
+    "muscles_pt": "Cabeça Lateral e Medial do Tríceps",
+    "instructions": "Criado pelo lendário Dave Tate: deitado no banco, os cotovelos apontam para fora e os halteres descem tocando o centro do peito.",
+    "steps": [
+      "Deite-se no banco reto com halteres apontando para cima e palmas voltadas para os pés.",
+      "Flexione os cotovelos para os lados, descendo as cabeças internas dos halteres até tocarem levemente o peito.",
+      "Estenda os braços usando puramente a força do tríceps até travar os cotovelos.",
+      "Mantenha os cotovelos abertos durante todo o movimento."
+    ],
+    "tips": [
+      "Não use cargas excessivas; priorize a mecânica perfeita."
+    ]
+  },
+  {
+    "id": "triceps-katana-extension",
+    "title": "Tríceps Katana na Polia (Katana Extension)",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0218",
+    "muscles_pt": "Cabeça Longa do Tríceps, Alinhamento Perfeito das Fibras Musculares",
+    "instructions": "Extensão de tríceps com cabos cruzados na altura do peito, estendendo os braços diagonalmente como se desembainhasse duas espadas katana.",
+    "steps": [
+      "Cruze os cabos no crossover na altura média/alta sem manoplas ou com pegadores simples.",
+      "Dobre os cotovelos com as mãos partindo do ombro oposto.",
+      "Estenda os braços diagonalmente para fora e para cima alinhando o movimento com a fibra muscular.",
+      "Retorne controladamente mantendo o cotovelo imóvel no espaço."
+    ],
+    "tips": [
+      "Excelente biomecânica com zero impacto nas articulações."
+    ]
+  },
+  {
+    "id": "triceps-pushdown-straight-bar",
+    "title": "Tríceps Pulley com Barra Reta",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0200",
+    "muscles_pt": "Cabeça Lateral e Medial do Tríceps",
+    "instructions": "Em pé na polia alta, empurre a barra reta para baixo estendendo os cotovelos até o bloqueio completo.",
+    "steps": [
+      "Segure a barra com pegada pronada na largura dos ombros.",
+      "Mantenha os cotovelos colados ao tronco e tronco ligeiramente inclinado à frente.",
+      "Empurre a barra para baixo até estender totalmente os braços.",
+      "Suba a barra de forma controlada até o ângulo de 90° nos cotovelos."
+    ],
+    "tips": [
+      "Não deixe os cotovelos subirem junto com a barra."
+    ]
+  },
+  {
+    "id": "triceps-pushdown-rope",
+    "title": "Tríceps Pulley com Corda",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0201",
+    "muscles_pt": "Cabeça Lateral do Tríceps (Ferradura do Tríceps)",
+    "instructions": "A corda permite abrir as mãos no final do movimento, aumentando o pico de contração da cabeça lateral.",
+    "steps": [
+      "Segure a corda na polia alta com pegada neutra.",
+      "Empurre a corda para baixo estendendo os braços.",
+      "No ponto mais baixo, afaste as pontas da corda para os lados forçando o tríceps.",
+      "Retorne suavemente até a altura do peito."
+    ],
+    "tips": [
+      "Segure 1 segundo no ponto de abertura máxima."
+    ]
+  },
+  {
+    "id": "triceps-reverse-grip-pushdown",
+    "title": "Tríceps Pulley Pegada Inversa (Supinada)",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0202",
+    "muscles_pt": "Cabeça Medial do Tríceps",
+    "instructions": "Segure a barra com palmas para cima (pegada supinada) para direcionar o foco para a cabeça medial do tríceps.",
+    "steps": [
+      "Segure a barra com as palmas voltadas para o teto.",
+      "Empurre a barra para baixo mantendo os cotovelos imóveis.",
+      "Estenda completamente e sinta a contração na parte interna do tríceps.",
+      "Suba devagar até 90°."
+    ],
+    "tips": [
+      "Exige punhos firmes e carga mais moderada."
+    ]
+  },
+  {
+    "id": "triceps-bench-dips",
+    "title": "Tríceps Mergulho no Banco (Bench Dips)",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [
+      "peito",
+      "ombros"
+    ],
+    "equipment": "peso_corporal",
+    "type": "bodyweight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0139",
+    "muscles_pt": "Tríceps Braquial, Deltoide Anterior",
+    "instructions": "Com as mãos apoiadas na borda do banco e pés no chão ou em outro banco, flexione os cotovelos descendo o quadril.",
+    "steps": [
+      "Apoie as mãos na borda do banco na largura dos ombros.",
+      "Estenda as pernas para frente com os calcanhares no chão.",
+      "Desça o tronco mantendo as costas rente ao banco até os cotovelos formarem 90°.",
+      "Empurre com as palmas voltando à posição inicial."
+    ],
+    "tips": [
+      "Não desça demais para não sobrecarregar a cápsula anterior dos ombros.",
+      "Pode-se apoiar anilhas sobre as coxas para carga adicional."
+    ]
+  },
+  {
+    "id": "triceps-dips-parallel-bars",
+    "title": "Paralelas para Tríceps (Dips)",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [
+      "peito",
+      "ombros"
+    ],
+    "equipment": "peso_corporal",
+    "type": "bodyweight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0251",
+    "muscles_pt": "Tríceps Braquial Completo, Peitoral Inferior",
+    "instructions": "Nas barras paralelas, mantenha o tronco ereto e cotovelos fechados para transferir o estímulo máximo ao tríceps.",
+    "steps": [
+      "Suba nas barras paralelas com os braços totalmente estendidos.",
+      "Mantenha o corpo o mais reto possível (sem inclinar o tronco para a frente).",
+      "Desça dobrando os cotovelos para trás até 90°.",
+      "Empurre com força estendendo os braços de volta ao topo."
+    ],
+    "tips": [
+      "Cruze os pés atrás e não balance o corpo."
+    ]
+  },
+  {
+    "id": "triceps-diamond-pushups",
+    "title": "Flexão Diamante (Diamond Push-up)",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [
+      "peito",
+      "ombros"
+    ],
+    "equipment": "peso_corporal",
+    "type": "bodyweight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0302",
+    "muscles_pt": "Tríceps Braquial, Miolo do Peitoral",
+    "instructions": "Em posição de flexão no solo, junte os polegares e indicadores formando um losango/diamante sob o peito.",
+    "steps": [
+      "Posicione as mãos no chão sob o centro do peito com os dedos formando um diamante.",
+      "Mantenha o corpo em linha reta da cabeça aos pés.",
+      "Desça o peito até quase encostar nas mãos com cotovelos rentes ao tronco.",
+      "Empurre o chão de volta estendendo os tríceps."
+    ],
+    "tips": [
+      "Se for difícil no início, apoie os joelhos no chão."
+    ]
+  },
+  {
+    "id": "triceps-close-grip-bench-press",
+    "title": "Supino Fechado com Barra (Close-Grip Bench)",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [
+      "peito",
+      "ombros"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0030",
+    "muscles_pt": "Tríceps Braquial (Carga Máxima Composta), Peitoral Maior",
+    "instructions": "Um dos melhores construtores de massa para tríceps, permitindo alta sobrecarga com os cotovelos fechados junto ao tronco.",
+    "steps": [
+      "Deite no banco e segure a barra com pegada na largura dos ombros (cerca de 30 a 40cm).",
+      "Desça a barra controladamente até encostar na linha inferior do peito/esterno.",
+      "Mantenha os cotovelos colados ao tronco na descida.",
+      "Empurre a barra para cima focando na extensão potente dos tríceps."
+    ],
+    "tips": [
+      "Não use uma pegada excessivamente fechada para não machucar os punhos."
+    ]
+  },
+  {
+    "id": "triceps-dumbbell-kickback",
+    "title": "Tríceps Coice com Halter (Kickback)",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0346",
+    "muscles_pt": "Cabeça Lateral e Longa do Tríceps (Pico de Contração)",
+    "instructions": "Apoiado no banco com o tronco paralelo ao chão, estenda o antebraço para trás até o alinhamento total.",
+    "steps": [
+      "Apoie um joelho e uma mão no banco com o tronco paralelo ao chão.",
+      "Erga o cotovelo do braço que segura o halter até a linha do tronco.",
+      "Estenda o antebraço para trás até travar o braço paralelo ao solo.",
+      "Segure 1 segundo no topo e retorne dobrando o cotovelo sem abaixá-lo."
+    ],
+    "tips": [
+      "O cotovelo deve funcionar como uma dobradiça imóvel."
+    ]
+  },
+  {
+    "id": "bench-press-barbell",
+    "title": "Supino Reto com Barra",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [
+      "triceps",
+      "ombros"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0025",
+    "muscles_pt": "Peitoral Maior (Fibras Esternais), Tríceps Braquial, Deltoide Anterior",
+    "instructions": "O exercício rei para densidade e força do peitoral. Deite com os olhos sob a barra, retraia as escápulas e empurre com potência.",
+    "steps": [
+      "Deite-se no banco com os pés bem firmes e apoiados no chão.",
+      "Aperte as escápulas juntas contra o banco e segure a barra com pegada ligeiramente mais larga que os ombros.",
+      "Desça de forma controlada até encostar suavemente na linha dos mamilos.",
+      "Empurre a barra de volta à posição inicial sem relaxar a tensão muscular."
+    ],
+    "tips": [
+      "Mantenha os cotovelos em um ângulo de 45° a 75° do tronco, nunca a 90°.",
+      "Inspire na descida e expire no ponto máximo de esforço ao empurrar a barra."
+    ]
+  },
+  {
+    "id": "bench-press-dumbbells",
+    "title": "Supino Reto com Halteres",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [
+      "triceps",
+      "ombros"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0289",
+    "muscles_pt": "Peitoral Maior, Maior Amplitude e Convergência",
+    "instructions": "Permite maior alongamento na descida e contração convergente no topo, sem limitar os punhos.",
+    "steps": [
+      "Deite no banco segurando os halteres com os pés no chão.",
+      "Desça os halteres pelas laterais do peito até sentir bom alongamento.",
+      "Empurre para cima em trajetória convergente sem bater os halteres no topo.",
+      "Mantenha as escápulas presas no banco."
+    ],
+    "tips": [
+      "Use os joelhos para subir os halteres ao deitar."
+    ]
+  },
+  {
+    "id": "bench-press-smith-machine",
+    "title": "Supino Reto no Smith / Máquina Articulada",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [
+      "triceps",
+      "ombros"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0099",
+    "muscles_pt": "Peitoral Maior com Trajetória Fixa e Estabilidade Máxima",
+    "instructions": "Ideal para treinar até a falha com total segurança, permitindo focar 100% no recrutamento do peitoral.",
+    "steps": [
+      "Posicione o banco no centro do Smith.",
+      "Ajuste as travas de segurança na altura do peito.",
+      "Destrave a barra e desça até quase tocar o peito.",
+      "Empurre com força mantendo as escápulas retraídas."
+    ],
+    "tips": [
+      "Excelente para dropsets e repetições parciais seguras."
+    ]
+  },
+  {
+    "id": "incline-dumbbell-press",
+    "title": "Supino Inclinado com Halteres",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [
+      "ombros",
+      "triceps"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0314",
+    "muscles_pt": "Porção Clavicular do Peitoral (Superior), Deltoide Anterior",
+    "instructions": "Ajuste o banco em inclinação de 30° a 45°. Foco primordial no preenchimento do peitoral superior.",
+    "steps": [
+      "Sente-se no banco inclinado e apoie os halteres sobre os joelhos.",
+      "Use os joelhos para subir os halteres na altura do peito ao deitar.",
+      "Suba os halteres em trajetória convergente.",
+      "Desça até sentir um bom alongamento no peitoral superior."
+    ],
+    "tips": [
+      "Evite inclinar o banco a mais de 45° para não transformar o exercício em desenvolvimento de ombros."
+    ]
+  },
+  {
+    "id": "incline-barbell-bench-press",
+    "title": "Supino Inclinado com Barra",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [
+      "ombros",
+      "triceps"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0047",
+    "muscles_pt": "Peitoral Superior, Deltoide Anterior, Tríceps",
+    "instructions": "Desça a barra na parte alta do tórax (logo abaixo da clavícula) mantendo os cotovelos apontados para dentro.",
+    "steps": [
+      "Deite-se no banco inclinado e segure a barra firme.",
+      "Tire a barra do suporte e posicione sobre o peito superior.",
+      "Desça até encostar de leve na parte alta do peito.",
+      "Empurre estendendo os braços com potência."
+    ],
+    "tips": [
+      "Mantenha as escápulas retraídas contra o banco."
+    ]
+  },
+  {
+    "id": "decline-barbell-bench-press",
+    "title": "Supino Declinado com Barra (Canadense)",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [
+      "triceps"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0033",
+    "muscles_pt": "Porção Inferior do Peitoral Maior",
+    "instructions": "Banco declinado a 15°-30° com pernas travadas nos suportes. Reduz o estresse nos ombros e enfatiza o contorno inferior do peitoral.",
+    "steps": [
+      "Prenda os pés firmes nos suportes do banco declinado.",
+      "Segure a barra com pegada ligeiramente afastada.",
+      "Desça a barra na direção da linha inferior do peitoral.",
+      "Empurre para cima verticalmente até estender os braços."
+    ],
+    "tips": [
+      "Tenha sempre um parceiro de treino ou use travas de segurança ao treinar pesado no declinado."
+    ]
+  },
+  {
+    "id": "decline-dumbbell-bench-press",
+    "title": "Supino Declinado com Halteres",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [
+      "triceps"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0301",
+    "muscles_pt": "Fibras Inferiores do Peitoral Maior",
+    "instructions": "Permite contração pronunciada na base do peito sem estresse na cápsula articular dos ombros.",
+    "steps": [
+      "Deite com as pernas presas no banco declinado segurando os halteres.",
+      "Desça os pesos ao lado da linha inferior do peitoral.",
+      "Empurre os halteres para cima e para o centro com potência."
+    ],
+    "tips": [
+      "Mantenha os cotovelos a 45° do tronco."
+    ]
+  },
+  {
+    "id": "reverse-grip-bench-press",
+    "title": "Supino com Pegada Inversa (Reverse Grip)",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [
+      "triceps"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0081",
+    "muscles_pt": "Peitoral Superior (Porção Clavicular), Tríceps",
+    "instructions": "Pegada supinada na barra em banco plano. Estudos eletromiográficos mostram ativação de peitoral superior até 30% maior que no supino inclinado normal.",
+    "steps": [
+      "Segure a barra com as palmas voltadas para você (pegada supinada).",
+      "Desça a barra em direção à parte inferior do peito.",
+      "Mantenha os cotovelos colados ao corpo.",
+      "Empurre para cima estendendo os braços."
+    ],
+    "tips": [
+      "Requer ajuda para retirar e recolocar a barra no suporte por segurança."
+    ]
+  },
+  {
+    "id": "svend-press-plates",
+    "title": "Supino Svend com Anilhas (Svend Press)",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [],
+    "equipment": "outro",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0412",
+    "muscles_pt": "Miolo do Peitoral (Isometria e Adução Horizontal)",
+    "instructions": "Pressione duas anilhas uma contra a outra entre as palmas das mãos na altura do peito e empurre para frente.",
+    "steps": [
+      "Em pé, segure duas anilhas pequenas esmagadas uma contra a outra entre as palmas das mãos.",
+      "Mantenha as mãos na altura do centro do peito.",
+      "Empurre as anilhas para frente esticando os braços enquanto esmaga as anilhas com força máxima.",
+      "Puxe de volta ao peito mantendo a pressão contínua."
+    ],
+    "tips": [
+      "O peso não importa; o que importa é a força com que você esmaga uma anilha contra a outra."
+    ]
+  },
+  {
+    "id": "floor-press-barbell-dumbbells",
+    "title": "Floor Press (Supino no Chão)",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [
+      "triceps"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0309",
+    "muscles_pt": "Peitoral Maior, Tríceps, Travamento Seguro",
+    "instructions": "Deitado diretamente no chão com joelhos dobrados. O contato dos cotovelos com o solo elimina a hiperextensão do ombro.",
+    "steps": [
+      "Deite-se no chão com a barra no suporte ou halteres nas mãos.",
+      "Desça o peso até os tríceps tocarem suavemente o solo.",
+      "Pause por 1 segundo no chão sem relaxar a musculatura.",
+      "Empurre com potência de volta ao topo."
+    ],
+    "tips": [
+      "Excelente exercício para quem sente dores nos ombros ao supinar no banco."
+    ]
+  },
+  {
+    "id": "dumbbell-fly-flat",
+    "title": "Crucifixo Reto com Halteres",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0286",
+    "muscles_pt": "Peitoral Maior (Fibras Médias em Alongamento Máximo)",
+    "instructions": "Deite-se no banco plano e abra os braços em arco com uma leve flexão nos cotovelos, esticando o peitoral.",
+    "steps": [
+      "Deite com os halteres apontados para cima com palmas viradas para dentro.",
+      "Abra os braços em arco amplo até sentir o peito alongar bem.",
+      "Mantenha os cotovelos levemente flexionados e congelados nesse ângulo.",
+      "Feche os braços em arco como se estivesse abraçando um barril."
+    ],
+    "tips": [
+      "Não desça além do nível dos ombros para preservar a articulação."
+    ]
+  },
+  {
+    "id": "dumbbell-fly-incline",
+    "title": "Crucifixo Inclinado com Halteres",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0312",
+    "muscles_pt": "Peitoral Superior em Alongamento Profundo",
+    "instructions": "Banco inclinado a 30°-45°. Isola a porção superior do peitoral com foco na expansão da caixa torácica.",
+    "steps": [
+      "Deite no banco inclinado segurando os halteres.",
+      "Abra os braços controladamente pelas laterais.",
+      "Sinta o alongamento nas fibras superiores e feche até o centro."
+    ],
+    "tips": [
+      "Cargas moderadas com controle absoluto geram os melhores resultados."
+    ]
+  },
+  {
+    "id": "cable-crossover",
+    "title": "Crucifixo na Polia (Crossover)",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0188",
+    "muscles_pt": "Peitoral Maior com Tensão Contínua e Pico de Contração",
+    "instructions": "Cruze os cabos à frente do peito, permitindo cruzar ligeiramente as mãos para alcançar contração extrema.",
+    "steps": [
+      "Dê um passo à frente no centro do crossover com os cabos tensionados.",
+      "Incline o tronco levemente e abra o peito.",
+      "Traga as mãos para a frente em arco até se tocarem ou cruzarem.",
+      "Segure 1 segundo no centro e retorne devagar."
+    ],
+    "tips": [
+      "Ajuste as polias no alto para foco inferior ou embaixo para foco superior."
+    ]
+  },
+  {
+    "id": "peck-deck-machine-fly",
+    "title": "Peck Deck / Voador / Butterfly",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0307",
+    "muscles_pt": "Peitoral Maior (Isolamento Estrito sem Estabilizadores)",
+    "instructions": "Sente-se com as costas apoiadas e feche as hastes da máquina à frente do peito espremendo o músculo.",
+    "steps": [
+      "Ajuste o assento para que as manoplas fiquem na altura do meio do peito.",
+      "Apoie as costas e cabeça no encosto.",
+      "Feche os braços até as mãos quase se tocarem no centro.",
+      "Retorne resistindo ao peso até sentir o alongamento do peito."
+    ],
+    "tips": [
+      "Mantenha as escápulas coladas no encosto durante todo o tempo."
+    ]
+  },
+  {
+    "id": "hex-press-dumbbells",
+    "title": "Hex Press com Halteres",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [
+      "triceps"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0316",
+    "muscles_pt": "Miolo do Peitoral, Supino com Adução Isométrica Ativa",
+    "instructions": "Pressione dois halteres sextavados um contra o outro no centro do peito durante toda a subida e descida do supino.",
+    "steps": [
+      "Deite-se no banco segurando dois halteres com as laterais grudadas uma na outra.",
+      "Aperte um halter contra o outro com força máxima.",
+      "Desça os halteres unidos até tocarem o peito.",
+      "Empurre para cima mantendo a pressão de esmagamento contínua."
+    ],
+    "tips": [
+      "A força para dentro é o segredo desse exercício."
+    ]
+  },
+  {
+    "id": "dumbbell-pullover-chest",
+    "title": "Pull-over para Peito com Halter",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [
+      "lats"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0375",
+    "muscles_pt": "Peitoral Maior, Serrátil Anterior, Expansão Torácica",
+    "instructions": "Deite atravessado no banco com apenas a parte superior das costas apoiada. Desça o halter por trás da cabeça.",
+    "steps": [
+      "Apoie os ombros atravessados no banco com o quadril rebaixado.",
+      "Segure o halter com as duas mãos sob a anilha superior acima do peito.",
+      "Desça o peso em arco por trás da cabeça mantendo os cotovelos semiflexionados.",
+      "Puxe de volta usando a contração do peitoral até a vertical."
+    ],
+    "tips": [
+      "Mantenha o quadril baixo para potencializar o alongamento da caixa torácica."
+    ]
+  },
+  {
+    "id": "lat-pulldown",
+    "title": "Puxada Frontal na Polia (Lat Pulldown)",
+    "primary_muscle_group": "lats",
+    "secondary_muscle_groups": [
+      "biceps",
+      "costas"
+    ],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0198",
+    "muscles_pt": "Latíssimo do Dorso (Grande Dorsal), Redondo Maior, Bíceps",
+    "instructions": "O principal exercício para construir a largura das costas (formato em V). Puxe a barra em direção à parte superior do peito.",
+    "steps": [
+      "Sente-se no aparelho e trave as coxas sob os rolos acolchoados.",
+      "Segure a barra com pegada pronada mais larga que os ombros.",
+      "Incline o tronco levemente para trás (10° a 15°) e abra o peito.",
+      "Puxe a barra em direção ao peito puxando os cotovelos para baixo e para trás.",
+      "Retorne estendendo os braços e sentindo as asas alongarem."
+    ],
+    "tips": [
+      "Pense em puxar com os cotovelos e não com as mãos.",
+      "Não balance o tronco para trás para puxar a carga."
+    ]
+  },
+  {
+    "id": "lat-pulldown-close-supinated",
+    "title": "Puxada Fechada Supinada (Puxada Inversa)",
+    "primary_muscle_group": "lats",
+    "secondary_muscle_groups": [
+      "biceps"
+    ],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0199",
+    "muscles_pt": "Porção Inferior do Grande Dorsal, Bíceps Braquial",
+    "instructions": "Pegada supinada na largura dos ombros que permite amplitude completa e ativação intensa do dorsal inferior e bíceps.",
+    "steps": [
+      "Segure a barra com as palmas voltadas para você.",
+      "Puxe a barra até a altura da clavícula mantendo os cotovelos colados ao corpo.",
+      "Esprema o dorsal no ponto mais baixo e suba controladamente."
+    ],
+    "tips": [
+      "Excelente alternativa para quem quer desenvolver a inserção inferior do dorsal."
+    ]
+  },
+  {
+    "id": "lat-pulldown-triangle-v-bar",
+    "title": "Puxada com Triângulo (V-Bar Pulldown)",
+    "primary_muscle_group": "lats",
+    "secondary_muscle_groups": [
+      "biceps",
+      "costas"
+    ],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0204",
+    "muscles_pt": "Latíssimo do Dorso, Romboides, Braquial",
+    "instructions": "O pegador triângulo proporciona pegada neutra confortável, permitindo maior uso de sobrecarga com segurança articular.",
+    "steps": [
+      "Encaixe o triângulo no cabo da puxada alta.",
+      "Puxe o acessório até tocar o peito superior.",
+      "Segure 1 segundo espremendo o meio das costas e retorne devagar."
+    ],
+    "tips": [
+      "Mantenha o peito estufado no topo do movimento."
+    ]
+  },
+  {
+    "id": "pull-up",
+    "title": "Barra Fixa Pronada (Pull-up)",
+    "primary_muscle_group": "lats",
+    "secondary_muscle_groups": [
+      "biceps",
+      "costas"
+    ],
+    "equipment": "peso_corporal",
+    "type": "bodyweight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0652",
+    "muscles_pt": "Latíssimo do Dorso, Redondo Maior, Core, Antebraço",
+    "instructions": "Exercício calistênico supremo para costas. Puxe o corpo até que o queixo passe acima da barra.",
+    "steps": [
+      "Segure a barra com pegada pronada aberta.",
+      "Fique pendurado em suspensão completa com o core ativado.",
+      "Puxe o corpo para cima levando os cotovelos em direção aos bolsos da calça.",
+      "Suba até o queixo ultrapassar a barra e desça sem dar trancos."
+    ],
+    "tips": [
+      "Evite cruzar as pernas e balançar o corpo com kipping."
+    ]
+  },
+  {
+    "id": "chin-up-supinated",
+    "title": "Barra Fixa Supinada (Chin-up)",
+    "primary_muscle_group": "lats",
+    "secondary_muscle_groups": [
+      "biceps"
+    ],
+    "equipment": "peso_corporal",
+    "type": "bodyweight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0253",
+    "muscles_pt": "Dorsal, Bíceps Braquial com Alta Sobrecarga",
+    "instructions": "Palmas voltadas para o corpo na barra fixa, permitindo recrutar bíceps e dorsal com grande eficiência mecânica.",
+    "steps": [
+      "Segure a barra com pegada supinada na largura dos ombros.",
+      "Puxe o corpo para cima até o queixo passar da barra.",
+      "Desça de maneira suave controlando a descida por 2 a 3 segundos."
+    ],
+    "tips": [
+      "Permite adicionar carga extra facilmente com cinto de tração."
+    ]
+  },
+  {
+    "id": "lat-pulldown-behind-neck",
+    "title": "Puxada Atrás do Pescoço",
+    "primary_muscle_group": "lats",
+    "secondary_muscle_groups": [
+      "costas",
+      "ombros"
+    ],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0197",
+    "muscles_pt": "Grande Dorsal, Romboides, Trapézio Médio",
+    "instructions": "Variação tradicional da Era de Ouro puxando a barra rente à nuca com controle estrito de amplitude.",
+    "steps": [
+      "Segure a barra com pegada bem aberta.",
+      "Incline a cabeça ligeiramente para a frente.",
+      "Puxe a barra até a altura da nuca sem bater na vértebra.",
+      "Suba controlando o movimento."
+    ],
+    "tips": [
+      "Requer boa mobilidade de ombros; evite se sentir desconforto articular."
+    ]
+  },
+  {
+    "id": "barbell-row",
+    "title": "Remada Curvada com Barra",
+    "primary_muscle_group": "costas",
+    "secondary_muscle_groups": [
+      "biceps",
+      "lats"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0027",
+    "muscles_pt": "Romboides, Trapézio Médio/Inferior, Latíssimo do Dorso, Eretor da Espinha",
+    "instructions": "O melhor construtor de espessura e densidade para as costas. Tronco inclinado a 45° com a coluna perfeitamente neutra.",
+    "steps": [
+      "Fique em pé com os pés na largura dos ombros segurando a barra.",
+      "Flexione levemente os joelhos e empurre o quadril para trás inclinando o tronco a 45°.",
+      "Puxe a barra em direção ao umbigo puxando os cotovelos para trás.",
+      "Aperte as escápulas no topo e desça controladamente."
+    ],
+    "tips": [
+      "Nunca curve a lombar durante o exercício.",
+      "Mantenha o pescoço alinhado com a coluna olhando para o chão à frente."
+    ]
+  },
+  {
+    "id": "dumbbell-bent-over-row",
+    "title": "Remada Curvada com Halteres",
+    "primary_muscle_group": "costas",
+    "secondary_muscle_groups": [
+      "biceps"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0292",
+    "muscles_pt": "Costas Médias, Romboides, Grande Dorsal",
+    "instructions": "Com halteres, os punhos têm liberdade de rotação para puxar com pegada neutra ou pronada profunda.",
+    "steps": [
+      "Incline o tronco para a frente segurando os halteres.",
+      "Puxe os dois halteres em direção aos quadris.",
+      "Esprema as costas no topo e desça sentindo o alongamento."
+    ],
+    "tips": [
+      "Não deixe o tronco balançar para cima a cada repetição."
+    ]
+  },
+  {
+    "id": "t-bar-row-chest-supported",
+    "title": "Remada Cavalo (T-Bar Row)",
+    "primary_muscle_group": "costas",
+    "secondary_muscle_groups": [
+      "biceps",
+      "lats"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0049",
+    "muscles_pt": "Espessura das Costas, Trapézio Médio, Romboides",
+    "instructions": "Com a barra ancorada em uma ponta (Landmine) ou no aparelho cavalo com pegada fechada neutra.",
+    "steps": [
+      "Fique sobre a barra com os pés firmes nas plataformas.",
+      "Segure os pegadores neutros com a coluna travada.",
+      "Puxe o peso contra o peito/abdômen retraindo as escápulas.",
+      "Desça até estender os braços mantendo a coluna estável."
+    ],
+    "tips": [
+      "Mantenha o peito aberto e não arredonde os ombros para frente."
+    ]
+  },
+  {
+    "id": "seated-cable-row",
+    "title": "Remada Baixa na Polia com Triângulo",
+    "primary_muscle_group": "costas",
+    "secondary_muscle_groups": [
+      "biceps",
+      "lats"
+    ],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0239",
+    "muscles_pt": "Romboides, Grande Dorsal Médio, Trapézio Inferior",
+    "instructions": "Sentado no aparelho de remada baixa, puxe o triângulo em direção ao abdômen com as costas eretas.",
+    "steps": [
+      "Sente-se com os pés apoiados e joelhos levemente flexionados.",
+      "Segure o triângulo e posicione o tronco na vertical.",
+      "Puxe o acessório até a altura do umbigo estufando o peito.",
+      "Retorne esticando os braços e permitindo que as escápulas se abram suavemente."
+    ],
+    "tips": [
+      "Não jogue o tronco excessivamente para trás durante a puxada."
+    ]
+  },
+  {
+    "id": "one-arm-dumbbell-row-saw",
+    "title": "Remada Unilateral com Halter (Serrote)",
+    "primary_muscle_group": "costas",
+    "secondary_muscle_groups": [
+      "biceps",
+      "lats"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0292",
+    "muscles_pt": "Latíssimo do Dorso, Redondo Maior, Romboides",
+    "instructions": "Apoie um joelho e mão no banco. Puxe o halter com o outro braço trazendo o cotovelo rente ao quadril.",
+    "steps": [
+      "Apoie a perna e mão esquerdas no banco reto.",
+      "Segure o halter com o braço direito esticado para baixo.",
+      "Puxe o halter em direção ao quadril (não em direção ao peito).",
+      "Desça o halter sentindo o dorsal alongar no ponto mais baixo."
+    ],
+    "tips": [
+      "Pense no movimento como acionar a corda de uma serra elétrica."
+    ]
+  },
+  {
+    "id": "pendlay-row",
+    "title": "Remada Pendlay (Pendlay Row)",
+    "primary_muscle_group": "costas",
+    "secondary_muscle_groups": [
+      "lats"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0027",
+    "muscles_pt": "Potência e Força Pura das Costas e Eretor da Espinha",
+    "instructions": "Remada estrita com tronco rigorosamente paralelo ao chão (90°), onde a barra toca e descansa no chão a cada repetição.",
+    "steps": [
+      "Posicione a barra no chão como em um levantamento terra.",
+      "Curve-se até o tronco ficar paralelo ao chão e segure a barra.",
+      "Puxe com força explosiva até tocar o esterno/estômago.",
+      "Retorne a barra até o chão parando completamente antes da próxima repetição."
+    ],
+    "tips": [
+      "Zero uso de embalo; cada repetição parte da inércia zero."
+    ]
+  },
+  {
+    "id": "meadows-row-landmine",
+    "title": "Remada Meadows (Meadows Row)",
+    "primary_muscle_group": "costas",
+    "secondary_muscle_groups": [
+      "lats"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0049",
+    "muscles_pt": "Dorsal Inferior e Médio, Desenvolvido por John Meadows",
+    "instructions": "Posicione-se de lado para uma barra ancorada no chão (landmine) e puxe pela ponta grossa da barra.",
+    "steps": [
+      "Fique de lado para a barra com base afastada.",
+      "Segure a ponta da barra com pegada pronada.",
+      "Puxe o cotovelo para cima e para trás com ênfase no dorsal.",
+      "Desça sentindo o alongamento do grande dorsal no fundo."
+    ],
+    "tips": [
+      "Use anilhas menores (de 10kg ou 15kg) para garantir amplitude máxima."
+    ]
+  },
+  {
+    "id": "seal-row-bench",
+    "title": "Remada Seal no Banco Elevado (Seal Row)",
+    "primary_muscle_group": "costas",
+    "secondary_muscle_groups": [
+      "biceps"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0292",
+    "muscles_pt": "Isolamento Absoluto das Costas sem Pressão Lombar",
+    "instructions": "Deitado de bruços sobre um banco reto elevado do chão. Elimina 100% da fadiga da coluna lombar.",
+    "steps": [
+      "Deite de bruços no banco elevado com os braços suspensos para baixo.",
+      "Segure os halteres ou barra livre embaixo do banco.",
+      "Puxe até que os cotovelos ultrapassem a linha do tronco.",
+      "Aperte as costas no topo e desça devagar."
+    ],
+    "tips": [
+      "Perfeito para quem sofre com hérnias ou fadiga lombar."
+    ]
+  },
+  {
+    "id": "straight-arm-pulldown-cable",
+    "title": "Pull-down com Braços Estendidos no Cabo",
+    "primary_muscle_group": "lats",
+    "secondary_muscle_groups": [
+      "triceps"
+    ],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0238",
+    "muscles_pt": "Isolamento Completo do Grande Dorsal sem Fadiga do Bíceps",
+    "instructions": "Com os braços quase retos, empurre a barra ou corda da altura da testa até encostar nas coxas.",
+    "steps": [
+      "Fique em pé de frente para a polia alta segurando a barra com pegada pronada.",
+      "Afaste-se e incline o tronco a 30° com cotovelos quase travados.",
+      "Empurre a barra para baixo em arco até tocar as coxas.",
+      "Esprema as asas por 1 segundo e retorne até a altura dos olhos."
+    ],
+    "tips": [
+      "Não dobre os cotovelos durante o movimento para não transformar em tríceps pulley."
+    ]
+  },
+  {
+    "id": "rack-pull-barbell",
+    "title": "Meio Levantamento Terra (Rack Pull)",
+    "primary_muscle_group": "costas",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0072",
+    "muscles_pt": "Trapézio Superior e Médio, Eretor da Espinha, Densidade das Costas",
+    "instructions": "Levantamento terra partindo das travas do rack na altura dos joelhos, focando na extensão de quadril e espessura das costas com alta carga.",
+    "steps": [
+      "Ajuste os suportes para a barra ficar logo abaixo ou na linha dos joelhos.",
+      "Segure a barra com pegada mista ou pronada com strap.",
+      "Estufe o peito, trave a coluna e empurre o quadril para frente até ficar reto.",
+      "Aperte as costas no topo e desça controladamente de volta às travas."
+    ],
+    "tips": [
+      "Permite manipular cargas elevadas com foco puro nas costas."
+    ]
+  },
+  {
+    "id": "overhead-press-barbell",
+    "title": "Desenvolvimento Militar Overhead Press (OHP)",
+    "primary_muscle_group": "ombros",
+    "secondary_muscle_groups": [
+      "triceps"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0091",
+    "muscles_pt": "Deltoide Anterior e Lateral, Tríceps, Core e Estabilidade",
+    "instructions": "Em pé, empurre a barra da altura da clavícula até acima da cabeça com os braços esticados.",
+    "steps": [
+      "Segure a barra na largura dos ombros com os antebraços verticais.",
+      "Contraia glúteos e abdômen firmemente.",
+      "Empurre a barra para cima passando rente ao rosto.",
+      "Trave a barra no topo diretamente sobre a cabeça e desça controlando."
+    ],
+    "tips": [
+      "Não arqueie as costas para trás ao empurrar."
+    ]
+  },
+  {
+    "id": "arnold-press-dumbbells",
+    "title": "Desenvolvimento Arnold com Halteres (Arnold Press)",
+    "primary_muscle_group": "ombros",
+    "secondary_muscle_groups": [
+      "triceps"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0011",
+    "muscles_pt": "Deltoide Anterior e Lateral com Rotação Completa",
+    "instructions": "Inicia com as palmas voltadas para você na altura do queixo e gira os punhos durante a subida até palmas para a frente.",
+    "steps": [
+      "Sente-se com as costas retas segurando os halteres na frente do peito com palmas para dentro.",
+      "Abra os cotovelos para os lados enquanto empurra os pesos para cima.",
+      "Termine no topo com os braços esticados e palmas para a frente.",
+      "Inverta o movimento girando os punhos de volta à posição inicial."
+    ],
+    "tips": [
+      "A rotação recruta todas as cabeças do deltoide em uma única repetição."
+    ]
+  },
+  {
+    "id": "seated-dumbbell-shoulder-press",
+    "title": "Desenvolvimento com Halteres Sentado",
+    "primary_muscle_group": "ombros",
+    "secondary_muscle_groups": [
+      "triceps"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0329",
+    "muscles_pt": "Deltoide Anterior e Lateral",
+    "instructions": "No banco com encosto reto a 85°-90°, empurre os halteres para cima mantendo estabilidade completa.",
+    "steps": [
+      "Sente-se com as costas apoiadas e erga os halteres na altura das orelhas.",
+      "Empurre os halteres verticalmente para o alto até quase se tocarem.",
+      "Desça controladamente até que os halteres fiquem na linha das orelhas."
+    ],
+    "tips": [
+      "Não encoste os halteres com força no topo."
+    ]
+  },
+  {
+    "id": "smith-machine-shoulder-press",
+    "title": "Desenvolvimento na Máquina Smith",
+    "primary_muscle_group": "ombros",
+    "secondary_muscle_groups": [
+      "triceps"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0102",
+    "muscles_pt": "Deltoides com Máxima Estabilidade e Isolamento",
+    "instructions": "A barra guiada do Smith permite focar na sobrecarga pura do ombro sem desvio lateral.",
+    "steps": [
+      "Ajuste o banco no Smith para a barra descer logo na frente do nariz/queixo.",
+      "Destrave a barra e empurre até a extensão quase total.",
+      "Desça de volta até a altura do queixo."
+    ],
+    "tips": [
+      "Mantenha os cotovelos sob a barra."
+    ]
+  },
+  {
+    "id": "lateral-raise-dumbbell",
+    "title": "Elevação Lateral com Halteres",
+    "primary_muscle_group": "ombros",
+    "secondary_muscle_groups": [],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0334",
+    "muscles_pt": "Deltoide Lateral (Ombros Largos em Formato de Globo)",
+    "instructions": "O exercício definitivo para largura dos ombros. Eleve os halteres pelas laterais até a altura dos ombros.",
+    "steps": [
+      "Fique em pé com os halteres ao lado das coxas com cotovelos levemente destravados.",
+      "Erga os braços para os lados até ficarem paralelos ao chão.",
+      "Mantenha o dedo mindinho ligeiramente mais alto que o polegar.",
+      "Desça de maneira controlada sem deixar os halteres colidirem."
+    ],
+    "tips": [
+      "Não use embalo do quadril para levantar a carga.",
+      "Imagine que está servindo jarras de água no topo do movimento."
+    ]
+  },
+  {
+    "id": "lateral-raise-cable-low",
+    "title": "Elevação Lateral na Polia Baixa",
+    "primary_muscle_group": "ombros",
+    "secondary_muscle_groups": [],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0225",
+    "muscles_pt": "Deltoide Lateral com Tensão Inicial Contínua",
+    "instructions": "No cabo, a resistência é imediata logo a partir do início do movimento, superando o ponto morto do halter.",
+    "steps": [
+      "Posicione-se ao lado da polia baixa e segure a manopla com a mão oposta passando o cabo por trás ou pela frente do corpo.",
+      "Puxe o cabo lateralmente até a altura do ombro.",
+      "Segure 1 segundo no topo e retorne controladamente."
+    ],
+    "tips": [
+      "Excelente para hipertrofia do deltoide lateral."
+    ]
+  },
+  {
+    "id": "front-raise-dumbbell-barbell",
+    "title": "Elevação Frontal com Halteres / Barra",
+    "primary_muscle_group": "ombros",
+    "secondary_muscle_groups": [
+      "peito"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0310",
+    "muscles_pt": "Deltoide Anterior (Parte Frontal do Ombro)",
+    "instructions": "Eleve os braços para a frente até a linha dos olhos mantendo os cotovelos semiflexionados.",
+    "steps": [
+      "Segure os halteres à frente das coxas com pegada pronada.",
+      "Erga os braços à frente até a linha do olhar.",
+      "Controle a descida resistindo à gravidade."
+    ],
+    "tips": [
+      "Não balance o tronco para trás ao subir os pesos."
+    ]
+  },
+  {
+    "id": "rear-delt-fly-dumbbell",
+    "title": "Crucifixo Inverso com Halteres (Rear Delt Fly)",
+    "primary_muscle_group": "ombros",
+    "secondary_muscle_groups": [
+      "costas"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0378",
+    "muscles_pt": "Deltoide Posterior, Romboides, Trapézio",
+    "instructions": "Com o tronco inclinado a 90° ou peito apoiado no banco, abra os braços para os lados focando na parte traseira dos ombros.",
+    "steps": [
+      "Incline o tronco para a frente quase paralelo ao chão.",
+      "Segure os halteres pendurados com cotovelos levemente flexionados.",
+      "Abra os braços para os lados puxando com o posterior de ombro.",
+      "Segure no topo e desça com controle estrito."
+    ],
+    "tips": [
+      "Não junte as escápulas com força excessiva para manter o foco no deltoide posterior."
+    ]
+  },
+  {
+    "id": "peck-deck-rear-delt-reverse-fly",
+    "title": "Crucifixo Inverso no Peck Deck / Máquina",
+    "primary_muscle_group": "ombros",
+    "secondary_muscle_groups": [
+      "costas"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0380",
+    "muscles_pt": "Deltoide Posterior com Isolamento Estrito",
+    "instructions": "Sente-se de frente para o encosto do Peck Deck e empurre as hastes para trás com pegada neutra ou pronada.",
+    "steps": [
+      "Ajuste o assento para que as manoplas fiquem na linha dos ombros.",
+      "Apoie o peito no encosto e segure as manoplas.",
+      "Empurre as manoplas para trás abrindo os braços em arco.",
+      "Esprema o posterior do ombro e retorne devagar."
+    ],
+    "tips": [
+      "Mantenha os cotovelos altos na linha dos ombros."
+    ]
+  },
+  {
+    "id": "face-pull-cable-rope",
+    "title": "Face Pull na Polia Alta com Corda",
+    "primary_muscle_group": "ombros",
+    "secondary_muscle_groups": [
+      "costas"
+    ],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0190",
+    "muscles_pt": "Deltoide Posterior, Manguito Rotador, Trapézio, Saúde Postural",
+    "instructions": "Puxe a corda da polia alta em direção ao rosto, abrindo as mãos e rodando os ombros externamente.",
+    "steps": [
+      "Ajuste a polia na altura dos olhos e segure a corda com pegada neutra ou polegares para trás.",
+      "Dê dois passos para trás e estabilize a postura.",
+      "Puxe a corda em direção ao nariz separando as mãos.",
+      "Finalize com rotação externa dos ombros espremendo as costas."
+    ],
+    "tips": [
+      "Essencial para a saúde e longevidade articular dos ombros de quem faz muito supino."
+    ]
+  },
+  {
+    "id": "shrug-barbell",
+    "title": "Encolhimento de Ombros com Barra (Shrugs)",
+    "primary_muscle_group": "costas",
+    "secondary_muscle_groups": [
+      "ombros"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0094",
+    "muscles_pt": "Trapézio Superior",
+    "instructions": "Em pé segurando a barra pesada, eleve os ombros em direção às orelhas sem dobrar os cotovelos.",
+    "steps": [
+      "Segure a barra à frente das coxas com pegada na largura dos ombros.",
+      "Encolha os ombros verticalmente para cima como se dissesse \"não sei\".",
+      "Segure no topo por 1 a 2 segundos apertando o trapézio.",
+      "Desça até sentir o alongamento do músculo."
+    ],
+    "tips": [
+      "Nunca gire os ombros em círculos; o movimento deve ser estritamente vertical."
+    ]
+  },
+  {
+    "id": "shrug-dumbbells",
+    "title": "Encolhimento de Ombros com Halteres",
+    "primary_muscle_group": "costas",
+    "secondary_muscle_groups": [
+      "ombros"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0403",
+    "muscles_pt": "Trapézio Superior com Pegada Neutra",
+    "instructions": "Com halteres nas laterais das coxas, a linha de ação fica perfeitamente alinhada com as fibras do trapézio.",
+    "steps": [
+      "Segure os halteres ao lado do corpo.",
+      "Puxe os ombros para cima em direção às orelhas.",
+      "Esprema o trapézio no topo e desça controladamente."
+    ],
+    "tips": [
+      "Pode-se usar straps para não falhar a pegada antes do trapézio."
+    ]
+  },
+  {
+    "id": "squat-barbell",
+    "title": "Agachamento Livre com Barra (Back Squat)",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0043",
+    "muscles_pt": "Quadríceps, Glúteo Máximo, Adutores, Core",
+    "instructions": "O exercício mais completo para pernas. Apoie a barra no trapézio, flexione quadris e joelhos e desça mantendo o tronco firme.",
+    "steps": [
+      "Posicione a barra sobre o trapézio superior e tire-a do rack com os pés paralelos.",
+      "Afaste os pés na largura dos ombros com as pontas levemente voltadas para fora.",
+      "Inspire, trave o abdômen e agache empurrando os joelhos para fora na direção dos dedos.",
+      "Desça até as coxas quebrarem a linha do paralelo (90° ou mais).",
+      "Empurre o chão através dos calcanhares para retornar à posição inicial."
+    ],
+    "tips": [
+      "Mantenha os calcanhares colados no chão o tempo todo.",
+      "Não deixe os joelhos caírem para dentro (valgo dinâmico) ao subir."
+    ]
+  },
+  {
+    "id": "front-squat-barbell",
+    "title": "Agachamento Frontal com Barra (Front Squat)",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0042",
+    "muscles_pt": "Quadríceps Isolado, Reto Abdominal, Eretores Torácicos",
+    "instructions": "Barra apoiada na parte frontal dos deltoides. Exige tronco ereto e transfere a maior parte do esforço diretamente para o quadríceps.",
+    "steps": [
+      "Apoie a barra nos ombros frontais com os cotovelos elevados e paralelos ao chão.",
+      "Agache verticalmente com o tronco o mais reto possível.",
+      "Desça até a amplitude profunda.",
+      "Empurre o solo mantendo os cotovelos altos."
+    ],
+    "tips": [
+      "Excelente para quem quer construir quadríceps sem sobrecarga lombar."
+    ]
+  },
+  {
+    "id": "hack-squat-machine",
+    "title": "Agachamento Hack na Máquina (Hack Squat)",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0044",
+    "muscles_pt": "Quadríceps (Vasto Lateral, Medial e Intermédio)",
+    "instructions": "Máquina guiada com as costas apoiadas em ângulo de 45°. Permite atingir falha muscular total no quadríceps com segurança.",
+    "steps": [
+      "Apoie os ombros e costas no acolchoado do Hack.",
+      "Posicione os pés na plataforma na largura dos ombros.",
+      "Destrave a máquina e desça dobrando os joelhos até pelo menos 90°.",
+      "Empurre a plataforma de volta sem travar bruscamente os joelhos."
+    ],
+    "tips": [
+      "Pés mais baixos na plataforma focam mais no quadríceps; pés mais altos focam mais em glúteo."
+    ]
+  },
+  {
+    "id": "bulgarian-split-squat",
+    "title": "Agachamento Búlgaro com Halteres",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0084",
+    "muscles_pt": "Quadríceps, Glúteo Máximo, Estabilidade Unilateral",
+    "instructions": "Com o pé traseiro apoiado em um banco atrás de você, agache na perna da frente até a coxa ficar paralela ao chão.",
+    "steps": [
+      "Fique de costas para o banco e apoie a ponta de um pé no estofado.",
+      "Dê um passo à frente com a outra perna segurando os halteres.",
+      "Desça o quadril verticalmente até o joelho traseiro quase encostar no chão.",
+      "Empurre com o calcanhar da perna da frente para subir."
+    ],
+    "tips": [
+      "Tronco ereto foca no quadríceps; tronco levemente inclinado foca no glúteo."
+    ]
+  },
+  {
+    "id": "goblet-squat-dumbbell",
+    "title": "Agachamento Goblet com Halter / Kettlebell",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0311",
+    "muscles_pt": "Quadríceps, Core, Mobilidade de Quadril",
+    "instructions": "Segure o halter na vertical junto ao peito como uma taça e agache profundamente mantendo o tronco ereto.",
+    "steps": [
+      "Segure o halter verticalmente com ambas as mãos apoiadas sob a cabeça do peso no peito.",
+      "Afaste os pés e aponte os joelhos na direção dos dedos.",
+      "Agache fundo encaixando os cotovelos entre os joelhos no ponto mais baixo.",
+      "Suba empurrando o chão com os calcanhares."
+    ],
+    "tips": [
+      "Fantástico para aquecimento e correção do padrão de agachamento."
+    ]
+  },
+  {
+    "id": "leg-press",
+    "title": "Leg Press 45º",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0739",
+    "muscles_pt": "Quadríceps, Glúteo Máximo, Isquiotibiais",
+    "instructions": "Empurre a plataforma pesada com as pernas a partir de uma posição sentada segura.",
+    "steps": [
+      "Sente-se no aparelho mantendo o quadril e a lombar colados no encosto.",
+      "Posicione os pés na plataforma na largura dos ombros.",
+      "Destrave a máquina e desça a plataforma até formar um ângulo de 90° nos joelhos.",
+      "Empurre com força através dos calcanhares sem esticar os joelhos até o travamento ósseo."
+    ],
+    "tips": [
+      "Nunca tire a lombar do banco durante a descida para não comprimir os discos vertebrais.",
+      "Não segure nos joelhos; use as manoplas laterais da máquina."
+    ]
+  },
+  {
+    "id": "lunges-dumbbell",
+    "title": "Afundo / Passada com Halteres (Lunges)",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0336",
+    "muscles_pt": "Quadríceps, Glúteos, Coordenação e Equilíbrio",
+    "instructions": "Dê um passo à frente e flexione ambos os joelhos a 90° de forma alternada ou caminhando.",
+    "steps": [
+      "Segure os halteres ao lado do corpo com postura ereta.",
+      "Dê um passo largo à frente e abaixe o quadril até o joelho traseiro quase tocar o chão.",
+      "Empurre o chão com a perna dianteira voltando à posição inicial ou dando o próximo passo."
+    ],
+    "tips": [
+      "Mantenha o joelho da frente alinhado com o tornozelo, sem projetar excessivamente além dos dedos."
+    ]
+  },
+  {
+    "id": "leg-extension",
+    "title": "Cadeira Extensora",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0585",
+    "muscles_pt": "Reto Femoral, Vasto Lateral, Vasto Medial e Vasto Intermédio",
+    "instructions": "Exercício de isolamento puro para quadríceps. Estenda os joelhos até o alinhamento completo.",
+    "steps": [
+      "Ajuste o encosto para que a dobra do joelho fique alinhada com o eixo da máquina.",
+      "Apoie o rolo acolchoado na parte frontal das canelas, logo acima dos pés.",
+      "Estenda as pernas para cima até travar os joelhos e contraia o quadríceps por 1 segundo.",
+      "Desça de maneira suave e controlada."
+    ],
+    "tips": [
+      "Segure firme nas manoplas laterais para manter o quadril travado no banco."
+    ]
+  },
+  {
+    "id": "stiff-deadlift-barbell",
+    "title": "Stiff com Barra (Stiff-Legged Deadlift)",
+    "primary_muscle_group": "isquiotibiais",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0096",
+    "muscles_pt": "Isquiotibiais (Bíceps Femoral, Semitendíneo, Semimembranáceo), Glúteo",
+    "instructions": "Com joelhos quase retos e pés paralelos, empurre o quadril para trás descendo a barra pelas canelas com alongamento profundo.",
+    "steps": [
+      "Fique em pé segurando a barra na largura dos ombros.",
+      "Destrave levemente os joelhos e mantenha esse ângulo fixo.",
+      "Empurre o quadril para trás enquanto desce a barra colada nas pernas.",
+      "Sinta os posteriores de coxa esticarem ao máximo e retorne contraindo os glúteos."
+    ],
+    "tips": [
+      "A coluna deve permanecer reta do início ao fim; nunca curve as costas."
+    ]
+  },
+  {
+    "id": "stiff-deadlift-dumbbells",
+    "title": "Stiff com Halteres",
+    "primary_muscle_group": "isquiotibiais",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "halteres",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0408",
+    "muscles_pt": "Isquiotibiais, Glúteos",
+    "instructions": "Permite descer os halteres rente às laterais das pernas respeitando a anatomia individual de quadril.",
+    "steps": [
+      "Segure os halteres à frente das coxas.",
+      "Jogue o quadril para trás descendo os pesos até a metade da canela.",
+      "Suba estendendo o quadril."
+    ],
+    "tips": [
+      "Foque no movimento do quadril indo para trás, e não em abaixar o tronco."
+    ]
+  },
+  {
+    "id": "romanian-deadlift",
+    "title": "RDL - Levantamento Terra Romeno",
+    "primary_muscle_group": "isquiotibiais",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0085",
+    "muscles_pt": "Isquiotibiais, Glúteo Máximo, Eretores da Espinha",
+    "instructions": "Começa de cima. Flexione os joelhos ligeiramente mais que no stiff para permitir maior sobrecarga com foco na cadeia posterior.",
+    "steps": [
+      "Tire a barra do suporte ficando em pé ereto.",
+      "Deslize a barra pelas coxas enquanto joga o bumbum para trás.",
+      "Pare logo abaixo dos joelhos quando os posteriores estiverem sob tensão máxima.",
+      "Empurre o quadril para frente contraindo os glúteos no topo."
+    ],
+    "tips": [
+      "Mantenha a barra colada nas pernas em todo o trajeto."
+    ]
+  },
+  {
+    "id": "deadlift-barbell",
+    "title": "Levantamento Terra Convencional com Barra",
+    "primary_muscle_group": "costas",
+    "secondary_muscle_groups": [
+      "gluteos",
+      "isquiotibiais",
+      "quadriceps"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0032",
+    "muscles_pt": "Cadeia Posterior Completa: Eretores, Glúteos, Isquiotibiais, Trapézio, Antebraços",
+    "instructions": "O teste definitivo de força bruta do corpo humano. Puxe a barra do chão até a posição ereta travando o quadril.",
+    "steps": [
+      "Posicione os pés na largura do quadril com a barra sobre o meio do pé.",
+      "Dobre os joelhos e segure a barra logo por fora das pernas.",
+      "Estufe o peito, abaixe o quadril e trave a coluna.",
+      "Empurre o chão com as pernas erguendo a barra mantendo-a colada nas canelas e coxas.",
+      "Fique ereto no topo sem inclinar para trás e desça de forma controlada."
+    ],
+    "tips": [
+      "Mantenha a barra colada no corpo em todos os centímetros do trajeto.",
+      "Use a respiração diafragmática (Manobra de Valsalva) para proteger a coluna."
+    ]
+  },
+  {
+    "id": "sumo-deadlift-barbell",
+    "title": "Levantamento Terra Sumô",
+    "primary_muscle_group": "gluteos",
+    "secondary_muscle_groups": [
+      "isquiotibiais",
+      "quadriceps"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0097",
+    "muscles_pt": "Glúteos, Adutores, Quadríceps, Eretor da Espinha",
+    "instructions": "Base aberta com pés apontados para fora e pegada por dentro dos joelhos. Reduz a distância da barra ao solo.",
+    "steps": [
+      "Adote uma postura bem ampla com os pés próximos aos pratos de peso.",
+      "Aponte os pés a 45° para fora.",
+      "Segure a barra com as mãos por dentro das pernas.",
+      "Empurre os joelhos para fora e suba com o tronco mais ereto que no terra convencional."
+    ],
+    "tips": [
+      "Excelente variação para quem tem fêmur longo ou busca hipertrofia de glúteos e adutores."
+    ]
+  },
+  {
+    "id": "lying-leg-curl-machine",
+    "title": "Mesa Flexora / Flexor Deitado",
+    "primary_muscle_group": "isquiotibiais",
+    "secondary_muscle_groups": [],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0586",
+    "muscles_pt": "Isquiotibiais (Bíceps Femoral, Semitendíneo)",
+    "instructions": "Deite-se de bruços e flexione os joelhos puxando o rolo acolchoado em direção aos glúteos.",
+    "steps": [
+      "Deite-se no aparelho com o rolo posicionado logo abaixo das panturrilhas.",
+      "Segure firme nas manoplas mantendo o quadril colado no banco.",
+      "Puxe os calcanhares em direção aos glúteos em movimento forte e fluido.",
+      "Segure 1 segundo no topo e retorne controlando a descida."
+    ],
+    "tips": [
+      "Não deixe o quadril se erguer do banco durante a contração máxima."
+    ]
+  },
+  {
+    "id": "seated-leg-curl-machine",
+    "title": "Cadeira Flexora Sentada",
+    "primary_muscle_group": "isquiotibiais",
+    "secondary_muscle_groups": [],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0587",
+    "muscles_pt": "Isquiotibiais em Posição de Alongamento Pélvico",
+    "instructions": "Na posição sentada, o quadril fica flexionado a 90°, colocando os posteriores sob maior tensão de alongamento.",
+    "steps": [
+      "Sente-se com as costas apoiadas e trave o suporte acolchoado sobre as coxas.",
+      "Posicione as pernas estendidas com o rolo sob os tornozelos.",
+      "Flexione os joelhos puxando o rolo para baixo e para trás.",
+      "Retorne devagar sentindo o músculo esticar."
+    ],
+    "tips": [
+      "Estudos comprovam que a cadeira flexora gera ligeira superioridade de hipertrofia sobre a mesa flexora."
+    ]
+  },
+  {
+    "id": "hip-thrust-barbell",
+    "title": "Elevação Pélvica com Barra (Hip Thrust)",
+    "primary_muscle_group": "gluteos",
+    "secondary_muscle_groups": [
+      "isquiotibiais"
+    ],
+    "equipment": "barra",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0046",
+    "muscles_pt": "Glúteo Máximo (Maior Ativação de Toda a Musculação)",
+    "instructions": "Com as costas apoiadas no banco e barra acolchoada sobre o quadril, empurre o quadril para cima até o alinhamento com o tronco.",
+    "steps": [
+      "Sente-se no chão encostando as escápulas na borda de um banco estável.",
+      "Posicione a barra com protetor acolchoado na linha do quadril.",
+      "Pés apoiados firmes no chão na largura dos ombros.",
+      "Empurre pelos calcanhares erguendo o quadril até ficar paralelo ao chão.",
+      "Aperte os glúteos no topo por 1 a 2 segundos com o queixo recolhido para o peito."
+    ],
+    "tips": [
+      "Mantenha o olhar para frente (não olhe para o teto) para evitar hiperextensão lombar."
+    ]
+  },
+  {
+    "id": "cable-glute-kickback",
+    "title": "Glúteo na Polia / Cabo (Extensão de Quadril)",
+    "primary_muscle_group": "gluteos",
+    "secondary_muscle_groups": [],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0224",
+    "muscles_pt": "Glúteo Máximo, Formato e Pico de Contração",
+    "instructions": "Com caneleira acoplada à polia baixa, empurre a perna para trás e para cima contraindo o glúteo.",
+    "steps": [
+      "Prenda a tornozeleira na polia baixa e fique de frente para o aparelho.",
+      "Segure na estrutura e incline o tronco levemente.",
+      "Estenda a perna para trás em arco até a contração máxima do glúteo.",
+      "Retorne suavemente sem deixar os pesos encostarem."
+    ],
+    "tips": [
+      "Não curve a lombar para chutar mais alto; o movimento ocorre exclusivamente no quadril."
+    ]
+  },
+  {
+    "id": "abductor-machine",
+    "title": "Cadeira Abdutora",
+    "primary_muscle_group": "gluteos",
+    "secondary_muscle_groups": [],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0584",
+    "muscles_pt": "Glúteo Médio e Glúteo Mínimo (Desenho Lateral do Quadril)",
+    "instructions": "Sentada na máquina abdutora, empurre as almofadas para fora abrindo as pernas contra a resistência.",
+    "steps": [
+      "Sente-se com as costas apoiadas e joelhos encaixados nas almofadas.",
+      "Empurre as pernas para fora o máximo possível.",
+      "Segure a abertura por 1 segundo e retorne sem deixar as placas baterem."
+    ],
+    "tips": [
+      "Inclinar o tronco levemente para a frente aumenta o recrutamento das fibras superiores do glúteo."
+    ]
+  },
+  {
+    "id": "standing-calf-raise",
+    "title": "Gêmeos em Pé (Elevação de Calcanhares)",
+    "primary_muscle_group": "panturrilha",
+    "secondary_muscle_groups": [],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "1372",
+    "muscles_pt": "Gastrocnêmio (Cabeça Medial e Lateral), Sóleo",
+    "instructions": "Com os joelhos estendidos e as pontas dos pés na borda de um degrau, erga os calcanhares o mais alto possível.",
+    "steps": [
+      "Apoie os ombros nas almofadas do aparelho ou use a máquina Smith.",
+      "Posicione apenas a ponta dos pés na borda do degrau.",
+      "Desça os calcanhares ao máximo sentindo o alongamento da fáscia.",
+      "Suba na ponta dos pés com potência e segure 2 segundos no pico da contração."
+    ],
+    "tips": [
+      "Faça uma pausa de 1 segundo embaixo para tirar o efeito elástico do tendão de Aquiles."
+    ]
+  },
+  {
+    "id": "seated-calf-raise-machine",
+    "title": "Gêmeos Sentado na Máquina (Seated Calf Raise)",
+    "primary_muscle_group": "panturrilha",
+    "secondary_muscle_groups": [],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "1373",
+    "muscles_pt": "Músculo Sóleo (Espessura e Volume Lateral da Panturrilha)",
+    "instructions": "Com os joelhos dobrados a 90°, o gastrocnêmio é encurtado e o músculo sóleo assume quase todo o trabalho mecânico.",
+    "steps": [
+      "Sente-se com a almofada sobre as coxas e pontas dos pés no apoio.",
+      "Destrave a alavanca de segurança.",
+      "Desça os calcanhares para alongamento total.",
+      "Empurre com as pontas dos pés até a contração máxima e segure 1 segundo."
+    ],
+    "tips": [
+      "Fundamental para dar espessura à panturrilha quando vista de frente."
+    ]
+  },
+  {
+    "id": "leg-press-calf-raise",
+    "title": "Panturrilha no Leg Press 45º",
+    "primary_muscle_group": "panturrilha",
+    "secondary_muscle_groups": [],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "1374",
+    "muscles_pt": "Gastrocnêmio, Sóleo com Alta Carga Guiada",
+    "instructions": "Apoie apenas as pontas dos pés na borda inferior da plataforma do Leg Press e faça a flexão plantar completa.",
+    "steps": [
+      "Sente-se no Leg Press com as pernas quase esticadas (joelhos destravados).",
+      "Posicione as pontas dos pés na borda inferior da plataforma com calcanhares soltos.",
+      "Deixe a plataforma descer suavemente esticando as panturrilhas.",
+      "Empurre a plataforma na ponta dos pés o mais longe possível."
+    ],
+    "tips": [
+      "Deixe as travas de segurança sempre ativadas por proteção."
+    ]
+  },
+  {
+    "id": "cable-crunch-kneeling",
+    "title": "Abdominal na Polia Alta com Corda (Cable Crunch)",
+    "primary_muscle_group": "abdomen",
+    "secondary_muscle_groups": [],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0221",
+    "muscles_pt": "Reto Abdominal com Sobrecarga Progressiva",
+    "instructions": "Ajoelhado de frente para a polia alta, segure a corda junto à cabeça e flexione a coluna enrolando o tronco em direção ao chão.",
+    "steps": [
+      "Ajoelhe-se a cerca de meio metro da polia alta segurando as pontas da corda ao lado da cabeça.",
+      "Fixe o quadril no lugar (não sente nos calcanhares).",
+      "Enrole a coluna trazendo os cotovelos em direção aos joelhos usando o abdômen.",
+      "Solte o ar completamente no ponto máximo e retorne suavemente sem mover o quadril."
+    ],
+    "tips": [
+      "Não puxe com os braços; os braços apenas seguram a corda, quem curva o tronco é o abdômen."
+    ]
+  },
+  {
+    "id": "hanging-leg-raise",
+    "title": "Elevação de Pernas Suspenso (Hanging Leg Raise)",
+    "primary_muscle_group": "abdomen",
+    "secondary_muscle_groups": [],
+    "equipment": "peso_corporal",
+    "type": "bodyweight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0472",
+    "muscles_pt": "Porção Infra do Reto Abdominal, Oblíquos, Flexores do Quadril",
+    "instructions": "Pendure-se em uma barra fixa e eleve as pernas retas ou joelhos até a linha do peito girando o quadril para cima.",
+    "steps": [
+      "Fique pendurado na barra fixa com os braços estendidos e corpo imóvel.",
+      "Eleve as pernas em direção ao teto, enrolando a pelve para cima no final.",
+      "Segure 1 segundo no topo sem balançar o corpo.",
+      "Desça de maneira controlada sem usar o impulso do pêndulo."
+    ],
+    "tips": [
+      "O segredo é girar o quadril para cima; se apenas erguer as pernas, só trabalhará o iliopsoas."
+    ]
+  },
+  {
+    "id": "ab-wheel-rollout",
+    "title": "Abdominal com Roda (Ab Wheel Rollout)",
+    "primary_muscle_group": "abdomen",
+    "secondary_muscle_groups": [
+      "costas",
+      "ombros"
+    ],
+    "equipment": "outro",
+    "type": "bodyweight_reps",
+    "animation_type": "deadlift",
+    "gif_id": "0001",
+    "muscles_pt": "Reto Abdominal, Transverso do Abdômen, Grande Dorsal",
+    "instructions": "Ajoelhado no chão, role a roda abdominal para a frente mantendo o abdômen travado e retorne com força do core.",
+    "steps": [
+      "Ajoelhe-se segurando as manoplas da roda no chão abaixo dos ombros.",
+      "Arredonde ligeiramente as costas e trave o abdômen com firmeza.",
+      "Role a roda para a frente estendendo o corpo o máximo que conseguir sem deixar a lombar arquear.",
+      "Puxe a roda de volta contraindo o abdômen."
+    ],
+    "tips": [
+      "Se a lombar doer, você foi longe demais. Controle a distância."
+    ]
+  },
+  {
+    "id": "plank-isometric",
+    "title": "Prancha Ventral Isométrica",
+    "primary_muscle_group": "abdomen",
+    "secondary_muscle_groups": [
+      "ombros"
+    ],
+    "equipment": "peso_corporal",
+    "type": "duration",
+    "animation_type": "bench_press",
+    "gif_id": "0648",
+    "muscles_pt": "Transverso do Abdômen, Reto Abdominal, Estabilidade da Coluna",
+    "instructions": "Apoie os antebraços e pontas dos pés no solo mantendo o corpo perfeitamente reto e rígido como uma tábua.",
+    "steps": [
+      "Apoie os antebraços no chão na largura dos ombros.",
+      "Estenda as pernas para trás com os pés juntos.",
+      "Contraia glúteos e puxe o umbigo em direção às costas.",
+      "Mantenha a respiração estável durante o tempo estipulado."
+    ],
+    "tips": [
+      "Não deixe o quadril cair nem aponte as nádegas para cima."
+    ]
+  },
+  {
+    "id": "treadmill-running",
+    "title": "Esteira (Caminhada / Corrida)",
+    "primary_muscle_group": "cardio",
+    "secondary_muscle_groups": [
+      "panturrilha"
+    ],
+    "equipment": "maquina",
+    "type": "distance_duration",
+    "animation_type": "squat",
+    "gif_id": "3656",
+    "muscles_pt": "Sistema Cardiorrespiratório, Membros Inferiores",
+    "instructions": "Exercício aeróbico para condicionamento cardiovascular, queima calórica e aquecimento muscular.",
+    "steps": [
+      "Suba na esteira com a máquina desligada ou em baixa velocidade.",
+      "Ajuste a velocidade e inclinação desejadas.",
+      "Mantenha a postura ereta olhando para a frente sem se apoiar nas barras laterais.",
+      "Finalize com 2 minutos de desaceleração progressiva."
+    ],
+    "tips": [
+      "Excelente como aquecimento pré-treino (5 a 10 min) ou cardio pós-treino."
     ]
   }
 ];

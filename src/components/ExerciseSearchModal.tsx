@@ -17,6 +17,7 @@ const MUSCLE_FILTERS: { label: string; value: MuscleGroup | 'all' }[] = [
   { label: 'Ombros', value: 'ombros' },
   { label: 'Bíceps', value: 'biceps' },
   { label: 'Tríceps', value: 'triceps' },
+  { label: 'Antebraço', value: 'antebraco' },
   { label: 'Quadríceps', value: 'quadriceps' },
   { label: 'Posterior', value: 'isquiotibiais' },
   { label: 'Glúteos', value: 'gluteos' },
@@ -32,6 +33,7 @@ const getMuscleBadge = (muscle: string) => {
   if (m.includes('ombros')) return 'OMBROS';
   if (m.includes('biceps')) return 'BÍCEPS';
   if (m.includes('triceps')) return 'TRÍCEPS';
+  if (m.includes('antebraco')) return 'ANTEB';
   if (m.includes('quadriceps') || m.includes('isquiotibiais') || m.includes('pernas')) return 'PERNAS';
   if (m.includes('gluteos')) return 'GLÚTEO';
   if (m.includes('panturrilha')) return 'PANTURR';
