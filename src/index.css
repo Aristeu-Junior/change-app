@@ -1,19 +1,44 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #0b0e14;
-  --bg-secondary: #131720;
-  --bg-card: #1a202c;
-  --bg-card-hover: #222938;
-  --accent-blue: #008cff;
-  --accent-blue-hover: #0077db;
-  --accent-green: #10b981;
-  --accent-gold: #f59e0b;
-  --accent-red: #ef4444;
-  --accent-purple: #8b5cf6;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border-subtle: #242c3d;
+  --bg-primary: #000000;
+  --bg-secondary: #0d0d0f;
+  --bg-card: #141416;
+  --bg-card-hover: #1c1c1f;
+  --border-subtle: #27272a;
+  --border-strong: #3f3f46;
+  --text-main: #ffffff;
+  --text-muted: #a1a1aa;
+  --text-dim: #71717a;
+  --btn-primary-bg: #ffffff;
+  --btn-primary-text: #000000;
+  --btn-secondary-bg: #1f1f23;
+  --btn-secondary-text: #ffffff;
+  --badge-bg: #27272a;
+  --badge-text: #ffffff;
+  --accent-check: #ffffff;
+  --accent-check-text: #000000;
+}
+
+/* Light Mode exclusively Black & White */
+.theme-light {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f4f4f5;
+  --bg-card: #fafafa;
+  --bg-card-hover: #f0f0f2;
+  --border-subtle: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --text-main: #000000;
+  --text-muted: #52525b;
+  --text-dim: #71717a;
+  --btn-primary-bg: #000000;
+  --btn-primary-text: #ffffff;
+  --btn-secondary-bg: #e4e4e7;
+  --btn-secondary-text: #000000;
+  --badge-bg: #e4e4e7;
+  --badge-text: #000000;
+  --accent-check: #000000;
+  --accent-check-text: #ffffff;
 }
 
 * {
@@ -32,15 +57,14 @@ html, body {
   user-select: none;
   -webkit-user-select: none;
   overscroll-behavior-y: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Ensure inputs can still be selected */
-input, textarea {
+input, textarea, select {
   user-select: text;
   -webkit-user-select: text;
 }
 
-/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -49,26 +73,13 @@ input, textarea {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: var(--border-strong);
   border-radius: 4px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #475569;
-}
 
-/* Safe area padding for iPhones with home indicator and notch */
 .pb-safe {
   padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
 .pt-safe {
   padding-top: max(12px, env(safe-area-inset-top));
-}
-
-/* Subtle pulse animation for active timer */
-@keyframes timerPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
-}
-.timer-pulse {
-  animation: timerPulse 2s infinite ease-in-out;
 }

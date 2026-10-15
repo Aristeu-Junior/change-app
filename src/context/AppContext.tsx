@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   Workout,
   WorkoutExercise,
@@ -6,6 +6,7 @@ import {
   Routine,
   RoutineFolder,
   ExerciseTemplate,
+  UserProfile,
   UserSettings,
   PersonalRecord,
   BodyMeasurement
@@ -29,7 +30,19 @@ interface RestTimerState {
 }
 
 interface AppContextType {
-  // Workouts
+  // Usuários e Autenticação
+  users: UserProfile[];
+  currentUser: UserProfile;
+  registerUser: (name: string, email: string, password?: string) => boolean;
+  loginUser: (email: string, password?: string) => boolean;
+  switchUser: (userId: string) => void;
+  logoutUser: () => void;
+
+  // Tema Preto & Branco
+  theme: 'dark' | 'light';
+  toggleTheme: () => void;
+
+  // Treinos
   workouts: Workout[];
   activeWorkout: Workout | null;
   isWorkoutModalOpen: boolean;
@@ -45,13 +58,13 @@ interface AppContextType {
   updateSet: (exerciseIndex: number, setIndex: number, updates: Partial<WorkoutSet>) => void;
   toggleSetCompleted: (exerciseIndex: number, setIndex: number) => void;
 
-  // Rest Timer
+  // Temporizador de Descanso
   restTimer: RestTimerState;
   startRestTimer: (seconds: number, exerciseTitle?: string) => void;
   adjustRestTimer: (deltaSeconds: number) => void;
   skipRestTimer: () => void;
 
-  // Routines & Folders
+  // Planos de Treino (Rotinas) & Pastas
   routines: Routine[];
   folders: RoutineFolder[];
   saveRoutine: (routine: Routine) => void;
@@ -59,47 +72,103 @@ interface AppContextType {
   createFolder: (title: string) => void;
   deleteFolder: (folderId: number) => void;
 
-  // Exercises
+  // Exercícios
   exercises: ExerciseTemplate[];
   addCustomExercise: (exercise: Omit<ExerciseTemplate, 'id' | 'is_custom'>) => void;
   deleteCustomExercise: (id: string) => void;
 
-  // Stats & Records
+  // Estatísticas e Recordes Pessoais (PR)
   personalRecords: Record<string, PersonalRecord>;
   measurements: BodyMeasurement[];
   saveMeasurement: (m: BodyMeasurement) => void;
 
-  // Settings
+  // Configurações
   settings: UserSettings;
   updateSettings: (newSettings: Partial<UserSettings>) => void;
 
-  // Data management
+  // Backup e Restauração
   exportDataJson: () => string;
   importDataJson: (jsonStr: string) => boolean;
 
-  // Active workout summary modal state
+  // Modal de Resumo pós-treino
   completedWorkoutSummary: Workout | null;
   closeSummaryModal: () => void;
 }
 
 const DEFAULT_SETTINGS: UserSettings = {
   weight_unit: 'kg',
-  distance_unit: 'kilometers',
+  distance_unit: 'quilometros',
   default_rest_seconds: 90,
   sound_enabled: true,
   haptics_enabled: true,
   wake_lock_enabled: true,
   theme: 'dark',
-  user_name: 'Athlete'
+  user_name: 'Atleta'
+};
+
+const DEFAULT_USER: UserProfile = {
+  id: 'user-default',
+  name: 'Atleta',
+  email: 'atleta@change.app',
+  avatar_color: '#ffffff',
+  created_at: new Date().toISOString()
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize state from LocalStorage
+  // Gerenciamento de Usuários
+  const [users, setUsers] = useState<UserProfile[]>(() => {
+    try {
+      const saved = localStorage.getItem('change_all_users');
+      return saved ? JSON.parse(saved) : [DEFAULT_USER];
+    } catch {
+      return [DEFAULT_USER];
+    }
+  });
+
+  const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
+    try {
+      const saved = localStorage.getItem('change_current_user');
+      return saved ? JSON.parse(saved) : DEFAULT_USER;
+    } catch {
+      return DEFAULT_USER;
+    }
+  });
+
+  // Tema Preto & Branco
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    try {
+      const saved = localStorage.getItem('change_theme');
+      return saved === 'light' ? 'light' : 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+
+  // Aplica classe no elemento HTML para modo escuro / claro
+  useEffect(() => {
+    localStorage.setItem('change_theme', theme);
+    if (theme === 'light') {
+      document.documentElement.classList.add('theme-light');
+      document.body.classList.add('theme-light');
+    } else {
+      document.documentElement.classList.remove('theme-light');
+      document.body.classList.remove('theme-light');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  // Chaves prefixadas com o ID do usuário para garantir isolamento de dados
+  const userKey = (key: string) => `change_${currentUser.id}_${key}`;
+
+  // Estados com carregamento isolado por usuário
   const [workouts, setWorkouts] = useState<Workout[]>(() => {
     try {
-      const saved = localStorage.getItem('change_workouts');
+      const saved = localStorage.getItem(`change_${currentUser.id}_workouts`);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -108,7 +177,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [activeWorkout, setActiveWorkout] = useState<Workout | null>(() => {
     try {
-      const saved = localStorage.getItem('change_active_workout');
+      const saved = localStorage.getItem(`change_${currentUser.id}_active_workout`);
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -116,12 +185,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [isWorkoutModalOpen, setWorkoutModalOpen] = useState<boolean>(() => {
-    return !!localStorage.getItem('change_active_workout');
+    return !!localStorage.getItem(`change_${currentUser.id}_active_workout`);
   });
 
   const [routines, setRoutines] = useState<Routine[]>(() => {
     try {
-      const saved = localStorage.getItem('change_routines');
+      const saved = localStorage.getItem(`change_${currentUser.id}_routines`);
       return saved ? JSON.parse(saved) : DEFAULT_ROUTINES;
     } catch {
       return DEFAULT_ROUTINES;
@@ -130,7 +199,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [folders, setFolders] = useState<RoutineFolder[]>(() => {
     try {
-      const saved = localStorage.getItem('change_folders');
+      const saved = localStorage.getItem(`change_${currentUser.id}_folders`);
       return saved ? JSON.parse(saved) : DEFAULT_FOLDERS;
     } catch {
       return DEFAULT_FOLDERS;
@@ -139,7 +208,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [exercises, setExercises] = useState<ExerciseTemplate[]>(() => {
     try {
-      const saved = localStorage.getItem('change_exercises');
+      const saved = localStorage.getItem(`change_${currentUser.id}_exercises`);
       return saved ? JSON.parse(saved) : DEFAULT_EXERCISES;
     } catch {
       return DEFAULT_EXERCISES;
@@ -148,7 +217,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [personalRecords, setPersonalRecords] = useState<Record<string, PersonalRecord>>(() => {
     try {
-      const saved = localStorage.getItem('change_prs');
+      const saved = localStorage.getItem(`change_${currentUser.id}_prs`);
       return saved ? JSON.parse(saved) : {};
     } catch {
       return {};
@@ -157,7 +226,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [measurements, setMeasurements] = useState<BodyMeasurement[]>(() => {
     try {
-      const saved = localStorage.getItem('change_measurements');
+      const saved = localStorage.getItem(`change_${currentUser.id}_measurements`);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -166,7 +235,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [settings, setSettings] = useState<UserSettings>(() => {
     try {
-      const saved = localStorage.getItem('change_settings');
+      const saved = localStorage.getItem(`change_${currentUser.id}_settings`);
       return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
     } catch {
       return DEFAULT_SETTINGS;
@@ -175,7 +244,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [completedWorkoutSummary, setCompletedWorkoutSummary] = useState<Workout | null>(null);
 
-  // Rest Timer State
+  // Temporizador de descanso
   const [restTimer, setRestTimer] = useState<RestTimerState>({
     isActive: false,
     remainingSeconds: 0,
@@ -183,48 +252,136 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     exerciseTitle: ''
   });
 
-  // Save changes to localStorage
+  // Salva dados no LocalStorage do usuário atual
   useEffect(() => {
-    localStorage.setItem('change_workouts', JSON.stringify(workouts));
-  }, [workouts]);
+    localStorage.setItem('change_all_users', JSON.stringify(users));
+  }, [users]);
+
+  useEffect(() => {
+    localStorage.setItem('change_current_user', JSON.stringify(currentUser));
+  }, [currentUser]);
+
+  useEffect(() => {
+    localStorage.setItem(userKey('workouts'), JSON.stringify(workouts));
+  }, [workouts, currentUser.id]);
 
   useEffect(() => {
     if (activeWorkout) {
-      localStorage.setItem('change_active_workout', JSON.stringify(activeWorkout));
+      localStorage.setItem(userKey('active_workout'), JSON.stringify(activeWorkout));
       if (settings.wake_lock_enabled) {
         requestWakeLock();
       }
     } else {
-      localStorage.removeItem('change_active_workout');
+      localStorage.removeItem(userKey('active_workout'));
       releaseWakeLock();
     }
-  }, [activeWorkout, settings.wake_lock_enabled]);
+  }, [activeWorkout, currentUser.id, settings.wake_lock_enabled]);
 
   useEffect(() => {
-    localStorage.setItem('change_routines', JSON.stringify(routines));
-  }, [routines]);
+    localStorage.setItem(userKey('routines'), JSON.stringify(routines));
+  }, [routines, currentUser.id]);
 
   useEffect(() => {
-    localStorage.setItem('change_folders', JSON.stringify(folders));
-  }, [folders]);
+    localStorage.setItem(userKey('folders'), JSON.stringify(folders));
+  }, [folders, currentUser.id]);
 
   useEffect(() => {
-    localStorage.setItem('change_exercises', JSON.stringify(exercises));
-  }, [exercises]);
+    localStorage.setItem(userKey('exercises'), JSON.stringify(exercises));
+  }, [exercises, currentUser.id]);
 
   useEffect(() => {
-    localStorage.setItem('change_prs', JSON.stringify(personalRecords));
-  }, [personalRecords]);
+    localStorage.setItem(userKey('prs'), JSON.stringify(personalRecords));
+  }, [personalRecords, currentUser.id]);
 
   useEffect(() => {
-    localStorage.setItem('change_measurements', JSON.stringify(measurements));
-  }, [measurements]);
+    localStorage.setItem(userKey('measurements'), JSON.stringify(measurements));
+  }, [measurements, currentUser.id]);
 
   useEffect(() => {
-    localStorage.setItem('change_settings', JSON.stringify(settings));
-  }, [settings]);
+    localStorage.setItem(userKey('settings'), JSON.stringify(settings));
+  }, [settings, currentUser.id]);
 
-  // Rest Timer countdown interval
+  // Recarrega os dados ao trocar de usuário
+  const reloadUserData = (userId: string) => {
+    try {
+      const savedWorkouts = localStorage.getItem(`change_${userId}_workouts`);
+      setWorkouts(savedWorkouts ? JSON.parse(savedWorkouts) : []);
+
+      const savedActive = localStorage.getItem(`change_${userId}_active_workout`);
+      setActiveWorkout(savedActive ? JSON.parse(savedActive) : null);
+      setWorkoutModalOpen(!!savedActive);
+
+      const savedRoutines = localStorage.getItem(`change_${userId}_routines`);
+      setRoutines(savedRoutines ? JSON.parse(savedRoutines) : DEFAULT_ROUTINES);
+
+      const savedFolders = localStorage.getItem(`change_${userId}_folders`);
+      setFolders(savedFolders ? JSON.parse(savedFolders) : DEFAULT_FOLDERS);
+
+      const savedExercises = localStorage.getItem(`change_${userId}_exercises`);
+      setExercises(savedExercises ? JSON.parse(savedExercises) : DEFAULT_EXERCISES);
+
+      const savedPrs = localStorage.getItem(`change_${userId}_prs`);
+      setPersonalRecords(savedPrs ? JSON.parse(savedPrs) : {});
+
+      const savedMeas = localStorage.getItem(`change_${userId}_measurements`);
+      setMeasurements(savedMeas ? JSON.parse(savedMeas) : []);
+
+      const savedSettings = localStorage.getItem(`change_${userId}_settings`);
+      setSettings(savedSettings ? { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) } : DEFAULT_SETTINGS);
+    } catch {
+      // Fallback
+    }
+  };
+
+  // Funções de Autenticação & Usuários
+  const registerUser = (name: string, email: string, password?: string): boolean => {
+    const existing = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    if (existing) return false;
+
+    const newUser: UserProfile = {
+      id: `user-${Date.now()}`,
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+      avatar_color: '#ffffff',
+      created_at: new Date().toISOString()
+    };
+
+    setUsers((prev) => [...prev, newUser]);
+    setCurrentUser(newUser);
+    reloadUserData(newUser.id);
+    return true;
+  };
+
+  const loginUser = (email: string, password?: string): boolean => {
+    const found = users.find(
+      (u) =>
+        u.email.toLowerCase() === email.toLowerCase() &&
+        (!u.password || u.password === password)
+    );
+    if (!found) return false;
+
+    setCurrentUser(found);
+    reloadUserData(found.id);
+    return true;
+  };
+
+  const switchUser = (userId: string) => {
+    const target = users.find((u) => u.id === userId);
+    if (target) {
+      setCurrentUser(target);
+      reloadUserData(target.id);
+    }
+  };
+
+  const logoutUser = () => {
+    if (users.length > 0) {
+      setCurrentUser(users[0]);
+      reloadUserData(users[0].id);
+    }
+  };
+
+  // Contagem regressiva do descanso
   useEffect(() => {
     if (!restTimer.isActive || restTimer.remainingSeconds <= 0) return;
 
@@ -250,16 +407,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => clearInterval(interval);
   }, [restTimer.isActive, restTimer.remainingSeconds, settings.sound_enabled, settings.haptics_enabled]);
 
-  // Workout Actions
+  // Ações de Treino
   const startWorkout = (routineId?: string, customTitle?: string) => {
-    let title = customTitle || 'Workout';
+    let title = customTitle || 'Treino Livre';
     let exercisesToStart: WorkoutExercise[] = [];
 
     if (routineId) {
       const routine = routines.find((r) => r.id === routineId);
       if (routine) {
         title = routine.title;
-        // Deep clone exercises and reset sets to uncompleted
         exercisesToStart = routine.exercises.map((e, eIdx) => ({
           ...e,
           id: `we-${Date.now()}-${eIdx}`,
@@ -335,15 +491,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setWorkoutModalOpen(false);
     setCompletedWorkoutSummary(finished);
 
-    // PR Celebration confetti
     try {
       confetti({
-        particleCount: prsHit > 0 ? 120 : 60,
-        spread: 80,
+        particleCount: prsHit > 0 ? 100 : 50,
+        spread: 70,
         origin: { y: 0.6 }
       });
     } catch {
-      // Ignore if confetti canvas not ready
+      // Ignora se indisponível
     }
 
     return finished;
@@ -363,7 +518,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addExerciseToWorkout = (template: ExerciseTemplate) => {
     if (!activeWorkout) return;
 
-    // Check if we have previous history for ghost values
     const prevWorkout = workouts.find((w) =>
       w.exercises.some((e) => e.exercise_template_id === template.id)
     );
@@ -383,7 +537,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           reps: prevExercise?.sets[0]?.reps || 10,
           completed: false,
           previousGhost: prevExercise?.sets[0]?.weight_kg
-            ? `${prevExercise.sets[0].weight_kg} kg x ${prevExercise.sets[0].reps}`
+            ? `${prevExercise.sets[0].weight_kg} kg × ${prevExercise.sets[0].reps}`
             : undefined
         }
       ]
@@ -426,7 +580,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!activeWorkout) return;
     const nextExercises = [...activeWorkout.exercises];
     nextExercises[exerciseIndex].sets.splice(setIndex, 1);
-    // re-index
     nextExercises[exerciseIndex].sets.forEach((s, idx) => {
       s.index = idx;
     });
@@ -454,7 +607,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (settings.sound_enabled) playGymTone('check');
       if (settings.haptics_enabled) triggerHaptic('light');
 
-      // Auto-start rest timer
       const restSec = nextExercises[exerciseIndex].rest_seconds || settings.default_rest_seconds;
       if (restSec > 0) {
         startRestTimer(restSec, nextExercises[exerciseIndex].title);
@@ -464,7 +616,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveWorkout({ ...activeWorkout, exercises: nextExercises });
   };
 
-  // Rest Timer Controls
+  // Temporizador de Descanso
   const startRestTimer = (seconds: number, exerciseTitle = '') => {
     setRestTimer({
       isActive: true,
@@ -494,7 +646,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // Routine & Folder actions
+  // Planos de Treino (Rotinas) & Pastas
   const saveRoutine = (routine: Routine) => {
     setRoutines((prev) => {
       const idx = prev.findIndex((r) => r.id === routine.id);
@@ -522,13 +674,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteFolder = (folderId: number) => {
     setFolders((prev) => prev.filter((f) => f.id !== folderId));
-    // Reset routines belonging to this folder to uncategorized (null)
     setRoutines((prev) =>
       prev.map((r) => (r.folder_id === folderId ? { ...r, folder_id: null } : r))
     );
   };
 
-  // Custom Exercises
+  // Exercícios Customizados
   const addCustomExercise = (ex: Omit<ExerciseTemplate, 'id' | 'is_custom'>) => {
     const newEx: ExerciseTemplate = {
       ...ex,
@@ -542,7 +693,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setExercises((prev) => prev.filter((e) => e.id !== id));
   };
 
-  // Measurements
+  // Medidas
   const saveMeasurement = (m: BodyMeasurement) => {
     setMeasurements((prev) => {
       const filtered = prev.filter((item) => item.date !== m.date);
@@ -550,16 +701,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // Settings
+  // Configurações
   const updateSettings = (newSettings: Partial<UserSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
-  // Backup & Restore
+  // Backup e Restauração
   const exportDataJson = (): string => {
     const data = {
-      version: '1.0.0',
+      app: 'Change',
+      version: '2.0.0',
       exportedAt: new Date().toISOString(),
+      user: currentUser,
       workouts,
       routines,
       folders,
@@ -594,6 +747,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <AppContext.Provider
       value={{
+        users,
+        currentUser,
+        registerUser,
+        loginUser,
+        switchUser,
+        logoutUser,
+        theme,
+        toggleTheme,
         workouts,
         activeWorkout,
         isWorkoutModalOpen,

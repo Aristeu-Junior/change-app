@@ -1,41 +1,35 @@
 export type MuscleGroup =
-  | 'chest'
-  | 'back'
+  | 'peito'
+  | 'costas'
   | 'lats'
-  | 'upper_back'
-  | 'lower_back'
-  | 'traps'
-  | 'shoulders'
+  | 'ombros'
   | 'biceps'
   | 'triceps'
-  | 'forearms'
+  | 'antebraco'
   | 'quadriceps'
-  | 'hamstrings'
-  | 'calves'
-  | 'glutes'
-  | 'abdominals'
+  | 'isquiotibiais'
+  | 'panturrilha'
+  | 'gluteos'
+  | 'abdomen'
   | 'cardio'
-  | 'full_body'
-  | 'other';
+  | 'corpo_inteiro'
+  | 'outro';
 
 export type EquipmentCategory =
-  | 'barbell'
-  | 'dumbbell'
-  | 'machine'
-  | 'cable'
+  | 'barra'
+  | 'halteres'
+  | 'maquina'
+  | 'polia'
+  | 'peso_corporal'
   | 'kettlebell'
-  | 'bodyweight'
-  | 'resistance_band'
-  | 'plate'
-  | 'other';
+  | 'elastico'
+  | 'outro';
 
 export type ExerciseType =
   | 'weight_reps'
   | 'reps_only'
   | 'bodyweight_reps'
-  | 'bodyweight_assisted_reps'
   | 'duration'
-  | 'weight_duration'
   | 'distance_duration';
 
 export type SetType = 'normal' | 'warmup' | 'dropset' | 'failure';
@@ -49,6 +43,10 @@ export interface ExerciseTemplate {
   type: ExerciseType;
   is_custom?: boolean;
   instructions?: string;
+  steps?: string[];
+  tips?: string[];
+  muscles_pt?: string;
+  animation_type?: string; // used for animated visual diagram
 }
 
 export interface WorkoutSet {
@@ -103,9 +101,18 @@ export interface RoutineFolder {
   index: number;
 }
 
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  password?: string;
+  avatar_color: string;
+  created_at: string;
+}
+
 export interface UserSettings {
   weight_unit: 'kg' | 'lbs';
-  distance_unit: 'kilometers' | 'miles';
+  distance_unit: 'quilometros' | 'milhas';
   default_rest_seconds: number;
   sound_enabled: boolean;
   haptics_enabled: boolean;
@@ -124,7 +131,7 @@ export interface PersonalRecord {
 }
 
 export interface BodyMeasurement {
-  date: string; // YYYY-MM-DD
+  date: string; // AAAA-MM-DD
   weight_kg?: number | null;
   fat_percent?: number | null;
   chest_cm?: number | null;

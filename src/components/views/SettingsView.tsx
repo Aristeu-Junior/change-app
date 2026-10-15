@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react';
 import {
-  Settings as SettingsIcon,
+  Moon,
+  Sun,
+  Users,
   Volume2,
   Vibrate,
   Eye,
@@ -8,17 +10,26 @@ import {
   Upload,
   Check,
   ShieldCheck,
-  Sparkles,
-  Smartphone
+  UserCircle2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { playGymTone, triggerHaptic } from '../../utils/calc';
+import { UserAccountModal } from '../UserAccountModal';
 
 export const SettingsView: React.FC = () => {
-  const { settings, updateSettings, exportDataJson, importDataJson } = useApp();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const {
+    settings,
+    updateSettings,
+    exportDataJson,
+    importDataJson,
+    theme,
+    toggleTheme,
+    currentUser
+  } = useApp();
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [importStatus, setImportStatus] = useState<string | null>(null);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
 
   const handleExport = () => {
     const jsonStr = exportDataJson();
@@ -26,7 +37,7 @@ export const SettingsView: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `change-workout-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `backup-treinos-change-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -40,9 +51,9 @@ export const SettingsView: React.FC = () => {
       const content = event.target?.result as string;
       const success = importDataJson(content);
       if (success) {
-        setImportStatus('Data restored successfully!');
+        setImportStatus('Dados restaurados com sucesso!');
       } else {
-        setImportStatus('Failed to parse backup file');
+        setImportStatus('Falha ao processar arquivo de backup.');
       }
       setTimeout(() => setImportStatus(null), 3000);
     };
@@ -50,30 +61,84 @@ export const SettingsView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-full px-4 pt-4 pb-28 space-y-6">
-      {/* Top Header */}
+    <div className="flex flex-col min-h-full px-4 pt-4 pb-28 space-y-5 text-white">
+      {/* Topo */}
       <div>
-        <h1 className="text-2xl font-black text-white">Settings</h1>
-        <p className="text-xs text-slate-400">App preferences & data backup</p>
+        <h1 className="text-2xl font-black text-white">Ajustes</h1>
+        <p className="text-xs text-zinc-400">Tema, múltiplos usuários & preferências</p>
       </div>
 
-      {/* Units Section */}
-      <div className="bg-[#131720] border border-[#242c3d] rounded-2xl p-4 shadow-md space-y-4">
-        <span className="text-xs uppercase font-bold text-slate-400 block">Units of Measurement</span>
-
-        {/* Weight Unit */}
+      {/* TEMA PRETO E BRANCO & BRANCO E PRETO */}
+      <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-3">
+        <span className="text-xs uppercase font-bold text-zinc-400 block">Tema Visual Exclusivo</span>
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-sm font-bold text-white block">Weight Unit</span>
-            <span className="text-xs text-slate-500">Used across all exercises and PRs</span>
+            <span className="text-sm font-bold text-white block">Modo de Exibição</span>
+            <span className="text-xs text-zinc-500">
+              {theme === 'dark' ? 'Preto e Branco (Modo Escuro)' : 'Branco e Preto (Modo Claro)'}
+            </span>
           </div>
-          <div className="flex bg-[#1a202c] p-1 rounded-xl border border-[#242c3d]">
+
+          <button
+            onClick={toggleTheme}
+            className="p-3 bg-white text-black rounded-2xl flex items-center gap-2 font-black text-xs uppercase tracking-wider shadow-lg active:scale-95 transition"
+          >
+            {theme === 'dark' ? (
+              <>
+                <Sun className="w-4 h-4 fill-black" />
+                <span>Modo Claro</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-4 h-4 fill-black" />
+                <span>Modo Escuro</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* MÚLTIPLOS USUÁRIOS / PERFIS */}
+      <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-3">
+        <span className="text-xs uppercase font-bold text-zinc-400 block">Perfil de Acesso do Atleta</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-white text-black font-black flex items-center justify-center text-sm shadow-md">
+              {currentUser.name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <span className="text-sm font-black text-white block">{currentUser.name}</span>
+              <span className="text-xs text-zinc-500">{currentUser.email}</span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsAccountModalOpen(true)}
+            className="px-3.5 py-2 bg-[#1c1c1f] hover:bg-[#27272a] border border-[#3f3f46] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Trocar / Criar</span>
+          </button>
+        </div>
+      </div>
+
+      {/* UNIDADES DE MEDIDA */}
+      <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-4">
+        <span className="text-xs uppercase font-bold text-zinc-400 block">Unidades de Treino</span>
+
+        {/* Peso */}
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-sm font-bold text-white block">Unidade de Peso</span>
+            <span className="text-xs text-zinc-500">Utilizada nas anilhas, barras e PRs</span>
+          </div>
+          <div className="flex bg-[#1c1c1f] p-1 rounded-xl border border-[#27272a]">
             <button
               onClick={() => updateSettings({ weight_unit: 'kg' })}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
                 settings.weight_unit === 'kg'
-                  ? 'bg-[#008cff] text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               KG
@@ -82,8 +147,8 @@ export const SettingsView: React.FC = () => {
               onClick={() => updateSettings({ weight_unit: 'lbs' })}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
                 settings.weight_unit === 'lbs'
-                  ? 'bg-[#008cff] text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               LBS
@@ -91,46 +156,46 @@ export const SettingsView: React.FC = () => {
           </div>
         </div>
 
-        {/* Distance Unit */}
-        <div className="flex items-center justify-between pt-2 border-t border-[#242c3d]">
+        {/* Distância */}
+        <div className="flex items-center justify-between pt-2 border-t border-[#27272a]">
           <div>
-            <span className="text-sm font-bold text-white block">Distance Unit</span>
-            <span className="text-xs text-slate-500">For running and cardio exercises</span>
+            <span className="text-sm font-bold text-white block">Unidade de Distância</span>
+            <span className="text-xs text-zinc-500">Para exercícios aeróbicos e corrida</span>
           </div>
-          <div className="flex bg-[#1a202c] p-1 rounded-xl border border-[#242c3d]">
+          <div className="flex bg-[#1c1c1f] p-1 rounded-xl border border-[#27272a]">
             <button
-              onClick={() => updateSettings({ distance_unit: 'kilometers' })}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
-                settings.distance_unit === 'kilometers'
-                  ? 'bg-[#008cff] text-white'
-                  : 'text-slate-400 hover:text-white'
+              onClick={() => updateSettings({ distance_unit: 'quilometros' })}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                settings.distance_unit === 'quilometros'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               KM
             </button>
             <button
-              onClick={() => updateSettings({ distance_unit: 'miles' })}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
-                settings.distance_unit === 'miles'
-                  ? 'bg-[#008cff] text-white'
-                  : 'text-slate-400 hover:text-white'
+              onClick={() => updateSettings({ distance_unit: 'milhas' })}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                settings.distance_unit === 'milhas'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
-              MI
+              MILHAS
             </button>
           </div>
         </div>
       </div>
 
-      {/* Rest Timer & Gym Ergonomics */}
-      <div className="bg-[#131720] border border-[#242c3d] rounded-2xl p-4 shadow-md space-y-4">
-        <span className="text-xs uppercase font-bold text-slate-400 block">Gym Experience</span>
+      {/* TEMPORIZADOR E ERGONOMIA */}
+      <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-4">
+        <span className="text-xs uppercase font-bold text-zinc-400 block">Experiência na Academia</span>
 
-        {/* Default Rest Timer */}
+        {/* Duração Padrão do Descanso */}
         <div>
-          <span className="text-sm font-bold text-white block">Default Rest Duration</span>
-          <span className="text-xs text-slate-500 mb-2 block">
-            Automatically starts when completing a set
+          <span className="text-sm font-bold text-white block">Tempo Padrão de Descanso</span>
+          <span className="text-xs text-zinc-500 mb-2 block">
+            Dispara automaticamente ao concluir uma série
           </span>
           <div className="grid grid-cols-5 gap-1.5 pt-1">
             {[30, 60, 90, 120, 180].map((sec) => (
@@ -139,8 +204,8 @@ export const SettingsView: React.FC = () => {
                 onClick={() => updateSettings({ default_rest_seconds: sec })}
                 className={`py-2 rounded-xl text-xs font-bold transition ${
                   settings.default_rest_seconds === sec
-                    ? 'bg-[#008cff] text-white'
-                    : 'bg-[#1a202c] text-slate-400 hover:text-white border border-[#242c3d]'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'bg-[#1c1c1f] text-zinc-400 hover:text-white border border-[#27272a]'
                 }`}
               >
                 {sec}s
@@ -149,87 +214,87 @@ export const SettingsView: React.FC = () => {
           </div>
         </div>
 
-        {/* Audio Beep / Bell Chime */}
-        <div className="flex items-center justify-between pt-2 border-t border-[#242c3d]">
+        {/* Efeitos Sonoros */}
+        <div className="flex items-center justify-between pt-2 border-t border-[#27272a]">
           <div className="flex items-center gap-2">
-            <Volume2 className="w-4 h-4 text-[#008cff]" />
+            <Volume2 className="w-4 h-4 text-white" />
             <div>
-              <span className="text-sm font-bold text-white block">Sound Effects</span>
-              <span className="text-xs text-slate-500">Rest countdown and set finish chimes</span>
+              <span className="text-sm font-bold text-white block">Efeitos Sonoros</span>
+              <span className="text-xs text-zinc-500">Bips e sino ao término do descanso</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => playGymTone('complete')}
-              className="text-[10px] font-bold text-[#008cff] bg-[#008cff]/10 px-2 py-1 rounded-lg"
+              className="text-[10px] font-bold text-white bg-zinc-800 px-2.5 py-1 rounded-lg border border-zinc-700"
             >
-              Test
+              Testar
             </button>
             <input
               type="checkbox"
               checked={settings.sound_enabled}
               onChange={(e) => updateSettings({ sound_enabled: e.target.checked })}
-              className="w-5 h-5 accent-[#008cff] rounded cursor-pointer"
+              className="w-5 h-5 accent-white rounded cursor-pointer"
             />
           </div>
         </div>
 
-        {/* Haptic Vibration */}
-        <div className="flex items-center justify-between pt-2 border-t border-[#242c3d]">
+        {/* Vibração Tátil */}
+        <div className="flex items-center justify-between pt-2 border-t border-[#27272a]">
           <div className="flex items-center gap-2">
-            <Vibrate className="w-4 h-4 text-purple-400" />
+            <Vibrate className="w-4 h-4 text-white" />
             <div>
-              <span className="text-sm font-bold text-white block">Haptic Feedback</span>
-              <span className="text-xs text-slate-500">Vibrate phone on set completion</span>
+              <span className="text-sm font-bold text-white block">Vibração no Celular</span>
+              <span className="text-xs text-zinc-500">Feedback tátil ao marcar série</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => triggerHaptic('success')}
-              className="text-[10px] font-bold text-purple-400 bg-purple-500/10 px-2 py-1 rounded-lg"
+              className="text-[10px] font-bold text-white bg-zinc-800 px-2.5 py-1 rounded-lg border border-zinc-700"
             >
-              Test
+              Testar
             </button>
             <input
               type="checkbox"
               checked={settings.haptics_enabled}
               onChange={(e) => updateSettings({ haptics_enabled: e.target.checked })}
-              className="w-5 h-5 accent-[#008cff] rounded cursor-pointer"
+              className="w-5 h-5 accent-white rounded cursor-pointer"
             />
           </div>
         </div>
 
-        {/* Keep Screen Awake (Wake Lock) */}
-        <div className="flex items-center justify-between pt-2 border-t border-[#242c3d]">
+        {/* Manter Tela Ligada */}
+        <div className="flex items-center justify-between pt-2 border-t border-[#27272a]">
           <div className="flex items-center gap-2">
-            <Eye className="w-4 h-4 text-amber-400" />
+            <Eye className="w-4 h-4 text-white" />
             <div>
-              <span className="text-sm font-bold text-white block">Keep Screen Awake</span>
-              <span className="text-xs text-slate-500">Prevents phone sleep during workout</span>
+              <span className="text-sm font-bold text-white block">Manter Tela Ligada</span>
+              <span className="text-xs text-zinc-500">Não desliga a tela durante o treino</span>
             </div>
           </div>
           <input
             type="checkbox"
             checked={settings.wake_lock_enabled}
             onChange={(e) => updateSettings({ wake_lock_enabled: e.target.checked })}
-            className="w-5 h-5 accent-[#008cff] rounded cursor-pointer"
+            className="w-5 h-5 accent-white rounded cursor-pointer"
           />
         </div>
       </div>
 
-      {/* Backup & Data Sovereignty */}
-      <div className="bg-[#131720] border border-[#242c3d] rounded-2xl p-4 shadow-md space-y-4">
+      {/* BACKUP E EXPORTAÇÃO */}
+      <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs uppercase font-bold text-slate-400 block">Data Backup & Ownership</span>
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
+          <span className="text-xs uppercase font-bold text-zinc-400 block">Soberania dos Seus Dados</span>
+          <ShieldCheck className="w-4 h-4 text-white" />
         </div>
 
-        <p className="text-xs text-slate-400 leading-relaxed">
-          All your workout sessions, routines, and personal records belong completely to you. You can export or import your data anytime with zero lock-in.
+        <p className="text-xs text-zinc-400 leading-relaxed">
+          Seus treinos, rotinas e recordes são seus. Você pode exportar seu backup em JSON ou restaurar quando quiser.
         </p>
 
         {importStatus && (
-          <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs font-bold text-emerald-400 flex items-center gap-2">
+          <div className="p-2.5 bg-zinc-800 border border-white/40 rounded-xl text-xs font-bold text-white flex items-center gap-2">
             <Check className="w-4 h-4" />
             <span>{importStatus}</span>
           </div>
@@ -238,18 +303,18 @@ export const SettingsView: React.FC = () => {
         <div className="flex gap-2">
           <button
             onClick={handleExport}
-            className="flex-1 py-3 bg-[#1a202c] hover:bg-[#222938] border border-[#242c3d] rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition active:scale-95"
+            className="flex-1 py-3 bg-[#18181b] hover:bg-[#222226] border border-[#27272a] rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition active:scale-95"
           >
-            <Download className="w-4 h-4 text-[#008cff]" />
-            Export JSON
+            <Download className="w-4 h-4" />
+            Exportar JSON
           </button>
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex-1 py-3 bg-[#1a202c] hover:bg-[#222938] border border-[#242c3d] rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition active:scale-95"
+            className="flex-1 py-3 bg-[#18181b] hover:bg-[#222226] border border-[#27272a] rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition active:scale-95"
           >
-            <Upload className="w-4 h-4 text-emerald-400" />
-            Import JSON
+            <Upload className="w-4 h-4" />
+            Restaurar JSON
           </button>
           <input
             ref={fileInputRef}
@@ -261,17 +326,11 @@ export const SettingsView: React.FC = () => {
         </div>
       </div>
 
-      {/* About Change App Card */}
-      <div className="bg-[#131720] border border-[#242c3d] rounded-2xl p-4 shadow-md text-center space-y-2">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#008cff] to-cyan-400 flex items-center justify-center mx-auto text-white font-black text-lg shadow-lg shadow-[#008cff]/20">
-          C
-        </div>
-        <h3 className="text-base font-black text-white">Change Workout Tracker</h3>
-        <p className="text-xs text-slate-400">
-          Reverse-engineered from the Hevy application architecture. Full offline mobile experience with 100% data sovereignty.
-        </p>
-        <span className="text-[10px] text-slate-600 block">v1.0.0 • Mobile Progressive Web App</span>
-      </div>
+      {/* Modal de Gestão de Usuários */}
+      <UserAccountModal
+        isOpen={isAccountModalOpen}
+        onClose={() => setIsAccountModalOpen(false)}
+      />
     </div>
   );
 };
