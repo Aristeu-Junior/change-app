@@ -16,14 +16,27 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
     <title>Change</title>
-    <script type="module" crossorigin src="./assets/index-FX-rtR4O.js"></script>
+    <script>
+      // Detecta imediatamente se está rodando instalado como Web App (iOS Standalone / Android PWA)
+      (function () {
+        try {
+          var isStandalone =
+            ('standalone' in window.navigator && window.navigator.standalone) ||
+            (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+          if (isStandalone) {
+            document.documentElement.classList.add('is-standalone');
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/index-oIuBbzCH.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/rolldown-runtime-WkwZ5CU-.js">
     <link rel="modulepreload" crossorigin href="./assets/vendor-icons-Bk5jf3Fp.js">
     <link rel="modulepreload" crossorigin href="./assets/vendor-react-QNskj52p.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-B_DlKnCt.css">
+    <link rel="stylesheet" crossorigin href="./assets/index-B4v5kmq5.css">
   </head>
   <body class="bg-black text-white">
-    <div id="root"></div>
+    <div id="root"></div>
     <script>
       // Registro do Service Worker para suporte PWA offline
       if ('serviceWorker' in navigator) {
