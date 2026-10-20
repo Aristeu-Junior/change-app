@@ -295,7 +295,7 @@ export const ShareRankModal: React.FC<ShareRankModalProps> = ({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-md bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl flex flex-col max-h-[90vh] text-white overflow-y-auto space-y-4">
+      <div className="w-full max-w-md bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl flex flex-col modal-safe-sheet text-white overflow-y-auto space-y-4">
         {/* Topo */}
         <div className="flex items-center justify-between pb-3 border-b border-[#27272a]">
           <div className="flex items-center gap-2">

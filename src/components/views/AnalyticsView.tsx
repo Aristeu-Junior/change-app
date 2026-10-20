@@ -332,12 +332,14 @@ export const AnalyticsView: React.FC = () => {
   const prList = Object.values(personalRecords);
 
   return (
-    <div className="flex flex-col min-h-full px-4 pt-4 pb-28 space-y-4 text-white">
+    <div className="flex flex-col min-h-full view-container space-y-4 text-white">
       {/* Topo com Botão de Compartilhar Rank Estilo GymRats */}
       <div className="flex items-center justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-black text-white">Rank & Competição</h1>
-          <p className="text-xs text-zinc-400">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-black text-white leading-tight truncate">
+            Rank & Competição
+          </h1>
+          <p className="text-[11px] sm:text-xs text-zinc-400 truncate">
             Patentes Hevy, Check-ins GymRats & Placar da Turma
           </p>
         </div>
@@ -450,7 +452,7 @@ export const AnalyticsView: React.FC = () => {
               <span className="text-[10px] text-zinc-500 font-bold">8 grupos</span>
             </div>
 
-            <div className="grid grid-cols-1 gap-2.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
               {muscleRanks.map((m) => (
                 <div
                   key={m.id}

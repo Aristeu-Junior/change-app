@@ -202,24 +202,24 @@ export const ExercisesView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-full px-4 pt-4 pb-28 space-y-4 text-white">
+    <div className="flex flex-col min-h-full view-container space-y-4 text-white">
       {/* Toast Notificação */}
       {toastMessage && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-white text-black font-black text-xs px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4 duration-200 border border-zinc-300">
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-white text-black font-black text-xs px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4 duration-200 border border-zinc-300">
           <Check className="w-4 h-4 text-black" />
           <span>{toastMessage}</span>
         </div>
       )}
 
       {/* Cabeçalho */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-black text-white">Exercícios</h1>
           <p className="text-xs text-zinc-400">Guia de execução, animações 3D & PRs</p>
         </div>
         <button
           onClick={() => setIsSearchModalOpen(true)}
-          className="p-2.5 bg-[#141416] hover:bg-[#1e1e24] border border-[#27272a] text-white rounded-xl flex items-center gap-1.5 text-xs font-bold transition active:scale-95"
+          className="p-2.5 bg-[#141416] hover:bg-[#1e1e24] border border-[#27272a] text-white rounded-xl flex items-center gap-1.5 text-xs font-bold transition active:scale-95 shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Criar</span>
@@ -257,7 +257,7 @@ export const ExercisesView: React.FC = () => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Pesquisar entre os 112 exercícios, músculos ou movimentos..."
+          placeholder="Buscar entre os 112 exercícios ou músculos..."
           className="w-full bg-[#141416] border border-[#27272a] rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white transition"
         />
         {query && (
@@ -271,7 +271,7 @@ export const ExercisesView: React.FC = () => {
       </div>
 
       {/* Filtros de Músculos */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0 no-scrollbar">
         {MUSCLE_FILTERS.map((f) => (
           <button
             key={f.value}
@@ -288,7 +288,7 @@ export const ExercisesView: React.FC = () => {
       </div>
 
       {/* Lista de Exercícios com Miniatura 3D ao lado esquerdo */}
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
         {filteredExercises.map((ex) => {
           const pr = personalRecords[ex.id];
           const thumbUrl = ex.gif_id
@@ -382,7 +382,7 @@ export const ExercisesView: React.FC = () => {
           }}
         >
           <div
-            className="w-full max-w-md bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col h-[88vh] sm:h-[84vh] max-h-[88dvh] sm:max-h-[84dvh] text-white overflow-hidden animate-in slide-in-from-bottom duration-200"
+            className="w-full max-w-md bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col modal-safe-sheet text-white overflow-hidden animate-in slide-in-from-bottom duration-200"
             onWheel={(e) => e.stopPropagation()}
           >
             {/* Topo FIXO (Título e Fechar sempre visíveis) */}
@@ -523,7 +523,7 @@ export const ExercisesView: React.FC = () => {
             if (e.target === e.currentTarget) setExerciseToAddToRoutine(null);
           }}
         >
-          <div className="w-full max-w-sm bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl flex flex-col max-h-[80vh] text-white animate-in slide-in-from-bottom duration-200">
+          <div className="w-full max-w-sm bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl flex flex-col modal-safe-sheet text-white animate-in slide-in-from-bottom duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-[#27272a]">
               <div>
                 <h3 className="text-sm font-black text-white">Adicionar a um Treino</h3>

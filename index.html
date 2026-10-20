@@ -16,6 +16,19 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
     <title>Change</title>
+    <script>
+      // Detecta imediatamente se está rodando instalado como Web App (iOS Standalone / Android PWA)
+      (function () {
+        try {
+          var isStandalone =
+            ('standalone' in window.navigator && window.navigator.standalone) ||
+            (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+          if (isStandalone) {
+            document.documentElement.classList.add('is-standalone');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body class="bg-black text-white">
     <div id="root"></div>

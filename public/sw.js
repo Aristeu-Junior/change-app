@@ -1,4 +1,4 @@
-const CACHE_NAME = 'change-workout-v1';
+const CACHE_NAME = 'change-workout-v3';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -16,13 +16,16 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Pass-through or cache-first for local assets
+  if (event.request.method !== 'GET') return;
+
+  // Network-first para garantir que atualizações de layout e código apareçam imediatamente no Web App
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) return cachedResponse;
-      return fetch(event.request).catch(() => {
-        // Fallback for offline if needed
-      });
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });

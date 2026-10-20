@@ -180,21 +180,21 @@ export const RoutinesView: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col min-h-full px-4 pt-3 pb-28 space-y-4 text-white">
+    <div className="flex flex-col min-h-full view-container space-y-4 text-white">
       {/* Topo Superior: Marca CHANGE, Perfil Ativo e Botão Modo Claro/Escuro */}
-      <div className="flex items-center justify-between pt-1 pb-1">
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-center justify-between gap-2 pb-1">
+        <div className="flex items-center gap-2.5 min-w-0">
           {/* Logo CHANGE com haltere */}
-          <div className="w-8 h-8 rounded-xl bg-white text-black font-black flex items-center justify-center text-xs shadow-md relative">
+          <div className="w-8 h-8 rounded-xl bg-white text-black font-black flex items-center justify-center text-xs shadow-md shrink-0 relative">
             <Dumbbell className="w-4 h-4 stroke-[2.5] text-black" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <h1 className="text-lg font-black tracking-wider text-white">CHANGE</h1>
+              <h1 className="text-lg md:text-2xl font-black tracking-wider text-white">CHANGE</h1>
               {cloudStatus === 'synced' && (
                 <span
                   title="Sincronizado na nuvem"
-                  className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300"
+                  className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 shrink-0"
                 >
                   <Cloud className="w-2.5 h-2.5" /> Nuvem
                 </span>
@@ -202,19 +202,19 @@ export const RoutinesView: React.FC = () => {
             </div>
             <button
               onClick={() => setIsAccountModalOpen(true)}
-              className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-white transition"
+              className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-white transition max-w-full"
             >
-              <span>
+              <span className="truncate">
                 Conta: <strong>{currentUser.name}</strong>{' '}
                 {isCurrentUserAdmin ? '(Admin • Cadastrar)' : '(Minha Conta)'}
               </span>
-              <Users className="w-3 h-3" />
+              <Users className="w-3 h-3 shrink-0" />
             </button>
           </div>
         </div>
 
         {/* Botão de Alternância de Tema P&B (Sol / Lua) */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={toggleTheme}
             className="p-2 bg-[#18181b] hover:bg-[#27272a] border border-[#27272a] rounded-xl text-white transition active:scale-95 flex items-center gap-1.5 text-xs font-bold"
@@ -362,9 +362,9 @@ export const RoutinesView: React.FC = () => {
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
-              <div className="space-y-2.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {list.length === 0 ? (
-                  <p className="text-xs text-zinc-500 italic pl-6">Nenhum plano nesta pasta ainda.</p>
+                  <p className="text-xs text-zinc-500 italic pl-6 col-span-full">Nenhum plano nesta pasta ainda.</p>
                 ) : (
                   list.map(renderRoutineCard)
                 )}
@@ -383,7 +383,7 @@ export const RoutinesView: React.FC = () => {
                 <span className="text-xs text-zinc-500 font-normal">({uncategorized.length})</span>
               </div>
             )}
-            <div className="space-y-2.5">{uncategorized.map(renderRoutineCard)}</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{uncategorized.map(renderRoutineCard)}</div>
           </div>
         )}
       </div>

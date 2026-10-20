@@ -145,7 +145,7 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-lg bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl flex flex-col h-[92vh] sm:h-[86vh] text-white">
+      <div className="w-full max-w-lg bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl flex flex-col h-[86dvh] modal-safe-sheet text-white">
         {/* Topo */}
         <div className="flex items-center justify-between pb-3 border-b border-[#27272a] shrink-0">
           <div>

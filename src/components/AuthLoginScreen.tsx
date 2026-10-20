@@ -32,14 +32,16 @@ export const AuthLoginScreen: React.FC = () => {
 
   return (
     <div
-      className={`w-full min-h-screen ${
+      className={`w-full min-h-dvh ${
         isLight ? 'bg-[#f4f4f5] text-black' : 'bg-black text-white'
-      } flex justify-center transition-colors duration-200`}
+      } flex items-center justify-center sm:p-6 transition-colors duration-200`}
     >
+      <div className="safe-top-shield sm:hidden" />
+
       <div
-        className={`w-full max-w-md min-h-screen ${
-          isLight ? 'bg-white border-zinc-200' : 'bg-black border-[#27272a]/60'
-        } border-x flex flex-col justify-between px-6 py-8 relative shadow-2xl transition-colors duration-200`}
+        className={`w-full max-w-md min-h-dvh sm:min-h-0 ${
+          isLight ? 'bg-white border-zinc-200' : 'bg-[#09090b] border-[#27272a]'
+        } sm:border sm:rounded-3xl flex flex-col justify-between px-6 sm:p-8 view-container sm:!pt-8 sm:!pb-8 relative shadow-2xl transition-colors duration-200`}
       >
         {/* Barra Superior: Logo + Botão Tema P&B */}
         <div className="flex items-center justify-between">

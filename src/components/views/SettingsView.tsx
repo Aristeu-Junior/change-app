@@ -61,7 +61,7 @@ export const SettingsView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-full px-4 pt-4 pb-28 space-y-5 text-white">
+    <div className="flex flex-col min-h-full view-container space-y-5 text-white">
       {/* Topo */}
       <div>
         <h1 className="text-2xl font-black text-white">Ajustes</h1>
@@ -69,7 +69,7 @@ export const SettingsView: React.FC = () => {
       </div>
 
       {/* CONTA DO ATLETA E GESTÃO DE CONVIDADOS */}
-      <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-3">
+      <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-3.5">
         <div className="flex items-center justify-between">
           <span className="text-xs uppercase font-bold text-zinc-400 block">
             Minha Conta Exclusiva
@@ -80,23 +80,23 @@ export const SettingsView: React.FC = () => {
             </span>
           )}
         </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white text-black font-black flex items-center justify-center text-sm shadow-md">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-white text-black font-black flex items-center justify-center text-sm shadow-md shrink-0">
               {currentUser.name.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <span className="text-sm font-black text-white block">{currentUser.name}</span>
-              <span className="text-xs text-zinc-500">{currentUser.email}</span>
+            <div className="min-w-0">
+              <span className="text-sm font-black text-white block truncate">{currentUser.name}</span>
+              <span className="text-xs text-zinc-400 block truncate">{currentUser.email}</span>
             </div>
           </div>
 
           <button
             onClick={() => setIsAccountModalOpen(true)}
-            className="px-3.5 py-2 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-sm"
+            className="w-full sm:w-auto px-4 py-2.5 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 shadow-sm shrink-0"
           >
             <Users className="w-3.5 h-3.5" />
-            <span>{isCurrentUserAdmin ? 'Cadastrar / Conta' : 'Minha Conta'}</span>
+            <span>{isCurrentUserAdmin ? 'Cadastrar / Minha Conta' : 'Minha Conta'}</span>
           </button>
         </div>
       </div>

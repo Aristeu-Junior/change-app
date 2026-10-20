@@ -1,6 +1,6 @@
 import React, { useState, lazy, Suspense } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
-import { MobileTabBar, TabType } from './components/MobileTabBar';
+import { MobileTabBar, DesktopSidebar, TabType } from './components/MobileTabBar';
 import { AuthLoginScreen } from './components/AuthLoginScreen';
 
 // Code-splitting de alta performance: carrega cada aba sob demanda
@@ -31,11 +31,20 @@ const AppContent: React.FC = () => {
   const isLight = theme === 'light';
 
   return (
-    <div className={`w-full min-h-screen ${isLight ? 'bg-[#f4f4f5] text-black' : 'bg-black text-white'} flex justify-center transition-colors duration-200`}>
-      {/* Mobile Frame Container (Max 480px width on desktop with clean borders, full width on mobile) */}
-      <div className={`w-full max-w-md min-h-screen ${isLight ? 'bg-white border-zinc-200' : 'bg-black border-[#27272a]/60'} border-x flex flex-col relative shadow-2xl transition-colors duration-200`}>
-        {/* Main View Area */}
-        <main className="flex-1 overflow-x-hidden">
+    <div
+      className={`w-full min-h-dvh ${
+        isLight ? 'bg-white text-black' : 'bg-black text-white'
+      } flex flex-col md:flex-row transition-colors duration-200`}
+    >
+      {/* Escudo de Safe-Area Superior no Celular (protege o relógio e bateria no modo Web App) */}
+      <div className="safe-top-shield md:hidden" />
+
+      {/* Barra Lateral Desktop (Computador / Notebook >= 768px) */}
+      <DesktopSidebar currentTab={currentTab} onSelectTab={setCurrentTab} />
+
+      {/* Área Principal (Full-width responsiva no Celular e Container amplo e limpo no Computador) */}
+      <div className="flex-1 min-w-0 flex flex-col">
+        <main className="flex-1 w-full max-w-4xl mx-auto overflow-x-hidden">
           <Suspense fallback={<ViewLoadingFallback />}>
             {currentTab === 'routines' && <RoutinesView />}
             {currentTab === 'exercises' && <ExercisesView />}
@@ -44,16 +53,16 @@ const AppContent: React.FC = () => {
             {currentTab === 'settings' && <SettingsView />}
           </Suspense>
         </main>
-
-        {/* Bottom Tab Bar with Active Floating Workout Pill */}
-        <MobileTabBar currentTab={currentTab} onSelectTab={setCurrentTab} />
-
-        {/* Live Active Workout Screen (Fullscreen Modal) */}
-        <Suspense fallback={null}>
-          <ActiveWorkoutModal />
-          <WorkoutSummaryModal />
-        </Suspense>
       </div>
+
+      {/* Barra Inferior Mobile (< 768px) */}
+      <MobileTabBar currentTab={currentTab} onSelectTab={setCurrentTab} />
+
+      {/* Modais Globais de Treino Ativo e Resumo */}
+      <Suspense fallback={null}>
+        <ActiveWorkoutModal />
+        <WorkoutSummaryModal />
+      </Suspense>
     </div>
   );
 };

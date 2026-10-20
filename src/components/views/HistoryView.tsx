@@ -44,7 +44,7 @@ export const HistoryView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-full px-4 pt-4 pb-28 space-y-5 text-white">
+    <div className="flex flex-col min-h-full view-container space-y-5 text-white">
       {/* Topo */}
       <div className="flex items-center justify-between">
         <div>
