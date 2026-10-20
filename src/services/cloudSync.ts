@@ -25,6 +25,16 @@ export interface CloudUserPayload {
   updated_at: string;
 }
 
+export interface LeaderboardEntry {
+  user_id: string;
+  email: string;
+  name: string;
+  avatar_color: string;
+  workouts: Workout[];
+  personal_records: Record<string, PersonalRecord>;
+  updated_at: string;
+}
+
 export interface SupabaseConfig {
   url: string;
   anonKey: string;
@@ -40,6 +50,37 @@ const DEFAULT_SUPABASE_ANON_KEY =
 // Apenas Aristeu e Vitória possuem permissão de Administrador para cadastrar novas pessoas
 export const ADMIN_EMAILS = new Set(['aristeu@change.app', 'vitoria@change.app']);
 export const ADMIN_USER_IDS = new Set(['user-aristeu', 'user-vitoria']);
+
+/**
+ * Sanitiza strings contra injeção de HTML/scripts (OWASP XSS Prevention)
+ */
+export const sanitizeInput = (input: string, maxLength = 120): string => {
+  if (!input) return '';
+  return input
+    .replace(/[<>]/g, '')
+    .trim()
+    .slice(0, maxLength);
+};
+
+/**
+ * Gera hash criptográfico SHA-256 com salt via Web Crypto API nativa (OWASP Password Security)
+ */
+export const hashPasswordSha256 = async (rawPassword: string): Promise<string> => {
+  const clean = rawPassword.trim();
+  // Se já for um hash hex de 64 caracteres, retorna direto
+  if (/^[a-f0-9]{64}$/i.test(clean)) {
+    return clean.toLowerCase();
+  }
+  try {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(`${clean}::change_salt_2026`);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  } catch {
+    return clean;
+  }
+};
 
 export const isAdminProfile = (user?: UserProfile | null): boolean => {
   if (!user) return false;
@@ -123,44 +164,83 @@ const buildHeaders = (config: SupabaseConfig, extra?: Record<string, string>) =>
 });
 
 /**
- * Busca a lista de todos os perfis cadastrados na nuvem
+ * Autentica o usuário via RPC segura no PostgreSQL (valida hash SHA-256 no servidor sem expor senhas)
  */
-export const pullAllUserProfilesFromCloud = async (): Promise<UserProfile[]> => {
+export const authenticateUserInCloud = async (
+  identifier: string,
+  password: string
+): Promise<CloudUserPayload | null> => {
+  const config = getSupabaseConfig();
+  if (!config) return null;
+
+  try {
+    const res = await fetch(`${config.url}/rest/v1/rpc/authenticate_change_user`, {
+      method: 'POST',
+      headers: buildHeaders(config),
+      body: JSON.stringify({
+        p_identifier: sanitizeInput(identifier, 100),
+        p_password: password.trim()
+      })
+    });
+
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        return rows[0] as CloudUserPayload;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Busca dados públicos do Ranking (Leaderboard) via RPC segura (sem expor password_hash)
+ */
+export const fetchCloudLeaderboard = async (): Promise<LeaderboardEntry[]> => {
   const config = getSupabaseConfig();
   if (!config) return [];
 
   try {
-    const res = await fetch(
-      `${config.url}/rest/v1/change_user_data?select=user_id,email,name,password_hash,avatar_color,updated_at&order=name.asc`,
-      {
-        method: 'GET',
-        headers: buildHeaders(config)
-      }
-    );
-
-    if (!res.ok) return [];
-    const rows = await res.json();
-    if (!Array.isArray(rows)) return [];
-
-    return rows.map((r: any) => {
-      const profile: UserProfile = {
-        id: r.user_id || `user-${r.email}`,
-        name: r.name,
-        email: r.email,
-        password: r.password_hash || undefined,
-        avatar_color: r.avatar_color || '#ffffff',
-        created_at: r.updated_at || new Date().toISOString()
-      };
-      profile.is_admin = isAdminProfile(profile);
-      return profile;
+    const res = await fetch(`${config.url}/rest/v1/rpc/get_change_leaderboard`, {
+      method: 'POST',
+      headers: buildHeaders(config),
+      body: JSON.stringify({})
     });
+
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows)) {
+        return rows as LeaderboardEntry[];
+      }
+    }
+    return [];
   } catch {
     return [];
   }
 };
 
 /**
- * Busca os dados completos de um usuário na nuvem pelo e-mail ou nome de usuário
+ * Busca a lista de todos os perfis cadastrados na nuvem (sem expor senhas)
+ */
+export const pullAllUserProfilesFromCloud = async (): Promise<UserProfile[]> => {
+  const entries = await fetchCloudLeaderboard();
+  return entries.map((r) => {
+    const profile: UserProfile = {
+      id: r.user_id || `user-${r.email}`,
+      name: r.name,
+      email: r.email,
+      avatar_color: r.avatar_color || '#ffffff',
+      created_at: r.updated_at || new Date().toISOString()
+    };
+    profile.is_admin = isAdminProfile(profile);
+    return profile;
+  });
+};
+
+/**
+ * Busca os dados completos de um usuário na nuvem pelo e-mail
  */
 export const pullUserFromCloudByEmail = async (
   identifier: string
@@ -170,9 +250,8 @@ export const pullUserFromCloudByEmail = async (
 
   try {
     const normalized = normalizeLoginIdentifier(identifier);
-    // Tenta por e-mail primeiro
     const res = await fetch(
-      `${config.url}/rest/v1/change_user_data?email=eq.${encodeURIComponent(normalized)}&select=*&limit=1`,
+      `${config.url}/rest/v1/change_user_data?email=eq.${encodeURIComponent(normalized)}&select=user_id,email,name,avatar_color,workouts,routines,folders,custom_exercises,personal_records,measurements,settings,updated_at&limit=1`,
       {
         method: 'GET',
         headers: buildHeaders(config)
@@ -185,23 +264,6 @@ export const pullUserFromCloudByEmail = async (
         return rows[0] as CloudUserPayload;
       }
     }
-
-    // Se digitou apenas o nome (ex: "Lucas"), busca pelo nome ignorando maiúsculas/minúsculas
-    const resByName = await fetch(
-      `${config.url}/rest/v1/change_user_data?name=ilike.${encodeURIComponent(identifier.trim())}&select=*&limit=1`,
-      {
-        method: 'GET',
-        headers: buildHeaders(config)
-      }
-    );
-
-    if (resByName.ok) {
-      const rowsByName = await resByName.json();
-      if (Array.isArray(rowsByName) && rowsByName.length > 0) {
-        return rowsByName[0] as CloudUserPayload;
-      }
-    }
-
     return null;
   } catch {
     return null;
@@ -209,7 +271,7 @@ export const pullUserFromCloudByEmail = async (
 };
 
 /**
- * Cria um novo usuário convidado diretamente na nuvem (Ação exclusiva de Aristeu e Vitória)
+ * Cria um novo usuário convidado diretamente na nuvem com senha criptografada em SHA-256
  */
 export const createCloudUserByAdmin = async (
   newUser: UserProfile,
@@ -223,11 +285,13 @@ export const createCloudUserByAdmin = async (
     return { ok: false, error: 'Este e-mail ou login já está cadastrado.' };
   }
 
+  const hashedPassword = await hashPasswordSha256(newUser.password || '123456');
+
   const payload: CloudUserPayload = {
     user_id: newUser.id,
-    email: newUser.email.trim().toLowerCase(),
-    name: newUser.name.trim(),
-    password_hash: newUser.password || '',
+    email: sanitizeInput(newUser.email, 100).toLowerCase(),
+    name: sanitizeInput(newUser.name, 80),
+    password_hash: hashedPassword,
     avatar_color: newUser.avatar_color || '#ffffff',
     workouts: [],
     routines: [],
@@ -235,7 +299,7 @@ export const createCloudUserByAdmin = async (
     custom_exercises: [],
     personal_records: {},
     measurements: [],
-    settings: { ...defaultSettings, user_name: newUser.name.trim() },
+    settings: { ...defaultSettings, user_name: sanitizeInput(newUser.name, 80) },
     updated_at: new Date().toISOString()
   };
 
@@ -258,7 +322,7 @@ export const createCloudUserByAdmin = async (
 };
 
 /**
- * Atualiza a senha de um usuário na nuvem
+ * Atualiza a senha de um usuário na nuvem com hash SHA-256
  */
 export const updateCloudUserPassword = async (
   email: string,
@@ -269,13 +333,14 @@ export const updateCloudUserPassword = async (
 
   try {
     const cleanEmail = email.trim().toLowerCase();
+    const hashedPassword = await hashPasswordSha256(newPassword);
     const res = await fetch(
       `${config.url}/rest/v1/change_user_data?email=eq.${encodeURIComponent(cleanEmail)}`,
       {
         method: 'PATCH',
         headers: buildHeaders(config, { Prefer: 'return=minimal' }),
         body: JSON.stringify({
-          password_hash: newPassword,
+          password_hash: hashedPassword,
           updated_at: new Date().toISOString()
         })
       }
@@ -326,11 +391,10 @@ export const pushUserToCloud = async (
   const config = getSupabaseConfig();
   if (!config || !user?.email) return false;
 
-  // Preserva a senha existente se já houver no perfil
   const payload: Record<string, any> = {
     user_id: user.id,
     email: user.email.trim().toLowerCase(),
-    name: user.name,
+    name: sanitizeInput(user.name, 80),
     avatar_color: user.avatar_color || '#ffffff',
     workouts: data.workouts,
     routines: data.routines,
@@ -341,10 +405,6 @@ export const pushUserToCloud = async (
     settings: data.settings,
     updated_at: new Date().toISOString()
   };
-
-  if (user.password !== undefined && user.password !== '') {
-    payload.password_hash = user.password;
-  }
 
   try {
     const res = await fetch(`${config.url}/rest/v1/change_user_data?on_conflict=email`, {
@@ -369,9 +429,10 @@ export const testCloudConnection = async (
 ): Promise<{ ok: boolean; message: string }> => {
   try {
     const cleanUrl = config.url.replace(/\/$/, '');
-    const res = await fetch(`${cleanUrl}/rest/v1/change_user_data?select=email&limit=1`, {
-      method: 'GET',
-      headers: buildHeaders({ url: cleanUrl, anonKey: config.anonKey.trim() })
+    const res = await fetch(`${cleanUrl}/rest/v1/rpc/get_change_leaderboard`, {
+      method: 'POST',
+      headers: buildHeaders({ url: cleanUrl, anonKey: config.anonKey.trim() }),
+      body: JSON.stringify({})
     });
 
     if (res.ok) {

@@ -3,7 +3,7 @@ import {
   Dumbbell,
   List,
   History,
-  BarChart3,
+  Trophy,
   User,
   Clock,
   ChevronRight,
@@ -54,23 +54,31 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({ currentTab, onSelect
             } rounded-2xl shadow-2xl flex items-center justify-between active:scale-98 transition group border border-zinc-200/20`}
           >
             <div className="flex items-center gap-2.5">
-              <div className={`w-8 h-8 rounded-xl ${
-                isLight ? 'bg-white text-black' : 'bg-black text-white'
-              } flex items-center justify-center animate-pulse`}>
+              <div
+                className={`w-8 h-8 rounded-xl ${
+                  isLight ? 'bg-white text-black' : 'bg-black text-white'
+                } flex items-center justify-center animate-pulse`}
+              >
                 <Play className={`w-4 h-4 ${isLight ? 'fill-black' : 'fill-white'}`} />
               </div>
               <div className="text-left">
                 <span className="text-xs font-black block line-clamp-1">{activeWorkout.title}</span>
-                <span className={`text-[10px] ${isLight ? 'text-zinc-300' : 'text-zinc-600'} flex items-center gap-1 font-bold`}>
+                <span
+                  className={`text-[10px] ${
+                    isLight ? 'text-zinc-300' : 'text-zinc-600'
+                  } flex items-center gap-1 font-bold`}
+                >
                   <Clock className="w-3 h-3" />
                   {formatDuration(elapsed)}
                 </span>
               </div>
             </div>
 
-            <div className={`flex items-center gap-1 text-xs font-extrabold ${
-              isLight ? 'bg-white text-black' : 'bg-black text-white'
-            } px-3 py-1.5 rounded-lg shadow-sm`}>
+            <div
+              className={`flex items-center gap-1 text-xs font-extrabold ${
+                isLight ? 'bg-white text-black' : 'bg-black text-white'
+              } px-3 py-1.5 rounded-lg shadow-sm`}
+            >
               <span>Continuar</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </div>
@@ -79,9 +87,11 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({ currentTab, onSelect
       )}
 
       {/* Barra de Navegação Inferior Intuitiva */}
-      <nav className={`w-full ${
-        isLight ? 'bg-white/95 border-zinc-200' : 'bg-[#000000]/95 border-[#27272a]'
-      } backdrop-blur-md border-t px-2 py-2 pb-safe pointer-events-auto flex items-center justify-around shadow-2xl transition-colors`}>
+      <nav
+        className={`w-full ${
+          isLight ? 'bg-white/95 border-zinc-200' : 'bg-[#000000]/95 border-[#27272a]'
+        } backdrop-blur-md border-t px-2 py-2 pb-safe pointer-events-auto flex items-center justify-around shadow-2xl transition-colors`}
+      >
         {/* Aba Planos de Treino */}
         <button
           onClick={() => onSelectTab('routines')}
@@ -118,13 +128,13 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({ currentTab, onSelect
           )}
         </button>
 
-        {/* Aba Estatísticas */}
+        {/* Aba Rank & Estatísticas (Estilo Hevy) */}
         <button
           onClick={() => onSelectTab('analytics')}
           className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition ${tabClass('analytics')}`}
         >
-          <BarChart3 className="w-5 h-5 stroke-[2.3]" />
-          <span className="text-[10px] tracking-tight">Estatísticas</span>
+          <Trophy className="w-5 h-5 stroke-[2.3]" />
+          <span className="text-[10px] tracking-tight">Rank</span>
           {currentTab === 'analytics' && (
             <span className={`w-1 h-1 rounded-full ${isLight ? 'bg-black' : 'bg-white'}`} />
           )}

@@ -23,6 +23,8 @@ import {
   isCloudConfigured,
   isAdminProfile,
   normalizeLoginIdentifier,
+  hashPasswordSha256,
+  authenticateUserInCloud,
   pullAllUserProfilesFromCloud,
   pullUserFromCloudByEmail,
   pushUserToCloud,
@@ -705,47 +707,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return true;
   };
 
-  // Login com verificação na nuvem (Supabase) e fallback local
+  // Login com verificação segura via RPC no PostgreSQL (Supabase) e fallback local com SHA-256
   const loginUser = async (identifier: string, password?: string): Promise<boolean> => {
     const normalized = normalizeLoginIdentifier(identifier);
     const inputPass = (password || '').trim();
+    const hashedInputPass = await hashPasswordSha256(inputPass);
 
-    // 1. Verifica primeiro na nuvem (Supabase) para validar qualquer usuário cadastrado em qualquer aparelho
+    // 1. Verifica primeiro na nuvem via RPC segura no PostgreSQL (sem nunca expor hashes de senha)
     if (isCloudConfigured()) {
-      const cloudAccount = await pullUserFromCloudByEmail(identifier);
+      const cloudAccount = await authenticateUserInCloud(identifier, inputPass);
       if (cloudAccount) {
-        const expectedPass = cloudAccount.password_hash || '123456';
-        if (expectedPass === inputPass) {
-          const restoredUser: UserProfile = {
-            id: cloudAccount.user_id || `user-${Date.now()}`,
+        const restoredUser: UserProfile = {
+          id: cloudAccount.user_id || `user-${Date.now()}`,
+          name: cloudAccount.name,
+          email: cloudAccount.email,
+          password: hashedInputPass,
+          is_admin: isAdminProfile({
+            id: cloudAccount.user_id,
             name: cloudAccount.name,
             email: cloudAccount.email,
-            password: expectedPass,
-            is_admin: isAdminProfile({
-              id: cloudAccount.user_id,
-              name: cloudAccount.name,
-              email: cloudAccount.email,
-              avatar_color: '#ffffff',
-              created_at: ''
-            }),
-            avatar_color: cloudAccount.avatar_color || '#ffffff',
-            created_at: cloudAccount.updated_at || new Date().toISOString()
-          };
+            avatar_color: '#ffffff',
+            created_at: ''
+          }),
+          avatar_color: cloudAccount.avatar_color || '#ffffff',
+          created_at: cloudAccount.updated_at || new Date().toISOString()
+        };
 
-          setUsers((prev) => {
-            const filtered = prev.filter(
-              (u) => u.email.toLowerCase() !== restoredUser.email.toLowerCase()
-            );
-            return [...filtered, restoredUser];
-          });
-          setCurrentUser(restoredUser);
-          reloadUserData(restoredUser.id, restoredUser.name);
-          localStorage.setItem('change_auth_session_active', 'true');
-          setIsAuthenticated(true);
-          await pullCloudDataForUser(restoredUser);
-          return true;
-        }
-        return false;
+        setUsers((prev) => {
+          const filtered = prev.filter(
+            (u) => u.email.toLowerCase() !== restoredUser.email.toLowerCase()
+          );
+          return [...filtered, restoredUser];
+        });
+        setCurrentUser(restoredUser);
+        reloadUserData(restoredUser.id, restoredUser.name);
+        localStorage.setItem('change_auth_session_active', 'true');
+        setIsAuthenticated(true);
+        await pullCloudDataForUser(restoredUser);
+        return true;
       }
     }
 
@@ -766,7 +765,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           .normalize('NFD')
           .replace(/[\u0300-\u036f]/g, '');
       const expectedLocalPass = u.password || '123456';
-      return (emailMatch || nameMatch) && expectedLocalPass === inputPass;
+      return (
+        (emailMatch || nameMatch) &&
+        (expectedLocalPass === inputPass || expectedLocalPass === hashedInputPass)
+      );
     });
 
     if (foundLocal) {
