@@ -109,6 +109,8 @@ export interface UserProfile {
   email: string;
   password?: string;
   is_admin?: boolean;
+  totp_enabled?: boolean;
+  totp_secret?: string | null;
   avatar_color: string;
   created_at: string;
 }

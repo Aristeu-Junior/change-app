@@ -30,8 +30,13 @@ import {
   pushUserToCloud,
   createCloudUserByAdmin,
   updateCloudUserPassword,
-  deleteCloudUserByAdmin
+  updateCloudUserCredentials,
+  configureCloudUserTotp,
+  completeEmailRecoveryOrMagicLogin,
+  deleteCloudUserByAdmin,
+  CloudUserPayload
 } from '../services/cloudSync';
+import { verifyTotpCode } from '../utils/totp';
 
 interface RestTimerState {
   isActive: boolean;
@@ -49,6 +54,12 @@ interface AppContextType {
   isAuthenticated: boolean;
   isCurrentUserAdmin: boolean;
   loginUser: (identifier: string, password?: string) => Promise<boolean>;
+  loginUserWith2FA: (
+    identifier: string,
+    password: string,
+    totpCode?: string
+  ) => Promise<{ ok: boolean; requires2FA?: boolean; error?: string }>;
+  loginWithCloudPayload: (cloudAccount: CloudUserPayload) => Promise<void>;
   logoutUser: () => void;
   adminCreateUser: (
     name: string,
@@ -57,6 +68,14 @@ interface AppContextType {
   ) => Promise<{ ok: boolean; error?: string }>;
   adminDeleteUser: (email: string) => Promise<boolean>;
   changeMyPassword: (newPassword: string) => Promise<boolean>;
+  updateMyProfile: (
+    newName: string,
+    newEmail: string,
+    newPassword?: string
+  ) => Promise<{ ok: boolean; error?: string }>;
+  configureMyTotp: (totpSecret: string | null, enable: boolean) => Promise<boolean>;
+  recoveryPasswordNotice: string | null;
+  clearRecoveryPasswordNotice: () => void;
 
   // Sincronização em Nuvem (Supabase)
   cloudStatus: CloudSyncStatus;
@@ -136,7 +155,7 @@ const INITIAL_USERS: UserProfile[] = [
   {
     id: 'user-aristeu',
     name: 'Aristeu',
-    email: 'aristeu@change.app',
+    email: 'aristeu2304@gmail.com',
     password: '123456',
     is_admin: true,
     avatar_color: '#ffffff',
@@ -236,6 +255,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
+  const [recoveryPasswordNotice, setRecoveryPasswordNotice] = useState<string | null>(null);
+  const clearRecoveryPasswordNotice = () => setRecoveryPasswordNotice(null);
+
   // Gerenciamento de Usuários
   const [users, setUsers] = useState<UserProfile[]>(() => {
     try {
@@ -243,12 +265,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (saved) {
         const parsed: UserProfile[] = JSON.parse(saved);
         const updated = parsed.map((u) => {
-          if (u.id === 'user-default' && u.name === 'Atleta') {
+          if (
+            (u.id === 'user-default' && u.name === 'Atleta') ||
+            (u.id === 'user-aristeu' && u.email === 'aristeu@change.app')
+          ) {
             return {
               ...u,
               id: 'user-aristeu',
               name: 'Aristeu',
-              email: 'aristeu@change.app',
+              email: 'aristeu2304@gmail.com',
               password: u.password || '123456',
               is_admin: true
             };
@@ -259,7 +284,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             password: u.password || (isAdminProfile(u) ? '123456' : undefined)
           };
         });
-        const hasVitoria = updated.some((u) => u.email.toLowerCase() === 'vitoria@change.app');
+        const hasVitoria = updated.some(
+          (u) => u.id === 'user-vitoria' || u.email.toLowerCase() === 'vitoria@change.app'
+        );
         if (!hasVitoria) {
           updated.push(INITIAL_USERS[1]);
         }
@@ -278,6 +305,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const parsed: UserProfile = JSON.parse(saved);
         if (parsed.id === 'user-default' && parsed.name === 'Atleta') {
           return INITIAL_USERS[0];
+        }
+        if (parsed.id === 'user-aristeu' && parsed.email === 'aristeu@change.app') {
+          return {
+            ...parsed,
+            email: 'aristeu2304@gmail.com',
+            is_admin: true
+          };
         }
         return {
           ...parsed,
@@ -518,8 +552,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCloudStatus('syncing');
     isPullingCloudRef.current = true;
     try {
-      const cloudData = await pullUserFromCloudByEmail(user.email);
+      const cloudData = await pullUserFromCloudByEmail(user.email, user.id);
       if (cloudData) {
+        if (
+          cloudData.email !== user.email ||
+          cloudData.name !== user.name ||
+          !!cloudData.totp_enabled !== !!user.totp_enabled
+        ) {
+          setCurrentUser((prev) => ({
+            ...prev,
+            name: cloudData.name || prev.name,
+            email: cloudData.email || prev.email,
+            totp_enabled: !!cloudData.totp_enabled,
+            totp_secret: cloudData.totp_secret || null
+          }));
+        }
         const cloudWorkouts = normalizeSavedWorkouts(cloudData.workouts || []);
         const cloudRoutines = sanitizeUserRoutines(cloudData.routines || []);
         const cloudFolders = sanitizeUserFolders(cloudData.folders || [], cloudRoutines);
@@ -702,57 +749,161 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updatedUser: UserProfile = { ...currentUser, password: cleanPass };
     setCurrentUser(updatedUser);
     setUsers((prev) =>
-      prev.map((u) => (u.email.toLowerCase() === currentUser.email.toLowerCase() ? updatedUser : u))
+      prev.map((u) => (u.id === currentUser.id ? updatedUser : u))
     );
     return true;
   };
 
-  // Login com verificação segura via RPC no PostgreSQL (Supabase) e fallback local com SHA-256
-  const loginUser = async (identifier: string, password?: string): Promise<boolean> => {
+  // Atualiza Nome, E-mail (ex: Vitória colocar seu Gmail) e opcionalmente a Senha
+  const updateMyProfile = async (
+    newName: string,
+    newEmail: string,
+    newPassword?: string
+  ): Promise<{ ok: boolean; error?: string }> => {
+    const cleanName = newName.trim();
+    const cleanEmail = newEmail.trim().toLowerCase();
+    if (!cleanName || !cleanEmail || !cleanEmail.includes('@')) {
+      return { ok: false, error: 'Informe um nome e um endereço de e-mail válido.' };
+    }
+
+    if (isCloudConfigured()) {
+      const res = await updateCloudUserCredentials(
+        currentUser.id,
+        cleanName,
+        cleanEmail,
+        newPassword
+      );
+      if (!res.ok) {
+        return { ok: false, error: res.error || 'Não foi possível salvar os dados.' };
+      }
+    }
+
+    const updatedUser: UserProfile = {
+      ...currentUser,
+      name: cleanName,
+      email: cleanEmail,
+      ...(newPassword && newPassword.trim() ? { password: newPassword.trim() } : {})
+    };
+    setCurrentUser(updatedUser);
+    setUsers((prev) => prev.map((u) => (u.id === currentUser.id ? updatedUser : u)));
+    return { ok: true };
+  };
+
+  // Ativa ou desativa Autenticação de 2 Fatores (2FA TOTP)
+  const configureMyTotp = async (totpSecret: string | null, enable: boolean): Promise<boolean> => {
+    if (isCloudConfigured()) {
+      const ok = await configureCloudUserTotp(currentUser.id, totpSecret, enable);
+      if (!ok) return false;
+    }
+
+    const updatedUser: UserProfile = {
+      ...currentUser,
+      totp_enabled: enable,
+      totp_secret: enable ? totpSecret : null
+    };
+    setCurrentUser(updatedUser);
+    setUsers((prev) => prev.map((u) => (u.id === currentUser.id ? updatedUser : u)));
+    return true;
+  };
+
+  // Restaura sessão completa a partir de um payload autenticado da nuvem
+  const loginWithCloudPayload = async (cloudAccount: CloudUserPayload): Promise<void> => {
+    const restoredUser: UserProfile = {
+      id: cloudAccount.user_id || `user-${Date.now()}`,
+      name: cloudAccount.name,
+      email: cloudAccount.email,
+      is_admin: isAdminProfile({
+        id: cloudAccount.user_id,
+        name: cloudAccount.name,
+        email: cloudAccount.email,
+        avatar_color: '#ffffff',
+        created_at: ''
+      }),
+      totp_enabled: !!cloudAccount.totp_enabled,
+      totp_secret: cloudAccount.totp_secret || null,
+      avatar_color: cloudAccount.avatar_color || '#ffffff',
+      created_at: cloudAccount.updated_at || new Date().toISOString()
+    };
+
+    setUsers((prev) => {
+      const filtered = prev.filter(
+        (u) => u.id !== restoredUser.id && u.email.toLowerCase() !== restoredUser.email.toLowerCase()
+      );
+      return [...filtered, restoredUser];
+    });
+    setCurrentUser(restoredUser);
+    reloadUserData(restoredUser.id, restoredUser.name);
+    localStorage.setItem('change_auth_session_active', 'true');
+    setIsAuthenticated(true);
+    await pullCloudDataForUser(restoredUser);
+  };
+
+  // Intercepta links de Recuperação de Senha / Magic Link recebidos por e-mail e limpa a URL imediatamente
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash || !hash.includes('access_token=')) return;
+
+    const params = new URLSearchParams(hash.replace(/^#/, ''));
+    const accessToken = params.get('access_token');
+    const authType = params.get('type');
+
+    // Limpa a URL imediatamente para nunca deixar tokens expostos na barra de endereço
+    window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
+
+    if (!accessToken) return;
+
+    const isRecovery = authType === 'recovery' || authType === 'magiclink' || authType === 'signup';
+    const generatedNewPass = isRecovery
+      ? `Change-${Math.floor(100000 + Math.random() * 900000)}`
+      : undefined;
+
+    completeEmailRecoveryOrMagicLogin(accessToken, generatedNewPass).then(async (cloudAccount) => {
+      if (cloudAccount) {
+        await loginWithCloudPayload(cloudAccount);
+        if (generatedNewPass) {
+          setRecoveryPasswordNotice(generatedNewPass);
+        }
+      }
+    });
+  }, []);
+
+  // Login com suporte a Autenticação de Dois Fatores (2FA)
+  const loginUserWith2FA = async (
+    identifier: string,
+    password: string,
+    totpCode?: string
+  ): Promise<{ ok: boolean; requires2FA?: boolean; error?: string }> => {
     const normalized = normalizeLoginIdentifier(identifier);
     const inputPass = (password || '').trim();
     const hashedInputPass = await hashPasswordSha256(inputPass);
 
-    // 1. Verifica primeiro na nuvem via RPC segura no PostgreSQL (sem nunca expor hashes de senha)
     if (isCloudConfigured()) {
       const cloudAccount = await authenticateUserInCloud(identifier, inputPass);
       if (cloudAccount) {
-        const restoredUser: UserProfile = {
-          id: cloudAccount.user_id || `user-${Date.now()}`,
-          name: cloudAccount.name,
-          email: cloudAccount.email,
-          password: hashedInputPass,
-          is_admin: isAdminProfile({
-            id: cloudAccount.user_id,
-            name: cloudAccount.name,
-            email: cloudAccount.email,
-            avatar_color: '#ffffff',
-            created_at: ''
-          }),
-          avatar_color: cloudAccount.avatar_color || '#ffffff',
-          created_at: cloudAccount.updated_at || new Date().toISOString()
-        };
-
-        setUsers((prev) => {
-          const filtered = prev.filter(
-            (u) => u.email.toLowerCase() !== restoredUser.email.toLowerCase()
-          );
-          return [...filtered, restoredUser];
-        });
-        setCurrentUser(restoredUser);
-        reloadUserData(restoredUser.id, restoredUser.name);
-        localStorage.setItem('change_auth_session_active', 'true');
-        setIsAuthenticated(true);
-        await pullCloudDataForUser(restoredUser);
-        return true;
+        if (cloudAccount.totp_enabled && cloudAccount.totp_secret) {
+          if (!totpCode || !totpCode.trim()) {
+            return { ok: false, requires2FA: true };
+          }
+          const valid2FA = await verifyTotpCode(cloudAccount.totp_secret, totpCode.trim());
+          if (!valid2FA) {
+            return {
+              ok: false,
+              requires2FA: true,
+              error: 'Código de 2 Fatores (2FA) inválido ou expirado.'
+            };
+          }
+        }
+        await loginWithCloudPayload(cloudAccount);
+        return { ok: true };
       }
     }
 
-    // 2. Fallback local (caso sem internet no momento)
+    // Fallback local
     const foundLocal = users.find((u) => {
       const emailMatch =
         u.email.toLowerCase() === normalized ||
-        u.email.toLowerCase() === `${normalized}@change.app`;
+        u.email.toLowerCase() === `${normalized}@change.app` ||
+        (normalized === 'aristeu2304@gmail.com' && u.id === 'user-aristeu');
       const nameMatch =
         u.name
           .trim()
@@ -772,14 +923,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
 
     if (foundLocal) {
+      if (foundLocal.totp_enabled && foundLocal.totp_secret) {
+        if (!totpCode || !totpCode.trim()) {
+          return { ok: false, requires2FA: true };
+        }
+        const valid2FA = await verifyTotpCode(foundLocal.totp_secret, totpCode.trim());
+        if (!valid2FA) {
+          return {
+            ok: false,
+            requires2FA: true,
+            error: 'Código de 2 Fatores (2FA) inválido ou expirado.'
+          };
+        }
+      }
       setCurrentUser(foundLocal);
       reloadUserData(foundLocal.id, foundLocal.name);
       localStorage.setItem('change_auth_session_active', 'true');
       setIsAuthenticated(true);
-      return true;
+      return { ok: true };
     }
 
-    return false;
+    return { ok: false, error: 'E-mail ou senha incorretos. Verifique seus dados.' };
+  };
+
+  // Wrapper de compatibilidade
+  const loginUser = async (identifier: string, password?: string): Promise<boolean> => {
+    const res = await loginUserWith2FA(identifier, password || '');
+    return res.ok;
   };
 
   const logoutUser = () => {
@@ -1172,10 +1342,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isAuthenticated,
       isCurrentUserAdmin,
       loginUser,
+      loginUserWith2FA,
+      loginWithCloudPayload,
       logoutUser,
       adminCreateUser,
       adminDeleteUser,
       changeMyPassword,
+      updateMyProfile,
+      configureMyTotp,
+      recoveryPasswordNotice,
+      clearRecoveryPasswordNotice,
       cloudStatus,
       syncNowWithCloud,
       theme,
@@ -1236,7 +1412,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       personalRecords,
       measurements,
       settings,
-      completedWorkoutSummary
+      completedWorkoutSummary,
+      recoveryPasswordNotice
     ]
   );
 
