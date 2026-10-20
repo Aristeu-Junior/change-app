@@ -46,9 +46,9 @@ export interface ExerciseTemplate {
   steps?: string[];
   tips?: string[];
   muscles_pt?: string;
-  animation_type?: string; // used for animated visual diagram
-  gif_id?: string; // ID da animação 3D dos bonecos
-  gif_url?: string; // URL direta do GIF/WebP da animação
+  animation_type?: string;
+  gif_id?: string;
+  gif_url?: string;
 }
 
 export interface WorkoutSet {
@@ -61,7 +61,7 @@ export interface WorkoutSet {
   duration_seconds?: number | null;
   rpe?: number | null;
   completed: boolean;
-  previousGhost?: string; // e.g. "80 kg x 8"
+  previousGhost?: string;
 }
 
 export interface WorkoutExercise {
@@ -79,8 +79,8 @@ export interface Workout {
   title: string;
   routine_id?: string | null;
   description?: string;
-  start_time: string; // ISO string
-  end_time?: string;   // ISO string
+  start_time: string;
+  end_time?: string;
   exercises: WorkoutExercise[];
   total_volume_kg: number;
   total_sets: number;
@@ -108,6 +108,7 @@ export interface UserProfile {
   name: string;
   email: string;
   password?: string;
+  is_admin?: boolean;
   avatar_color: string;
   created_at: string;
 }
@@ -133,7 +134,7 @@ export interface PersonalRecord {
 }
 
 export interface BodyMeasurement {
-  date: string; // AAAA-MM-DD
+  date: string;
   weight_kg?: number | null;
   fat_percent?: number | null;
   chest_cm?: number | null;

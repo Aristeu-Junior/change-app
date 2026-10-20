@@ -31,6 +31,7 @@ export const RoutinesView: React.FC = () => {
     deleteFolder,
     createFolder,
     currentUser,
+    isCurrentUserAdmin,
     cloudStatus,
     theme,
     toggleTheme
@@ -204,7 +205,8 @@ export const RoutinesView: React.FC = () => {
               className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-white transition"
             >
               <span>
-                Perfil: <strong>{currentUser.name}</strong> (Trocar)
+                Conta: <strong>{currentUser.name}</strong>{' '}
+                {isCurrentUserAdmin ? '(Admin • Cadastrar)' : '(Minha Conta)'}
               </span>
               <Users className="w-3 h-3" />
             </button>

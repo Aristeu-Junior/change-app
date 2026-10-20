@@ -21,9 +21,14 @@ import {
 } from '../utils/calc';
 import {
   isCloudConfigured,
+  isAdminProfile,
+  normalizeLoginIdentifier,
   pullAllUserProfilesFromCloud,
   pullUserFromCloudByEmail,
-  pushUserToCloud
+  pushUserToCloud,
+  createCloudUserByAdmin,
+  updateCloudUserPassword,
+  deleteCloudUserByAdmin
 } from '../services/cloudSync';
 
 interface RestTimerState {
@@ -36,13 +41,20 @@ interface RestTimerState {
 export type CloudSyncStatus = 'unconfigured' | 'idle' | 'syncing' | 'synced' | 'error';
 
 interface AppContextType {
-  // Usuários e Autenticação
+  // Usuários, Autenticação e Permissões de Administrador (Aristeu & Vitória)
   users: UserProfile[];
   currentUser: UserProfile;
-  registerUser: (name: string, email: string, password?: string) => Promise<boolean>;
-  loginUser: (email: string, password?: string) => Promise<boolean>;
-  switchUser: (userId: string) => void;
+  isAuthenticated: boolean;
+  isCurrentUserAdmin: boolean;
+  loginUser: (identifier: string, password?: string) => Promise<boolean>;
   logoutUser: () => void;
+  adminCreateUser: (
+    name: string,
+    emailOrUsername: string,
+    password: string
+  ) => Promise<{ ok: boolean; error?: string }>;
+  adminDeleteUser: (email: string) => Promise<boolean>;
+  changeMyPassword: (newPassword: string) => Promise<boolean>;
 
   // Sincronização em Nuvem (Supabase)
   cloudStatus: CloudSyncStatus;
@@ -123,6 +135,8 @@ const INITIAL_USERS: UserProfile[] = [
     id: 'user-aristeu',
     name: 'Aristeu',
     email: 'aristeu@change.app',
+    password: '123456',
+    is_admin: true,
     avatar_color: '#ffffff',
     created_at: new Date().toISOString()
   },
@@ -130,20 +144,19 @@ const INITIAL_USERS: UserProfile[] = [
     id: 'user-vitoria',
     name: 'Vitória',
     email: 'vitoria@change.app',
+    password: '123456',
+    is_admin: true,
     avatar_color: '#ffffff',
     created_at: new Date().toISOString()
   }
 ];
 
-// Sincroniza exercícios salvos mantendo customizados e atualizando todos os 112 padrões (incluindo gif_id revisado)
 const syncExercisesWithDefaults = (savedList: ExerciseTemplate[] | null): ExerciseTemplate[] => {
   if (!savedList || !Array.isArray(savedList)) return DEFAULT_EXERCISES;
   const customOnly = savedList.filter((e) => e.is_custom);
   return [...customOnly, ...DEFAULT_EXERCISES];
 };
 
-// Remove apenas os treinos padrão antigos pré-carregados (routine-push-a, routine-pull-a, routine-legs-a)
-// para garantir que a tela inicial venha sempre zerada até o usuário criar seu próprio treino
 const sanitizeUserRoutines = (saved: Routine[] | null): Routine[] => {
   if (!saved || !Array.isArray(saved)) return [];
   return saved.filter((r) => !LEGACY_DEFAULT_ROUTINE_IDS.has(r.id));
@@ -162,7 +175,6 @@ const sanitizeUserFolders = (saved: RoutineFolder[] | null, validRoutines: Routi
   });
 };
 
-// Calcula a carga real utilizada nos exercícios concluídos (sem multiplicar por repetições ou séries)
 export const calculateRealWorkoutLoadKg = (exercises: WorkoutExercise[]): number => {
   if (!exercises || !Array.isArray(exercises)) return 0;
   let totalLoad = 0;
@@ -176,7 +188,6 @@ export const calculateRealWorkoutLoadKg = (exercises: WorkoutExercise[]): number
   return Math.round(totalLoad * 10) / 10;
 };
 
-// Normaliza treinos salvos para corrigir volumes antigos multiplicados (ex: 600kg -> 20kg)
 const normalizeSavedWorkouts = (list: Workout[]): Workout[] => {
   if (!Array.isArray(list)) return [];
   return list.map((w) => ({
@@ -185,7 +196,6 @@ const normalizeSavedWorkouts = (list: Workout[]): Workout[] => {
   }));
 };
 
-// Reconstrói os recordes pessoais (PRs) com os valores exatos de carga pegos nos treinos
 const rebuildPersonalRecords = (workoutsList: Workout[]): Record<string, PersonalRecord> => {
   const prs: Record<string, PersonalRecord> = {};
   const chronological = [...workoutsList].reverse();
@@ -215,19 +225,39 @@ const rebuildPersonalRecords = (workoutsList: Workout[]): Record<string, Persona
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Gerenciamento de Usuários (Garantindo perfis de Aristeu, Vitória e novos amigos)
+  // Estado de Autenticação: exige login para impedir que pessoas transitem nos treinos de outras
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('change_auth_session_active') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  // Gerenciamento de Usuários
   const [users, setUsers] = useState<UserProfile[]>(() => {
     try {
       const saved = localStorage.getItem('change_all_users');
       if (saved) {
         const parsed: UserProfile[] = JSON.parse(saved);
-        // Se só existia o 'user-default' genérico antigo, atualiza o nome para Aristeu e garante Vitória
-        const updated = parsed.map((u) =>
-          u.id === 'user-default' && u.name === 'Atleta'
-            ? { ...u, name: 'Aristeu', email: 'aristeu@change.app' }
-            : u
-        );
-        const hasVitoria = updated.some((u) => u.name.toLowerCase().includes('vit'));
+        const updated = parsed.map((u) => {
+          if (u.id === 'user-default' && u.name === 'Atleta') {
+            return {
+              ...u,
+              id: 'user-aristeu',
+              name: 'Aristeu',
+              email: 'aristeu@change.app',
+              password: u.password || '123456',
+              is_admin: true
+            };
+          }
+          return {
+            ...u,
+            is_admin: isAdminProfile(u),
+            password: u.password || (isAdminProfile(u) ? '123456' : undefined)
+          };
+        });
+        const hasVitoria = updated.some((u) => u.email.toLowerCase() === 'vitoria@change.app');
         if (!hasVitoria) {
           updated.push(INITIAL_USERS[1]);
         }
@@ -245,15 +275,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (saved) {
         const parsed: UserProfile = JSON.parse(saved);
         if (parsed.id === 'user-default' && parsed.name === 'Atleta') {
-          return { ...parsed, name: 'Aristeu', email: 'aristeu@change.app' };
+          return INITIAL_USERS[0];
         }
-        return parsed;
+        return {
+          ...parsed,
+          is_admin: isAdminProfile(parsed)
+        };
       }
       return INITIAL_USERS[0];
     } catch {
       return INITIAL_USERS[0];
     }
   });
+
+  const isCurrentUserAdmin = useMemo(() => isAdminProfile(currentUser), [currentUser]);
 
   // Status de sincronização com a nuvem
   const [cloudStatus, setCloudStatus] = useState<CloudSyncStatus>(() =>
@@ -311,7 +346,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return !!localStorage.getItem(`change_${currentUser.id}_active_workout`);
   });
 
-  // Rotinas começam sempre vazias ([]) para cada usuário
   const [routines, setRoutines] = useState<Routine[]>(() => {
     try {
       const saved = localStorage.getItem(`change_${currentUser.id}_routines`);
@@ -371,7 +405,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [settings, setSettings] = useState<UserSettings>(() => {
     try {
       const saved = localStorage.getItem(`change_${currentUser.id}_settings`);
-      return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : { ...DEFAULT_SETTINGS, user_name: currentUser.name };
+      return saved
+        ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) }
+        : { ...DEFAULT_SETTINGS, user_name: currentUser.name };
     } catch {
       return { ...DEFAULT_SETTINGS, user_name: currentUser.name };
     }
@@ -379,7 +415,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [completedWorkoutSummary, setCompletedWorkoutSummary] = useState<Workout | null>(null);
 
-  // Temporizador de descanso
   const [restTimer, setRestTimer] = useState<RestTimerState>({
     isActive: false,
     remainingSeconds: 0,
@@ -436,13 +471,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(userKey('settings'), JSON.stringify(settings));
   }, [settings, currentUser.id]);
 
-  // Sincronização automática em segundo plano com o Supabase (Debounced para zero travamento)
+  // Sincronização automática em segundo plano com o Supabase
   const syncTimeoutRef = useRef<number | null>(null);
   const isPullingCloudRef = useRef<boolean>(false);
 
   const syncNowWithCloud = async (): Promise<boolean> => {
-    if (!isCloudConfigured()) {
-      setCloudStatus('unconfigured');
+    if (!isCloudConfigured() || !isAuthenticated) {
       return false;
     }
     setCloudStatus('syncing');
@@ -460,7 +494,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   useEffect(() => {
-    if (!isCloudConfigured() || isPullingCloudRef.current) return;
+    if (!isCloudConfigured() || !isAuthenticated || isPullingCloudRef.current) return;
 
     if (syncTimeoutRef.current) {
       window.clearTimeout(syncTimeoutRef.current);
@@ -475,9 +509,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         window.clearTimeout(syncTimeoutRef.current);
       }
     };
-  }, [workouts, routines, folders, exercises, measurements, settings, currentUser.id]);
+  }, [workouts, routines, folders, exercises, measurements, settings, currentUser.id, isAuthenticated]);
 
-  // Busca dados da nuvem ao iniciar ou trocar de usuário (se o conector Supabase estiver ativo)
   const pullCloudDataForUser = async (user: UserProfile) => {
     if (!isCloudConfigured() || !user.email) return;
     setCloudStatus('syncing');
@@ -494,7 +527,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const localWorkouts = localWorkoutsRaw ? normalizeSavedWorkouts(JSON.parse(localWorkoutsRaw)) : [];
         const localRoutines = localRoutinesRaw ? sanitizeUserRoutines(JSON.parse(localRoutinesRaw)) : [];
 
-        // Se a nuvem está vazia mas o aparelho já tem treinos/planos locais, sobe os locais para a nuvem
         if (
           cloudWorkouts.length === 0 &&
           cloudRoutines.length === 0 &&
@@ -546,25 +578,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   useEffect(() => {
-    if (isCloudConfigured()) {
-      pullAllUserProfilesFromCloud().then((cloudUsers) => {
-        if (cloudUsers.length > 0) {
-          setUsers((prev) => {
-            const byEmail = new Map<string, UserProfile>();
-            prev.forEach((u) => byEmail.set(u.email.toLowerCase(), u));
-            cloudUsers.forEach((cu) => {
-              const existing = byEmail.get(cu.email.toLowerCase());
-              byEmail.set(cu.email.toLowerCase(), existing ? { ...existing, ...cu } : cu);
+    if (isCloudConfigured() && isAuthenticated) {
+      if (isAdminProfile(currentUser)) {
+        pullAllUserProfilesFromCloud().then((cloudUsers) => {
+          if (cloudUsers.length > 0) {
+            setUsers((prev) => {
+              const byEmail = new Map<string, UserProfile>();
+              prev.forEach((u) => byEmail.set(u.email.toLowerCase(), u));
+              cloudUsers.forEach((cu) => {
+                const existing = byEmail.get(cu.email.toLowerCase());
+                byEmail.set(cu.email.toLowerCase(), existing ? { ...existing, ...cu } : cu);
+              });
+              return Array.from(byEmail.values());
             });
-            return Array.from(byEmail.values());
-          });
-        }
-      });
+          }
+        });
+      }
       pullCloudDataForUser(currentUser);
     }
-  }, [currentUser.id]);
+  }, [currentUser.id, isAuthenticated]);
 
-  // Recarrega os dados locais ao trocar de usuário
   const reloadUserData = (userId: string, userName?: string) => {
     try {
       const savedWorkouts = localStorage.getItem(`change_${userId}_workouts`);
@@ -601,102 +634,159 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Funções de Autenticação & Usuários (Local + Nuvem)
-  const registerUser = async (name: string, email: string, password?: string): Promise<boolean> => {
-    const cleanEmail = email.trim().toLowerCase();
-    const existing = users.find((u) => u.email.toLowerCase() === cleanEmail);
-    if (existing) return false;
+  // Exclusivo para Aristeu e Vitória: Cria novo acesso na nuvem sem deslogar o admin
+  const adminCreateUser = async (
+    name: string,
+    emailOrUsername: string,
+    password: string
+  ): Promise<{ ok: boolean; error?: string }> => {
+    if (!isAdminProfile(currentUser)) {
+      return { ok: false, error: 'Apenas Aristeu e Vitória têm permissão para criar cadastros.' };
+    }
+
+    const rawIdentifier = emailOrUsername.trim().toLowerCase();
+    const finalEmail = rawIdentifier.includes('@') ? rawIdentifier : `${rawIdentifier}@change.app`;
+
+    const existingLocal = users.find((u) => u.email.toLowerCase() === finalEmail);
+    if (existingLocal) {
+      return { ok: false, error: 'Este usuário ou e-mail já está cadastrado.' };
+    }
 
     const newUser: UserProfile = {
       id: `user-${Date.now()}`,
       name: name.trim(),
-      email: cleanEmail,
-      password,
+      email: finalEmail,
+      password: password.trim(),
+      is_admin: false,
       avatar_color: '#ffffff',
       created_at: new Date().toISOString()
     };
 
-    setUsers((prev) => [...prev, newUser]);
-    setCurrentUser(newUser);
-    reloadUserData(newUser.id, newUser.name);
-
     if (isCloudConfigured()) {
-      await pushUserToCloud(newUser, {
-        workouts: [],
-        routines: [],
-        folders: [],
-        exercises: DEFAULT_EXERCISES,
-        personalRecords: {},
-        measurements: [],
-        settings: { ...DEFAULT_SETTINGS, user_name: newUser.name }
-      });
+      const cloudRes = await createCloudUserByAdmin(newUser, DEFAULT_SETTINGS);
+      if (!cloudRes.ok) {
+        return cloudRes;
+      }
     }
 
+    setUsers((prev) => [...prev, newUser]);
+    return { ok: true };
+  };
+
+  // Exclusivo para Aristeu e Vitória: Revoga o acesso de um convidado
+  const adminDeleteUser = async (email: string): Promise<boolean> => {
+    if (!isAdminProfile(currentUser)) return false;
+    const cleanEmail = email.trim().toLowerCase();
+    if (cleanEmail === 'aristeu@change.app' || cleanEmail === 'vitoria@change.app') return false;
+
+    if (isCloudConfigured()) {
+      await deleteCloudUserByAdmin(cleanEmail);
+    }
+
+    setUsers((prev) => prev.filter((u) => u.email.toLowerCase() !== cleanEmail));
     return true;
   };
 
-  const loginUser = async (email: string, password?: string): Promise<boolean> => {
-    const cleanEmail = email.trim().toLowerCase();
-    const foundLocal = users.find(
-      (u) =>
-        u.email.toLowerCase() === cleanEmail &&
-        (!u.password || u.password === password)
+  // Altera a senha do próprio usuário logado
+  const changeMyPassword = async (newPassword: string): Promise<boolean> => {
+    const cleanPass = newPassword.trim();
+    if (!cleanPass) return false;
+
+    if (isCloudConfigured()) {
+      const ok = await updateCloudUserPassword(currentUser.email, cleanPass);
+      if (!ok) return false;
+    }
+
+    const updatedUser: UserProfile = { ...currentUser, password: cleanPass };
+    setCurrentUser(updatedUser);
+    setUsers((prev) =>
+      prev.map((u) => (u.email.toLowerCase() === currentUser.email.toLowerCase() ? updatedUser : u))
     );
+    return true;
+  };
+
+  // Login com verificação na nuvem (Supabase) e fallback local
+  const loginUser = async (identifier: string, password?: string): Promise<boolean> => {
+    const normalized = normalizeLoginIdentifier(identifier);
+    const inputPass = (password || '').trim();
+
+    // 1. Verifica primeiro na nuvem (Supabase) para validar qualquer usuário cadastrado em qualquer aparelho
+    if (isCloudConfigured()) {
+      const cloudAccount = await pullUserFromCloudByEmail(identifier);
+      if (cloudAccount) {
+        const expectedPass = cloudAccount.password_hash || '123456';
+        if (expectedPass === inputPass) {
+          const restoredUser: UserProfile = {
+            id: cloudAccount.user_id || `user-${Date.now()}`,
+            name: cloudAccount.name,
+            email: cloudAccount.email,
+            password: expectedPass,
+            is_admin: isAdminProfile({
+              id: cloudAccount.user_id,
+              name: cloudAccount.name,
+              email: cloudAccount.email,
+              avatar_color: '#ffffff',
+              created_at: ''
+            }),
+            avatar_color: cloudAccount.avatar_color || '#ffffff',
+            created_at: cloudAccount.updated_at || new Date().toISOString()
+          };
+
+          setUsers((prev) => {
+            const filtered = prev.filter(
+              (u) => u.email.toLowerCase() !== restoredUser.email.toLowerCase()
+            );
+            return [...filtered, restoredUser];
+          });
+          setCurrentUser(restoredUser);
+          reloadUserData(restoredUser.id, restoredUser.name);
+          localStorage.setItem('change_auth_session_active', 'true');
+          setIsAuthenticated(true);
+          await pullCloudDataForUser(restoredUser);
+          return true;
+        }
+        return false;
+      }
+    }
+
+    // 2. Fallback local (caso sem internet no momento)
+    const foundLocal = users.find((u) => {
+      const emailMatch =
+        u.email.toLowerCase() === normalized ||
+        u.email.toLowerCase() === `${normalized}@change.app`;
+      const nameMatch =
+        u.name
+          .trim()
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') ===
+        identifier
+          .trim()
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
+      const expectedLocalPass = u.password || '123456';
+      return (emailMatch || nameMatch) && expectedLocalPass === inputPass;
+    });
 
     if (foundLocal) {
       setCurrentUser(foundLocal);
       reloadUserData(foundLocal.id, foundLocal.name);
-      if (isCloudConfigured()) {
-        await pullCloudDataForUser(foundLocal);
-      }
+      localStorage.setItem('change_auth_session_active', 'true');
+      setIsAuthenticated(true);
       return true;
-    }
-
-    // Se não achou localmente, verifica se o usuário existe no banco em nuvem (ex.: acessando de outro celular)
-    if (isCloudConfigured()) {
-      const cloudAccount = await pullUserFromCloudByEmail(cleanEmail);
-      if (
-        cloudAccount &&
-        (!cloudAccount.password_hash || cloudAccount.password_hash === (password || ''))
-      ) {
-        const restoredUser: UserProfile = {
-          id: cloudAccount.user_id || `user-${Date.now()}`,
-          name: cloudAccount.name,
-          email: cloudAccount.email,
-          password: cloudAccount.password_hash,
-          avatar_color: cloudAccount.avatar_color || '#ffffff',
-          created_at: cloudAccount.updated_at || new Date().toISOString()
-        };
-
-        setUsers((prev) => {
-          if (prev.some((u) => u.email.toLowerCase() === cleanEmail)) return prev;
-          return [...prev, restoredUser];
-        });
-        setCurrentUser(restoredUser);
-        await pullCloudDataForUser(restoredUser);
-        return true;
-      }
     }
 
     return false;
   };
 
-  const switchUser = (userId: string) => {
-    const target = users.find((u) => u.id === userId);
-    if (target) {
-      setCurrentUser(target);
-      reloadUserData(target.id, target.name);
-    }
-  };
-
   const logoutUser = () => {
-    if (users.length > 0) {
-      setCurrentUser(users[0]);
-      reloadUserData(users[0].id, users[0].name);
-    }
+    localStorage.removeItem('change_auth_session_active');
+    setIsAuthenticated(false);
+    setWorkoutModalOpen(false);
   };
 
-  // Contagem regressiva do descanso otimizada
+  // Contagem regressiva do descanso
   useEffect(() => {
     if (!restTimer.isActive) return;
 
@@ -816,7 +906,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
       }).catch(() => {});
     } catch {
-      // Ignora se indisponível
+      // Ignora
     }
 
     return finished;
@@ -948,7 +1038,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveWorkout({ ...activeWorkout, exercises: nextExercises });
   };
 
-  // Temporizador de Descanso
   const startRestTimer = (seconds: number, exerciseTitle = '') => {
     setRestTimer({
       isActive: true,
@@ -978,7 +1067,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // Planos de Treino (Rotinas) & Pastas
   const saveRoutine = (routine: Routine) => {
     setRoutines((prev) => {
       const idx = prev.findIndex((r) => r.id === routine.id);
@@ -1011,7 +1099,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
-  // Exercícios Customizados
   const addCustomExercise = (ex: Omit<ExerciseTemplate, 'id' | 'is_custom'>) => {
     const newEx: ExerciseTemplate = {
       ...ex,
@@ -1025,7 +1112,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setExercises((prev) => prev.filter((e) => e.id !== id));
   };
 
-  // Medidas
   const saveMeasurement = (m: BodyMeasurement) => {
     setMeasurements((prev) => {
       const filtered = prev.filter((item) => item.date !== m.date);
@@ -1033,16 +1119,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // Configurações
   const updateSettings = (newSettings: Partial<UserSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   };
 
-  // Backup e Restauração
   const exportDataJson = (): string => {
     const data = {
       app: 'Change',
-      version: '2.1.0',
+      version: '2.2.0',
       exportedAt: new Date().toISOString(),
       user: currentUser,
       workouts,
@@ -1079,78 +1163,82 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCompletedWorkoutSummary(null);
   };
 
-  const contextValue = useMemo(() => ({
-    users,
-    currentUser,
-    registerUser,
-    loginUser,
-    switchUser,
-    logoutUser,
-    cloudStatus,
-    syncNowWithCloud,
-    theme,
-    toggleTheme,
-    workouts,
-    activeWorkout,
-    isWorkoutModalOpen,
-    setWorkoutModalOpen,
-    startWorkout,
-    finishWorkout,
-    discardWorkout,
-    deleteWorkout,
-    clearWorkouts,
-    updateWorkoutTitle,
-    addExerciseToWorkout,
-    removeExerciseFromWorkout,
-    addSet,
-    removeSet,
-    updateSet,
-    toggleSetCompleted,
-    restTimer,
-    startRestTimer,
-    adjustRestTimer,
-    skipRestTimer,
-    routines,
-    folders,
-    saveRoutine,
-    deleteRoutine,
-    createFolder,
-    deleteFolder,
-    exercises,
-    addCustomExercise,
-    deleteCustomExercise,
-    personalRecords,
-    measurements,
-    saveMeasurement,
-    settings,
-    updateSettings,
-    exportDataJson,
-    importDataJson,
-    completedWorkoutSummary,
-    closeSummaryModal
-  }), [
-    users,
-    currentUser,
-    cloudStatus,
-    theme,
-    workouts,
-    activeWorkout,
-    isWorkoutModalOpen,
-    restTimer,
-    routines,
-    folders,
-    exercises,
-    personalRecords,
-    measurements,
-    settings,
-    completedWorkoutSummary
-  ]);
-
-  return (
-    <AppContext.Provider value={contextValue}>
-      {children}
-    </AppContext.Provider>
+  const contextValue = useMemo(
+    () => ({
+      users,
+      currentUser,
+      isAuthenticated,
+      isCurrentUserAdmin,
+      loginUser,
+      logoutUser,
+      adminCreateUser,
+      adminDeleteUser,
+      changeMyPassword,
+      cloudStatus,
+      syncNowWithCloud,
+      theme,
+      toggleTheme,
+      workouts,
+      activeWorkout,
+      isWorkoutModalOpen,
+      setWorkoutModalOpen,
+      startWorkout,
+      finishWorkout,
+      discardWorkout,
+      deleteWorkout,
+      clearWorkouts,
+      updateWorkoutTitle,
+      addExerciseToWorkout,
+      removeExerciseFromWorkout,
+      addSet,
+      removeSet,
+      updateSet,
+      toggleSetCompleted,
+      restTimer,
+      startRestTimer,
+      adjustRestTimer,
+      skipRestTimer,
+      routines,
+      folders,
+      saveRoutine,
+      deleteRoutine,
+      createFolder,
+      deleteFolder,
+      exercises,
+      addCustomExercise,
+      deleteCustomExercise,
+      personalRecords,
+      measurements,
+      saveMeasurement,
+      settings,
+      updateSettings,
+      exportDataJson,
+      importDataJson,
+      completedWorkoutSummary,
+      closeSummaryModal
+    }),
+    [
+      users,
+      currentUser,
+      isAuthenticated,
+      isCurrentUserAdmin,
+      cloudStatus,
+      theme,
+      workouts,
+      activeWorkout,
+      isWorkoutModalOpen,
+      restTimer,
+      routines,
+      folders,
+      exercises,
+      personalRecords,
+      measurements,
+      settings,
+      completedWorkoutSummary
+    ]
   );
+
+  return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>;
 };
 
 export const useApp = () => {

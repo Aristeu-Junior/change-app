@@ -31,6 +31,7 @@ export const SettingsView: React.FC = () => {
     theme,
     toggleTheme,
     currentUser,
+    isCurrentUserAdmin,
     cloudStatus,
     syncNowWithCloud
   } = useApp();
@@ -102,11 +103,18 @@ export const SettingsView: React.FC = () => {
         <p className="text-xs text-zinc-400">Perfis, nuvem, tema & preferências</p>
       </div>
 
-      {/* MÚLTIPLOS USUÁRIOS / PERFIS (ARISTEU, VITÓRIA E AMIGOS) */}
+      {/* CONTA DO ATLETA E GESTÃO DE CONVIDADOS (ADMIN: ARISTEU & VITÓRIA) */}
       <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-3">
-        <span className="text-xs uppercase font-bold text-zinc-400 block">
-          Perfil Exclusivo do Atleta
-        </span>
+        <div className="flex items-center justify-between">
+          <span className="text-xs uppercase font-bold text-zinc-400 block">
+            Minha Conta Exclusiva
+          </span>
+          {isCurrentUserAdmin && (
+            <span className="px-2 py-0.5 rounded bg-white text-black text-[9px] font-black uppercase">
+              Admin
+            </span>
+          )}
+        </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-white text-black font-black flex items-center justify-center text-sm shadow-md">
@@ -123,18 +131,18 @@ export const SettingsView: React.FC = () => {
             className="px-3.5 py-2 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-sm"
           >
             <Users className="w-3.5 h-3.5" />
-            <span>Trocar / Criar</span>
+            <span>{isCurrentUserAdmin ? 'Cadastrar / Conta' : 'Minha Conta'}</span>
           </button>
         </div>
       </div>
 
-      {/* CONECTOR DE BANCO EM NUVEM (SUPABASE) */}
+      {/* STATUS DE SINCRONIZAÇÃO EM NUVEM (SUPABASE) */}
       <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Cloud className="w-4 h-4 text-white" />
             <span className="text-xs uppercase font-bold text-zinc-400">
-              Banco em Nuvem (Supabase Multi-Usuário)
+              Banco em Nuvem (Supabase São Paulo)
             </span>
           </div>
           <span
@@ -155,41 +163,27 @@ export const SettingsView: React.FC = () => {
         </div>
 
         <p className="text-xs text-zinc-400 leading-relaxed">
-          Salva automaticamente os treinos de <strong>Aristeu</strong>, <strong>Vitória</strong> e seus amigos na nuvem sem pesar o aplicativo.
+          Seus treinos e cargas ficam salvos de forma isolada na nuvem do perfil <strong>{currentUser.name}</strong>.
         </p>
 
-        {cloudMsg && (
+        {isCurrentUserAdmin && cloudMsg && (
           <div className="p-2.5 bg-[#18181b] border border-white/30 rounded-xl text-xs font-bold text-white">
             {cloudMsg}
           </div>
         )}
 
-        <form onSubmit={handleSaveCloudConfig} className="space-y-2.5 pt-1">
-          <input
-            type="url"
-            value={supabaseUrl}
-            onChange={(e) => setSupabaseUrl(e.target.value)}
-            placeholder="URL do Projeto Supabase (https://xxx.supabase.co)"
-            className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white"
-          />
-          <input
-            type="password"
-            value={supabaseAnonKey}
-            onChange={(e) => setSupabaseAnonKey(e.target.value)}
-            placeholder="Anon / Public Key do Supabase"
-            className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white"
-          />
-          <div className="flex gap-2">
+        {isCurrentUserAdmin && (
+          <form onSubmit={handleSaveCloudConfig} className="space-y-2.5 pt-1">
             <button
-              type="submit"
-              disabled={isTestingCloud}
-              className="flex-1 py-2.5 bg-white text-black font-black text-xs rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95"
+              type="button"
+              onClick={() => syncNowWithCloud()}
+              className="w-full py-2.5 bg-[#18181b] hover:bg-[#222226] border border-[#27272a] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isTestingCloud ? 'animate-spin' : ''}`} />
-              <span>{isTestingCloud ? 'Conectando...' : 'Conectar & Sincronizar'}</span>
+              <span>Forçar Sincronização com a Nuvem Agora</span>
             </button>
-          </div>
-        </form>
+          </form>
+        )}
       </div>
 
       {/* TEMA PRETO E BRANCO & BRANCO E PRETO */}

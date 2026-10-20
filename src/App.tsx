@@ -1,6 +1,7 @@
 import React, { useState, lazy, Suspense } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { MobileTabBar, TabType } from './components/MobileTabBar';
+import { AuthLoginScreen } from './components/AuthLoginScreen';
 
 // Code-splitting de alta performance: carrega cada aba sob demanda
 const RoutinesView = lazy(() => import('./components/views/RoutinesView').then(m => ({ default: m.RoutinesView })));
@@ -19,8 +20,13 @@ const ViewLoadingFallback: React.FC = () => (
 );
 
 const AppContent: React.FC = () => {
-  const { theme } = useApp();
+  const { theme, isAuthenticated } = useApp();
   const [currentTab, setCurrentTab] = useState<TabType>('routines');
+
+  // Exige autenticação na tela de login estilo Hevy antes de exibir os treinos
+  if (!isAuthenticated) {
+    return <AuthLoginScreen />;
+  }
 
   const isLight = theme === 'light';
 
