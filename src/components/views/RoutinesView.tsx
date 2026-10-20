@@ -84,20 +84,137 @@ export const RoutinesView: React.FC = () => {
     return map;
   }, [allTemplates]);
 
-  // Calcula metadados de fila de prioridade para uma lista/categoria de treinos
+  // Normaliza texto (sem acentos e minúsculo) para comparar nomes de treinos personalizados
+  const normalizeText = (str: string): string =>
+    (str || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+  // Extrai grupos musculares principais a partir do nome personalizado ("Peito", "Costas", "Bíceps"...) e dos exercícios
+  const extractTargetMuscles = (title: string, exList: { exercise_template_id: string; title: string }[]): Set<string> => {
+    const muscles = new Set<string>();
+    const normTitle = normalizeText(title);
+
+    const keywordMap: [string[], string][] = [
+      [['peito', 'peitoral', 'supino', 'push'], 'peito'],
+      [['costa', 'costas', 'dorsal', 'remada', 'puxada', 'pull'], 'costas'],
+      [['biceps', 'rosca', 'braco'], 'biceps'],
+      [['triceps', 'testa', 'pulley'], 'triceps'],
+      [['ombro', 'ombros', 'deltoide', 'elevacao'], 'ombros'],
+      [['perna', 'pernas', 'quadriceps', 'agachamento', 'leg', 'inferior'], 'quadriceps'],
+      [['posterior', 'isquiotibiais', 'mesa flexora', 'stiff'], 'isquiotibiais'],
+      [['gluteo', 'gluteos', 'elevacao pelvica'], 'gluteos'],
+      [['panturrilha', 'gemeos'], 'panturrilha'],
+      [['abdomen', 'abdominal', 'core'], 'abdomen']
+    ];
+
+    keywordMap.forEach(([keywords, group]) => {
+      if (keywords.some((kw) => normTitle.includes(kw))) {
+        muscles.add(group);
+      }
+    });
+
+    // Conta os grupos musculares dos exercícios que compõem o treino criado pelo usuário
+    const muscleCounts: Record<string, number> = {};
+    exList.forEach((ex) => {
+      const tpl =
+        templateMap[ex.exercise_template_id] ||
+        templateMap[ex.title.toLowerCase()];
+      const pGroup = tpl?.primary_muscle_group?.toLowerCase();
+      if (pGroup) {
+        const normalizedGroup = pGroup === 'lats' ? 'costas' : pGroup;
+        muscleCounts[normalizedGroup] = (muscleCounts[normalizedGroup] || 0) + 1;
+      }
+    });
+
+    const totalEx = exList.length;
+    if (totalEx > 0) {
+      Object.entries(muscleCounts).forEach(([group, count]) => {
+        // Se pelo menos 2 exercícios ou >= 40% do treino foca naquele músculo, marca como músculo-alvo do treino
+        if (count >= 2 || count / totalEx >= 0.4) {
+          muscles.add(group);
+        }
+      });
+    }
+
+    return muscles;
+  };
+
+  // Descobre o último treino realizado que corresponde a esta rotina personalizada (por ID, nome, exercícios em comum ou grupo muscular)
+  const findLatestMatchingWorkoutForRoutine = (r: Routine) => {
+    const normRoutineTitle = normalizeText(r.title);
+    const routineExIds = new Set(
+      r.exercises.map((e) => e.exercise_template_id || normalizeText(e.title))
+    );
+    const routineMuscles = extractTargetMuscles(r.title, r.exercises);
+
+    for (const w of workouts) {
+      // 1. Match direto por ID da rotina ou Nome do treino
+      const normWTitle = normalizeText(w.title);
+      if (
+        w.routine_id === r.id ||
+        (normRoutineTitle && normWTitle === normRoutineTitle)
+      ) {
+        return w;
+      }
+
+      // 2. Match inteligente por exercícios em comum (treinos personalizados criados pelo usuário)
+      const completedExercises = w.exercises.filter((ex) =>
+        ex.sets.some((s) => s.completed)
+      );
+      const effectiveWExercises =
+        completedExercises.length > 0 ? completedExercises : w.exercises;
+
+      if (routineExIds.size > 0 && effectiveWExercises.length > 0) {
+        let sharedCount = 0;
+        effectiveWExercises.forEach((wEx) => {
+          const keyId = wEx.exercise_template_id;
+          const keyTitle = normalizeText(wEx.title);
+          if (routineExIds.has(keyId) || routineExIds.has(keyTitle)) {
+            sharedCount++;
+          }
+        });
+
+        const minRequired = routineExIds.size === 1 ? 1 : Math.max(2, Math.ceil(routineExIds.size * 0.5));
+        if (sharedCount >= minRequired) {
+          return w;
+        }
+      }
+
+      // 3. Match inteligente por grupo muscular / nome customizado (Ex: "Peito", "Costas", "Bíceps")
+      if (routineMuscles.size > 0 && effectiveWExercises.length > 0) {
+        const wMuscles = extractTargetMuscles(w.title, effectiveWExercises);
+        if (wMuscles.size > 0) {
+          let matchedMuscles = 0;
+          routineMuscles.forEach((m) => {
+            if (wMuscles.has(m)) matchedMuscles++;
+          });
+          // Se todos os grupos principais do treino (ex: Peito, ou Peito + Bíceps) foram treinados nesse workout
+          if (
+            matchedMuscles === routineMuscles.size ||
+            (routineMuscles.size >= 2 && matchedMuscles >= 2)
+          ) {
+            return w;
+          }
+        }
+      }
+    }
+
+    return undefined;
+  };
+
+  // Calcula metadados de fila de prioridade para uma lista/categoria de treinos (incluindo treinos criados pelo próprio usuário)
   const buildPriorityQueueForList = (list: Routine[]): RoutineQueueMeta[] => {
     if (list.length === 0) return [];
 
     const now = Date.now();
     const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
 
-    // 1. Descobre quando cada rotina foi feita pela última vez no histórico
+    // 1. Descobre quando cada rotina (ou seus exercícios/músculos) foi treinada pela última vez
     const withLastTime = list.map((r, originalIdx) => {
-      const matchedWorkout = workouts.find(
-        (w) =>
-          w.routine_id === r.id ||
-          w.title.trim().toLowerCase() === r.title.trim().toLowerCase()
-      );
+      const matchedWorkout = findLatestMatchingWorkoutForRoutine(r);
       const lastTime = matchedWorkout
         ? new Date(matchedWorkout.end_time || matchedWorkout.start_time).getTime()
         : 0;
@@ -120,7 +237,7 @@ export const RoutinesView: React.FC = () => {
       };
     });
 
-    // 2. Se houver apenas 1 treino na lista, retorna direto
+    // 2. Se houver apenas 1 treino na lista, ainda marca se já foi treinado recentemente
     if (withLastTime.length === 1) {
       const item = withLastTime[0];
       return [
@@ -148,13 +265,10 @@ export const RoutinesView: React.FC = () => {
       return a.lastDoneTime - b.lastDoneTime;
     });
 
-    // Verifica se algum treino do grupo já foi feito nesta semana
     const anyDoneThisWeek = sorted.some((item) => item.doneThisWeek);
-    // Se todos já foram feitos na semana, o ciclo reiniciou e o mais antigo volta a ser a recomendação #1
     const allDoneThisWeek = sorted.every((item) => item.doneThisWeek);
 
     return sorted.map((item, idx) => {
-      // Considera "já feito no ciclo atual" se foi feito na semana e (não é o primeiro da fila após fechar ciclo, ou é o último feito)
       const isDoneInCurrentCycle = allDoneThisWeek
         ? idx > 0 && item.doneThisWeek
         : item.doneThisWeek;
@@ -165,24 +279,34 @@ export const RoutinesView: React.FC = () => {
         lastDoneDateStr: item.lastDoneDateStr,
         doneThisWeek: item.doneThisWeek,
         isDoneInCurrentCycle,
-        isTopRecommended: anyDoneThisWeek && idx === 0,
-        isNextInQueue: anyDoneThisWeek && idx === 1 && sorted.length > 2 && !isDoneInCurrentCycle
+        isTopRecommended: idx === 0 && (!allDoneThisWeek || anyDoneThisWeek),
+        isNextInQueue: idx === 1 && sorted.length >= 2 && !isDoneInCurrentCycle
       };
     });
   };
 
-  // Ao clicar em Iniciar: verifica se já treinou este plano na semana para exibir o aviso de confirmação
+  // Fila global de todos os treinos do usuário (para sugerir o próximo treino mesmo entre pastas diferentes)
+  const globalQueue = useMemo(
+    () => buildPriorityQueueForList(routines),
+    [routines, workouts, templateMap]
+  );
+
+  // Ao clicar em Iniciar: verifica se já treinou este plano/músculo recentemente para exibir o aviso de confirmação
   const handleStartRoutineClick = (
     meta: RoutineQueueMeta,
     groupQueue: RoutineQueueMeta[]
   ) => {
     if (meta.doneThisWeek) {
-      const topAlt = groupQueue.find(
-        (m) => m.routine.id !== meta.routine.id && !m.isDoneInCurrentCycle
-      );
+      const topAlt =
+        groupQueue.find(
+          (m) => m.routine.id !== meta.routine.id && !m.isDoneInCurrentCycle
+        ) ||
+        globalQueue.find(
+          (m) => m.routine.id !== meta.routine.id && !m.isDoneInCurrentCycle
+        );
       setRepeatConfirmRoutine({
         routine: meta.routine,
-        lastDoneDateStr: meta.lastDoneDateStr || 'nesta semana',
+        lastDoneDateStr: meta.lastDoneDateStr || 'recentemente nesta semana',
         recommendedAlternative: topAlt ? topAlt.routine : null
       });
       return;

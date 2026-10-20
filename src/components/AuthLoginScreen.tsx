@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Dumbbell,
   Lock,
@@ -12,20 +12,21 @@ import {
   Clock,
   UserCheck,
   User,
+  UserPlus,
   ArrowRight,
   ArrowLeft,
   KeyRound,
   Smartphone,
   CheckCircle2,
-  XCircle
+  XCircle,
+  ChevronRight
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import {
   requestPasswordRecoveryEmail,
   recoverPasswordWithTotp,
-  fetchGoogleClientIdFromCloud,
-  authenticateWithGoogleAccessToken,
   requestOrCheckGoogleAccess,
+  pullAllUserProfilesFromCloud,
   CloudUserPayload
 } from '../services/cloudSync';
 import { verifyTotpCode } from '../utils/totp';
@@ -34,14 +35,22 @@ type AuthMode =
   | 'login'
   | 'two_factor'
   | 'forgot_password'
-  | 'google_email_prompt'
-  | 'google_request_form'
+  | 'google_account_chooser'
+  | 'google_add_account'
   | 'google_pending'
   | 'google_approved'
   | 'access_denied';
 
+interface SavedGoogleAccountItem {
+  name: string;
+  email: string;
+  status?: 'approved' | 'pending' | 'rejected';
+}
+
+const DEVICE_GOOGLE_ACCOUNTS_KEY = 'change_device_google_accounts';
+
 export const AuthLoginScreen: React.FC = () => {
-  const { loginUserWith2FA, loginWithCloudPayload, theme, toggleTheme } = useApp();
+  const { users, loginUserWith2FA, loginWithCloudPayload, theme, toggleTheme } = useApp();
 
   const [mode, setMode] = useState<AuthMode>('login');
   const [identifier, setIdentifier] = useState('');
@@ -50,7 +59,19 @@ export const AuthLoginScreen: React.FC = () => {
   const [newRecoveryPassword, setNewRecoveryPassword] = useState('');
   const [useTotpForRecovery, setUseTotpForRecovery] = useState(false);
 
-  // Dados para solicitação de acesso via Google (quando e-mail não está pré-cadastrado)
+  // Contas Google disponíveis no seletor ("Escolha uma conta")
+  const [deviceGoogleAccounts, setDeviceGoogleAccounts] = useState<SavedGoogleAccountItem[]>(() => {
+    try {
+      const raw = localStorage.getItem(DEVICE_GOOGLE_ACCOUNTS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [cloudProfiles, setCloudProfiles] = useState<SavedGoogleAccountItem[]>([]);
+  const [selectingAccountEmail, setSelectingAccountEmail] = useState<string | null>(null);
+
+  // Dados para adicionar nova conta Google (quando a pessoa clica em "Usar outra conta")
   const [googleRequestName, setGoogleRequestName] = useState('');
   const [googleRequestPassword, setGoogleRequestPassword] = useState('');
   const [approvedCloudAccount, setApprovedCloudAccount] = useState<CloudUserPayload | null>(null);
@@ -59,19 +80,40 @@ export const AuthLoginScreen: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [googleClientId, setGoogleClientId] = useState<string | null>(null);
 
   // Caso o login via Google exija 2FA antes de concluir
   const [pendingGoogleAccount, setPendingGoogleAccount] = useState<CloudUserPayload | null>(null);
 
   const isLight = theme === 'light';
 
+  const saveAccountToDeviceChooser = (acc: SavedGoogleAccountItem) => {
+    setDeviceGoogleAccounts((prev) => {
+      const cleanEmail = acc.email.trim().toLowerCase();
+      const filtered = prev.filter((item) => item.email.toLowerCase() !== cleanEmail);
+      const next = [{ name: acc.name.trim(), email: cleanEmail, status: acc.status }, ...filtered];
+      try {
+        localStorage.setItem(DEVICE_GOOGLE_ACCOUNTS_KEY, JSON.stringify(next));
+      } catch {
+        // Ignore
+      }
+      return next;
+    });
+  };
+
+  // Carrega perfis existentes e verifica solicitações pendentes no aparelho
   useEffect(() => {
-    fetchGoogleClientIdFromCloud().then((cid) => {
-      if (cid) setGoogleClientId(cid);
+    pullAllUserProfilesFromCloud().then((list) => {
+      if (list && list.length > 0) {
+        setCloudProfiles(
+          list.map((u) => ({
+            name: u.name,
+            email: u.email,
+            status: 'approved'
+          }))
+        );
+      }
     });
 
-    // Verifica se este dispositivo tinha uma solicitação Google pendente
     const savedPendingEmail = localStorage.getItem('change_pending_google_email');
     if (savedPendingEmail) {
       setIdentifier(savedPendingEmail);
@@ -82,6 +124,11 @@ export const AuthLoginScreen: React.FC = () => {
           setMode('access_denied');
         } else if (res.status === 'approved' && res.account) {
           localStorage.removeItem('change_pending_google_email');
+          saveAccountToDeviceChooser({
+            name: res.account.name,
+            email: res.account.email,
+            status: 'approved'
+          });
           setApprovedCloudAccount(res.account);
           setMode('google_approved');
         } else {
@@ -90,6 +137,38 @@ export const AuthLoginScreen: React.FC = () => {
       });
     }
   }, []);
+
+  // Lista unificada de contas para o Seletor Padrão do Google ("Escolha uma conta")
+  const chooserAccounts = useMemo(() => {
+    const map = new Map<string, SavedGoogleAccountItem>();
+
+    // 1. Contas salvas neste dispositivo (prioridade no topo)
+    deviceGoogleAccounts.forEach((acc) => {
+      if (acc.email) {
+        map.set(acc.email.toLowerCase(), acc);
+      }
+    });
+
+    // 2. Perfis sincronizados da nuvem
+    cloudProfiles.forEach((acc) => {
+      if (acc.email && !map.has(acc.email.toLowerCase())) {
+        map.set(acc.email.toLowerCase(), acc);
+      }
+    });
+
+    // 3. Perfis locais conhecidos
+    users.forEach((u) => {
+      if (u.email && !map.has(u.email.toLowerCase())) {
+        map.set(u.email.toLowerCase(), {
+          name: u.name,
+          email: u.email,
+          status: 'approved'
+        });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [deviceGoogleAccounts, cloudProfiles, users]);
 
   // Monitoramento em tempo real enquanto aguarda aprovação do Admin (Aceitar ou Negar)
   useEffect(() => {
@@ -104,9 +183,19 @@ export const AuthLoginScreen: React.FC = () => {
       if (!active) return;
       if (res.status === 'approved' && res.account) {
         localStorage.removeItem('change_pending_google_email');
+        saveAccountToDeviceChooser({
+          name: res.account.name,
+          email: res.account.email,
+          status: 'approved'
+        });
         setApprovedCloudAccount(res.account);
         setMode('google_approved');
       } else if (res.status === 'rejected') {
+        saveAccountToDeviceChooser({
+          name: googleRequestName || cleanEmail.split('@')[0],
+          email: cleanEmail,
+          status: 'rejected'
+        });
         setMode('access_denied');
       }
     };
@@ -133,7 +222,7 @@ export const AuthLoginScreen: React.FC = () => {
       window.removeEventListener('pageshow', checkStatusNow);
       window.removeEventListener('online', checkStatusNow);
     };
-  }, [mode, identifier]);
+  }, [mode, identifier, googleRequestName]);
 
   const resetMessages = () => {
     setErrorMsg(null);
@@ -184,7 +273,6 @@ export const AuthLoginScreen: React.FC = () => {
     resetMessages();
     setIsLoading(true);
 
-    // Se veio do login pelo Google e a conta tem 2FA ativo
     if (pendingGoogleAccount) {
       const valid = await verifyTotpCode(pendingGoogleAccount.totp_secret || '', totpCode);
       if (!valid) {
@@ -205,189 +293,136 @@ export const AuthLoginScreen: React.FC = () => {
     }
   };
 
-  // 3. Login com o Google (Com sistema de Solicitação de Aprovação para o Administrador)
+  // 3. Ao tocar em "Continuar com o Google": abre imediatamente a Aba Padrão de Seleção de Contas do Google
   const handleGoogleSignInClick = () => {
     resetMessages();
-
-    // Se houver Google OAuth Client ID configurado, abre o Popup Oficial do Google sem sair da URL limpa
-    if (googleClientId) {
-      setIsLoading(true);
-      const loadGsiAndAuth = () => {
-        const googleObj = (window as any).google;
-        if (!googleObj?.accounts?.oauth2) {
-          setIsLoading(false);
-          setMode('google_email_prompt');
-          return;
-        }
-        const tokenClient = googleObj.accounts.oauth2.initTokenClient({
-          client_id: googleClientId,
-          scope: 'openid email profile',
-          prompt: 'select_account',
-          callback: async (tokenResponse: any) => {
-            if (tokenResponse?.access_token) {
-              const authRes = await authenticateWithGoogleAccessToken(tokenResponse.access_token);
-              setIsLoading(false);
-
-              if (authRes.status === 'rejected') {
-                setMode('access_denied');
-                return;
-              }
-
-              if (authRes.status === 'pending') {
-                setMode('google_pending');
-                return;
-              }
-
-              if (authRes.ok && authRes.account) {
-                if (authRes.account.totp_enabled && authRes.account.totp_secret) {
-                  setPendingGoogleAccount(authRes.account);
-                  setMode('two_factor');
-                } else {
-                  await loginWithCloudPayload(authRes.account);
-                }
-              } else {
-                setErrorMsg(authRes.error || 'Não foi possível autenticar com o Google.');
-              }
-            } else {
-              setIsLoading(false);
-            }
-          }
-        });
-        tokenClient.requestAccessToken();
-      };
-
-      if ((window as any).google?.accounts?.oauth2) {
-        loadGsiAndAuth();
-      } else {
-        const script = document.createElement('script');
-        script.src = 'https://accounts.google.com/gsi/client';
-        script.async = true;
-        script.onload = loadGsiAndAuth;
-        script.onerror = () => {
-          setIsLoading(false);
-          setMode('google_email_prompt');
-        };
-        document.head.appendChild(script);
+    pullAllUserProfilesFromCloud().then((list) => {
+      if (list && list.length > 0) {
+        setCloudProfiles(
+          list.map((u) => ({
+            name: u.name,
+            email: u.email,
+            status: 'approved'
+          }))
+        );
       }
-      return;
-    }
-
-    // Abre a verificação de Conta Google (@gmail.com)
-    setMode('google_email_prompt');
+    });
+    setMode('google_account_chooser');
   };
 
-  // Verifica status do e-mail Google informado
-  const handleGoogleEmailCheckSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanEmail = identifier.trim().toLowerCase();
-    if (!cleanEmail || !cleanEmail.includes('@')) {
-      setErrorMsg('Informe o seu endereço de e-mail do Google (ex: seuemail@gmail.com).');
-      return;
-    }
-
+  // 4. Ao tocar em uma Conta Google na lista ("Escolha uma conta para continuar no Change")
+  const handleSelectGoogleAccount = async (acc: SavedGoogleAccountItem) => {
     resetMessages();
+    const cleanEmail = acc.email.trim().toLowerCase();
+    setIdentifier(cleanEmail);
+    setGoogleRequestName(acc.name);
+    setSelectingAccountEmail(cleanEmail);
     setIsLoading(true);
-    const checkRes = await requestOrCheckGoogleAccess(cleanEmail);
+
+    const checkRes = await requestOrCheckGoogleAccess(cleanEmail, acc.name);
+    setSelectingAccountEmail(null);
     setIsLoading(false);
 
-    // 1. Caso o Admin tenha NEGADO o acesso desta pessoa
     if (checkRes.status === 'rejected') {
+      saveAccountToDeviceChooser({ ...acc, status: 'rejected' });
       setMode('access_denied');
       return;
     }
 
-    // 2. Caso já tenha enviado solicitação e esteja AGUARDANDO o Admin aceitar
     if (checkRes.status === 'pending') {
       localStorage.setItem('change_pending_google_email', cleanEmail);
+      saveAccountToDeviceChooser({ ...acc, status: 'pending' });
       setMode('google_pending');
       return;
     }
 
-    // 3. Caso o e-mail ainda NÃO esteja pré-cadastrado -> Pede Nome para enviar Solicitação ao Admin
-    if (checkRes.status === 'needs_registration') {
-      const suggestedName = cleanEmail.split('@')[0].replace(/[._0-9]/g, ' ').trim();
-      if (suggestedName && !googleRequestName) {
-        setGoogleRequestName(
-          suggestedName.charAt(0).toUpperCase() + suggestedName.slice(1)
-        );
-      }
-      setMode('google_request_form');
-      return;
-    }
-
-    // 4. Caso a conta já esteja APROVADA no sistema
     if (checkRes.status === 'approved' && checkRes.account) {
-      // Se não for conta Admin ou se acabou de ser aprovada neste aparelho, libera acesso imediato (ou pede 2FA se ativo)
-      if (!checkRes.account.is_admin) {
-        localStorage.removeItem('change_pending_google_email');
-        if (checkRes.account.totp_enabled && checkRes.account.totp_secret) {
-          setPendingGoogleAccount(checkRes.account);
-          setMode('two_factor');
-          return;
-        }
-        setApprovedCloudAccount(checkRes.account);
-        setMode('google_approved');
+      localStorage.removeItem('change_pending_google_email');
+      saveAccountToDeviceChooser({
+        name: checkRes.account.name,
+        email: checkRes.account.email,
+        status: 'approved'
+      });
+
+      if (checkRes.account.totp_enabled && checkRes.account.totp_secret) {
+        setPendingGoogleAccount(checkRes.account);
+        setMode('two_factor');
         return;
       }
 
-      // Para contas de Administrador, envia link seguro para o Gmail ou orienta usar a senha/2FA
-      setIsLoading(true);
-      const magicRes = await requestPasswordRecoveryEmail(cleanEmail);
-      setIsLoading(false);
-      if (magicRes.ok) {
-        setSuccessMsg(
-          `Enviamos um link de confirmação segura para sua conta Google de Administrador (${cleanEmail})!`
-        );
-      } else {
-        setErrorMsg(
-          magicRes.error || 'Conta de Administrador identificada. Use sua senha na tela inicial.'
-        );
-      }
-    }
-  };
-
-  // Envia a Solicitação de Acesso Google para o Admin aprovar ou negar
-  const handleSendGoogleAccessRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanEmail = identifier.trim().toLowerCase();
-    const cleanName = googleRequestName.trim();
-
-    if (!cleanName) {
-      setErrorMsg('Informe o seu nome para que o administrador identifique sua solicitação.');
+      await loginWithCloudPayload(checkRes.account);
       return;
     }
+
+    // Fallback local caso seja um dos perfis locais offline
+    const localMatch = users.find((u) => u.email.toLowerCase() === cleanEmail);
+    if (localMatch) {
+      await loginUserWith2FA(localMatch.email, localMatch.password || '123456');
+      return;
+    }
+
+    setErrorMsg(checkRes.message || 'Não foi possível conectar com esta conta Google.');
+  };
+
+  // 5. Quando uma pessoa nova escolhe "Usar outra conta" no seletor do Google
+  const handleAddAnotherGoogleAccountSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanEmail = identifier.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setErrorMsg('Informe um endereço de e-mail Google válido (ex: seuemail@gmail.com).');
+      return;
+    }
+
+    const derivedName =
+      googleRequestName.trim() ||
+      cleanEmail.split('@')[0].replace(/[._0-9]/g, ' ').trim() ||
+      'Atleta';
+    const formattedName = derivedName.charAt(0).toUpperCase() + derivedName.slice(1);
 
     resetMessages();
     setIsLoading(true);
     const res = await requestOrCheckGoogleAccess(
       cleanEmail,
-      cleanName,
+      formattedName,
       googleRequestPassword.trim() || undefined
     );
     setIsLoading(false);
 
-    if (res.status === 'pending') {
-      localStorage.setItem('change_pending_google_email', cleanEmail);
-      setMode('google_pending');
+    if (res.status === 'rejected') {
+      saveAccountToDeviceChooser({ name: formattedName, email: cleanEmail, status: 'rejected' });
+      setMode('access_denied');
       return;
     }
 
-    if (res.status === 'rejected') {
-      setMode('access_denied');
+    if (res.status === 'pending') {
+      localStorage.setItem('change_pending_google_email', cleanEmail);
+      saveAccountToDeviceChooser({ name: formattedName, email: cleanEmail, status: 'pending' });
+      setMode('google_pending');
       return;
     }
 
     if (res.status === 'approved' && res.account) {
       localStorage.removeItem('change_pending_google_email');
-      setApprovedCloudAccount(res.account);
-      setMode('google_approved');
+      saveAccountToDeviceChooser({
+        name: res.account.name,
+        email: res.account.email,
+        status: 'approved'
+      });
+
+      if (res.account.totp_enabled && res.account.totp_secret) {
+        setPendingGoogleAccount(res.account);
+        setMode('two_factor');
+        return;
+      }
+
+      await loginWithCloudPayload(res.account);
       return;
     }
 
-    setErrorMsg(res.error || 'Não foi possível enviar a solicitação de acesso.');
+    setErrorMsg(res.message || 'Não foi possível conectar esta conta Google.');
   };
 
-  // 4. Esqueci Minha Senha (Envio de Nova Senha por E-mail ou Redefinição Imediata via 2FA)
+  // 6. Esqueci Minha Senha (Envio de Nova Senha por E-mail ou Redefinição Imediata via 2FA)
   const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier.trim()) {
@@ -502,7 +537,7 @@ export const AuthLoginScreen: React.FC = () => {
               </div>
             )}
 
-            {/* Botão Entrar com o Google */}
+            {/* Botão Entrar com o Google -> Abre o Seletor Padrão de Contas do Google */}
             <button
               type="button"
               onClick={handleGoogleSignInClick}
@@ -596,7 +631,230 @@ export const AuthLoginScreen: React.FC = () => {
         )}
 
         {/* =========================================================
-            MODO 2: VERIFICAÇÃO DE 2 FATORES (2FA - GOOGLE AUTHENTICATOR)
+            MODO 2: SELETOR PADRÃO DE CONTAS DO GOOGLE ("ESCOLHA UMA CONTA")
+           ========================================================= */}
+        {mode === 'google_account_chooser' && (
+          <div className="my-auto py-5 animate-in fade-in duration-150">
+            <div className="bg-[#141416] border border-[#27272a] rounded-3xl overflow-hidden shadow-2xl">
+              {/* Barra Superior Oficial "Fazer login com o Google" */}
+              <div className="px-5 py-3.5 border-b border-[#27272a] flex items-center justify-between bg-[#18181b]">
+                <div className="flex items-center gap-2.5">
+                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"
+                    />
+                  </svg>
+                  <span className="text-xs font-bold text-zinc-200">
+                    Fazer login com o Google
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetMessages();
+                    setMode('login');
+                  }}
+                  className="text-[11px] font-bold text-zinc-400 hover:text-white transition"
+                >
+                  Cancelar
+                </button>
+              </div>
+
+              {/* Cabeçalho Central "Escolha uma conta" */}
+              <div className="px-6 pt-6 pb-4 text-center space-y-1.5">
+                <div className="w-11 h-11 rounded-2xl bg-white text-black font-black flex items-center justify-center mx-auto shadow-md mb-2">
+                  <Dumbbell className="w-5 h-5 stroke-[2.5] text-black" />
+                </div>
+                <h2 className="text-xl font-black text-white tracking-tight">
+                  Escolha uma conta
+                </h2>
+                <p className="text-xs text-zinc-400">
+                  para prosseguir para <strong className="text-white">Change</strong>
+                </p>
+              </div>
+
+              {errorMsg && (
+                <div className="mx-5 mb-3 p-3 rounded-xl bg-red-950/40 border border-red-500/30 text-xs font-bold text-red-300">
+                  {errorMsg}
+                </div>
+              )}
+
+              {/* Lista de Contas para Selecionar com 1 Toque */}
+              <div className="divide-y divide-[#27272a] border-t border-b border-[#27272a] max-h-72 overflow-y-auto">
+                {chooserAccounts.map((acc) => {
+                  const isBusy = selectingAccountEmail === acc.email.toLowerCase();
+                  return (
+                    <button
+                      key={acc.email}
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => handleSelectGoogleAccount(acc)}
+                      className="w-full px-5 py-3.5 hover:bg-[#1c1c1f] active:bg-zinc-800 flex items-center justify-between gap-3 text-left transition group"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-white text-black font-black text-sm flex items-center justify-center shrink-0 shadow">
+                          {acc.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-black text-white truncate">
+                              {acc.name}
+                            </span>
+                            {acc.status === 'pending' && (
+                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-300 font-bold">
+                                Pendente
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-zinc-400 truncate block">
+                            {acc.email}
+                          </span>
+                        </div>
+                      </div>
+
+                      {isBusy ? (
+                        <div className="w-4 h-4 rounded-full border-2 border-zinc-500 border-t-white animate-spin shrink-0" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4 text-zinc-500 group-hover:text-white group-hover:translate-x-0.5 transition shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+
+                {/* Opção Padrão do Google: "Usar outra conta" */}
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() => {
+                    resetMessages();
+                    setIdentifier('');
+                    setGoogleRequestName('');
+                    setGoogleRequestPassword('');
+                    setMode('google_add_account');
+                  }}
+                  className="w-full px-5 py-4 hover:bg-[#1c1c1f] active:bg-zinc-800 flex items-center gap-3.5 text-left transition"
+                >
+                  <div className="w-10 h-10 rounded-full bg-[#1c1c1f] border border-[#3f3f46] text-white flex items-center justify-center shrink-0">
+                    <UserPlus className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black text-white block">
+                      Usar outra conta
+                    </span>
+                    <span className="text-[10px] text-zinc-400 block">
+                      Conectar um novo e-mail do Google ao Change
+                    </span>
+                  </div>
+                </button>
+              </div>
+
+              <div className="px-6 py-4 bg-[#121214] text-[10px] text-zinc-500 leading-relaxed text-center">
+                Para continuar, o Google compartilhará seu nome e endereço de e-mail com o aplicativo Change.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================
+            MODO 3: USAR OUTRA CONTA GOOGLE (SOLICITAÇÃO AO ADMIN)
+           ========================================================= */}
+        {mode === 'google_add_account' && (
+          <div className="my-auto py-5 animate-in fade-in duration-150">
+            <div className="bg-[#141416] border border-[#27272a] rounded-3xl p-6 shadow-2xl space-y-5">
+              <button
+                type="button"
+                onClick={() => {
+                  resetMessages();
+                  setMode('google_account_chooser');
+                }}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white transition"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Voltar para as contas</span>
+              </button>
+
+              <div className="space-y-1.5">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#18181b] border border-[#27272a] text-[10px] font-black uppercase tracking-wider text-zinc-200">
+                  <span>Conta Google</span>
+                </div>
+                <h2 className="text-xl font-black text-white leading-tight">
+                  Fazer login com o Google
+                </h2>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Selecione sua conta informando seu Gmail abaixo. Caso seja seu primeiro acesso, o administrador receberá seu pedido de aprovação na hora.
+                </p>
+              </div>
+
+              {errorMsg && (
+                <div className="p-3 rounded-xl bg-red-950/40 border border-red-500/30 text-xs font-bold text-red-300">
+                  {errorMsg}
+                </div>
+              )}
+
+              <form onSubmit={handleAddAnotherGoogleAccountSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] uppercase tracking-wider font-black text-zinc-400 block">
+                    Seu Nome
+                  </label>
+                  <div className="relative">
+                    <User className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={googleRequestName}
+                      onChange={(e) => setGoogleRequestName(e.target.value)}
+                      placeholder="Como você se chama?"
+                      required
+                      className="w-full bg-[#18181b] border border-[#27272a] focus:border-white rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-white placeholder-zinc-500 focus:outline-none transition"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] uppercase tracking-wider font-black text-zinc-400 block">
+                    E-mail do Google (Gmail)
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      placeholder="seuemail@gmail.com"
+                      required
+                      className="w-full bg-[#18181b] border border-[#27272a] focus:border-white rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-white placeholder-zinc-500 focus:outline-none transition"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-3.5 bg-white hover:bg-zinc-200 text-black font-black text-xs uppercase tracking-widest rounded-xl shadow-xl flex items-center justify-center gap-2 transition active:scale-98 disabled:opacity-50"
+                >
+                  <span>{isLoading ? 'Conectando...' : 'Continuar com esta Conta'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================
+            MODO 4: VERIFICAÇÃO DE 2 FATORES (2FA - GOOGLE AUTHENTICATOR)
            ========================================================= */}
         {mode === 'two_factor' && (
           <div className="my-auto py-6 space-y-6 animate-in fade-in duration-150">
@@ -664,7 +922,7 @@ export const AuthLoginScreen: React.FC = () => {
         )}
 
         {/* =========================================================
-            MODO 3: ABA ESQUECI MINHA SENHA (POR E-MAIL OU 2FA)
+            MODO 5: ABA ESQUECI MINHA SENHA (POR E-MAIL OU 2FA)
            ========================================================= */}
         {mode === 'forgot_password' && (
           <div className="my-auto py-6 space-y-5 animate-in fade-in duration-150">
@@ -795,159 +1053,6 @@ export const AuthLoginScreen: React.FC = () => {
                     ? 'Redefinir Senha Agora'
                     : 'Enviar Nova Senha para o E-mail'}
                 </span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* =========================================================
-            MODO 4: IDENTIFICAÇÃO COM CONTA GOOGLE
-           ========================================================= */}
-        {mode === 'google_email_prompt' && (
-          <div className="my-auto py-6 space-y-5 animate-in fade-in duration-150">
-            <button
-              type="button"
-              onClick={() => {
-                resetMessages();
-                setMode('login');
-              }}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white transition"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Voltar para o login</span>
-            </button>
-
-            <div className="space-y-1.5">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#141416] border border-[#27272a] text-[10px] font-black uppercase tracking-wider text-zinc-300">
-                <Mail className="w-3 h-3 text-white" />
-                <span>Conexão Google</span>
-              </div>
-              <h2 className="text-2xl font-black text-white leading-tight">Continuar com o Google</h2>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                Informe o seu e-mail do Google (Gmail). Se for o seu primeiro acesso, uma solicitação será enviada ao administrador para aprovar sua entrada.
-              </p>
-            </div>
-
-            {errorMsg && (
-              <div className="p-3 rounded-xl bg-red-950/40 border border-red-500/30 text-xs font-bold text-red-300">
-                {errorMsg}
-              </div>
-            )}
-
-            {successMsg && (
-              <div className="p-3.5 rounded-xl bg-zinc-900 border border-white/40 text-xs font-bold text-white flex items-start gap-2.5 leading-relaxed">
-                <CheckCircle2 className="w-4 h-4 text-white shrink-0 mt-0.5" />
-                <span>{successMsg}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleGoogleEmailCheckSubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-wider font-black text-zinc-400 block">
-                  Seu E-mail do Google
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="email"
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="seuemail@gmail.com"
-                    required
-                    className="w-full bg-[#141416] border border-[#27272a] focus:border-white rounded-xl pl-10 pr-4 py-3.5 text-xs font-bold text-white placeholder-zinc-500 focus:outline-none transition"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-4 bg-white hover:bg-zinc-200 text-black font-black text-xs uppercase tracking-widest rounded-xl shadow-xl flex items-center justify-center gap-2 transition active:scale-98 disabled:opacity-50"
-              >
-                <span>{isLoading ? 'Verificando conta Google...' : 'Continuar'}</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* =========================================================
-            MODO 5: SOLICITAR APROVAÇÃO DE ACESSO (CONTA GOOGLE NOVA)
-           ========================================================= */}
-        {mode === 'google_request_form' && (
-          <div className="my-auto py-6 space-y-5 animate-in fade-in duration-150">
-            <button
-              type="button"
-              onClick={() => {
-                resetMessages();
-                setMode('google_email_prompt');
-              }}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-400 hover:text-white transition"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Trocar e-mail</span>
-            </button>
-
-            <div className="space-y-1.5">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#141416] border border-[#27272a] text-[10px] font-black uppercase tracking-wider text-zinc-300">
-                <ShieldCheck className="w-3 h-3 text-white" />
-                <span>Solicitação de Acesso</span>
-              </div>
-              <h2 className="text-2xl font-black text-white leading-tight">
-                Solicitar Entrada no Change
-              </h2>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                O e-mail <strong className="text-white">{identifier.trim().toLowerCase()}</strong> ainda não está cadastrado. Informe seu nome abaixo para enviar um pedido de aprovação ao administrador.
-              </p>
-            </div>
-
-            {errorMsg && (
-              <div className="p-3 rounded-xl bg-red-950/40 border border-red-500/30 text-xs font-bold text-red-300">
-                {errorMsg}
-              </div>
-            )}
-
-            <form onSubmit={handleSendGoogleAccessRequest} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-wider font-black text-zinc-400 block">
-                  Seu Nome
-                </label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={googleRequestName}
-                    onChange={(e) => setGoogleRequestName(e.target.value)}
-                    placeholder="Como você se chama?"
-                    required
-                    className="w-full bg-[#141416] border border-[#27272a] focus:border-white rounded-xl pl-10 pr-4 py-3.5 text-xs font-bold text-white placeholder-zinc-500 focus:outline-none transition"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[11px] uppercase tracking-wider font-black text-zinc-400 block">
-                  Crie uma Senha de Acesso (Opcional)
-                </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    value={googleRequestPassword}
-                    onChange={(e) => setGoogleRequestPassword(e.target.value)}
-                    placeholder="Para também entrar com e-mail e senha"
-                    className="w-full bg-[#141416] border border-[#27272a] focus:border-white rounded-xl pl-10 pr-4 py-3.5 text-xs font-bold text-white placeholder-zinc-500 focus:outline-none transition"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-4 bg-white hover:bg-zinc-200 text-black font-black text-xs uppercase tracking-widest rounded-xl shadow-xl flex items-center justify-center gap-2 transition active:scale-98 disabled:opacity-50"
-              >
-                <span>{isLoading ? 'Enviando solicitação...' : 'Pedir Aprovação de Acesso'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
