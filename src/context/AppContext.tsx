@@ -21,6 +21,7 @@ import {
 } from '../utils/calc';
 import {
   isCloudConfigured,
+  pullAllUserProfilesFromCloud,
   pullUserFromCloudByEmail,
   pushUserToCloud
 } from '../services/cloudSync';
@@ -487,27 +488,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const cloudWorkouts = normalizeSavedWorkouts(cloudData.workouts || []);
         const cloudRoutines = sanitizeUserRoutines(cloudData.routines || []);
         const cloudFolders = sanitizeUserFolders(cloudData.folders || [], cloudRoutines);
-        const cloudExercises = syncExercisesWithDefaults(cloudData.custom_exercises || []);
-        const cloudPrs = rebuildPersonalRecords(cloudWorkouts);
-        const cloudMeas = cloudData.measurements || [];
-        const cloudSettings = { ...DEFAULT_SETTINGS, ...(cloudData.settings || {}) };
 
-        setWorkouts(cloudWorkouts);
-        setRoutines(cloudRoutines);
-        setFolders(cloudFolders);
-        setExercises(cloudExercises);
-        setPersonalRecords(cloudPrs);
-        setMeasurements(cloudMeas);
-        setSettings(cloudSettings);
+        const localWorkoutsRaw = localStorage.getItem(`change_${user.id}_workouts`);
+        const localRoutinesRaw = localStorage.getItem(`change_${user.id}_routines`);
+        const localWorkouts = localWorkoutsRaw ? normalizeSavedWorkouts(JSON.parse(localWorkoutsRaw)) : [];
+        const localRoutines = localRoutinesRaw ? sanitizeUserRoutines(JSON.parse(localRoutinesRaw)) : [];
 
-        localStorage.setItem(`change_${user.id}_workouts`, JSON.stringify(cloudWorkouts));
-        localStorage.setItem(`change_${user.id}_routines`, JSON.stringify(cloudRoutines));
-        localStorage.setItem(`change_${user.id}_folders`, JSON.stringify(cloudFolders));
-        localStorage.setItem(`change_${user.id}_exercises`, JSON.stringify(cloudExercises));
-        localStorage.setItem(`change_${user.id}_prs`, JSON.stringify(cloudPrs));
-        localStorage.setItem(`change_${user.id}_measurements`, JSON.stringify(cloudMeas));
-        localStorage.setItem(`change_${user.id}_settings`, JSON.stringify(cloudSettings));
-        setCloudStatus('synced');
+        // Se a nuvem está vazia mas o aparelho já tem treinos/planos locais, sobe os locais para a nuvem
+        if (
+          cloudWorkouts.length === 0 &&
+          cloudRoutines.length === 0 &&
+          (localWorkouts.length > 0 || localRoutines.length > 0)
+        ) {
+          await pushUserToCloud(user, {
+            workouts: localWorkouts,
+            routines: localRoutines,
+            folders,
+            exercises,
+            personalRecords: rebuildPersonalRecords(localWorkouts),
+            measurements,
+            settings
+          });
+          setCloudStatus('synced');
+        } else {
+          const cloudExercises = syncExercisesWithDefaults(cloudData.custom_exercises || []);
+          const cloudPrs = rebuildPersonalRecords(cloudWorkouts);
+          const cloudMeas = cloudData.measurements || [];
+          const cloudSettings = { ...DEFAULT_SETTINGS, ...(cloudData.settings || {}) };
+
+          setWorkouts(cloudWorkouts);
+          setRoutines(cloudRoutines);
+          setFolders(cloudFolders);
+          setExercises(cloudExercises);
+          setPersonalRecords(cloudPrs);
+          setMeasurements(cloudMeas);
+          setSettings(cloudSettings);
+
+          localStorage.setItem(`change_${user.id}_workouts`, JSON.stringify(cloudWorkouts));
+          localStorage.setItem(`change_${user.id}_routines`, JSON.stringify(cloudRoutines));
+          localStorage.setItem(`change_${user.id}_folders`, JSON.stringify(cloudFolders));
+          localStorage.setItem(`change_${user.id}_exercises`, JSON.stringify(cloudExercises));
+          localStorage.setItem(`change_${user.id}_prs`, JSON.stringify(cloudPrs));
+          localStorage.setItem(`change_${user.id}_measurements`, JSON.stringify(cloudMeas));
+          localStorage.setItem(`change_${user.id}_settings`, JSON.stringify(cloudSettings));
+          setCloudStatus('synced');
+        }
       } else {
         setCloudStatus('idle');
       }
@@ -522,6 +547,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     if (isCloudConfigured()) {
+      pullAllUserProfilesFromCloud().then((cloudUsers) => {
+        if (cloudUsers.length > 0) {
+          setUsers((prev) => {
+            const byEmail = new Map<string, UserProfile>();
+            prev.forEach((u) => byEmail.set(u.email.toLowerCase(), u));
+            cloudUsers.forEach((cu) => {
+              const existing = byEmail.get(cu.email.toLowerCase());
+              byEmail.set(cu.email.toLowerCase(), existing ? { ...existing, ...cu } : cu);
+            });
+            return Array.from(byEmail.values());
+          });
+        }
+      });
       pullCloudDataForUser(currentUser);
     }
   }, [currentUser.id]);

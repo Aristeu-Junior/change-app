@@ -32,6 +32,11 @@ export interface SupabaseConfig {
 
 const STORAGE_CONFIG_KEY = 'change_supabase_config';
 
+// Conexão oficial do projeto change-app (Região: sa-east-1 São Paulo) pré-configurada
+const DEFAULT_SUPABASE_URL = 'https://wewjirbxwdwtighamkpt.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indld2ppcmJ4d2R3dGlnaGFta3B0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1MTEzMzksImV4cCI6MjEwODA4NzMzOX0.R1X5-kyoe1Yv6iQovXAqFterZitVSf85w8h44J3CzN8';
+
 export const getSupabaseConfig = (): SupabaseConfig | null => {
   const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
   const envKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
@@ -54,7 +59,11 @@ export const getSupabaseConfig = (): SupabaseConfig | null => {
   } catch {
     // Ignore
   }
-  return null;
+
+  return {
+    url: DEFAULT_SUPABASE_URL,
+    anonKey: DEFAULT_SUPABASE_ANON_KEY
+  };
 };
 
 export const saveSupabaseConfig = (config: SupabaseConfig | null) => {
@@ -81,6 +90,39 @@ const buildHeaders = (config: SupabaseConfig, extra?: Record<string, string>) =>
   'Content-Type': 'application/json',
   ...extra
 });
+
+/**
+ * Busca a lista de todos os perfis cadastrados na nuvem (Aristeu, Vitória e Amigos)
+ */
+export const pullAllUserProfilesFromCloud = async (): Promise<UserProfile[]> => {
+  const config = getSupabaseConfig();
+  if (!config) return [];
+
+  try {
+    const res = await fetch(
+      `${config.url}/rest/v1/change_user_data?select=user_id,email,name,password_hash,avatar_color,updated_at&order=name.asc`,
+      {
+        method: 'GET',
+        headers: buildHeaders(config)
+      }
+    );
+
+    if (!res.ok) return [];
+    const rows = await res.json();
+    if (!Array.isArray(rows)) return [];
+
+    return rows.map((r: any) => ({
+      id: r.user_id || `user-${r.email}`,
+      name: r.name,
+      email: r.email,
+      password: r.password_hash || undefined,
+      avatar_color: r.avatar_color || '#ffffff',
+      created_at: r.updated_at || new Date().toISOString()
+    }));
+  } catch {
+    return [];
+  }
+};
 
 /**
  * Busca os dados completos de um usuário na nuvem pelo e-mail
@@ -175,17 +217,10 @@ export const testCloudConnection = async (
     });
 
     if (res.ok) {
-      return { ok: true, message: 'Conectado ao banco na nuvem com sucesso!' };
-    }
-    const errText = await res.text();
-    if (res.status === 404 || errText.includes('relation') || errText.includes('does not exist')) {
-      return {
-        ok: false,
-        message: 'Projeto Supabase conectado, mas a tabela change_user_data ainda não foi criada.'
-      };
+      return { ok: true, message: 'Conectado ao banco na nuvem (São Paulo sa-east-1) com sucesso!' };
     }
     return { ok: false, message: `Erro HTTP ${res.status}: Verifique a URL e a Anon Key.` };
   } catch {
-    return { ok: false, message: 'Não foi possível conectar. Verifique a URL do Supabase.' };
+    return { ok: false, message: 'Não foi possível conectar. Verifique sua conexão.' };
   }
 };
