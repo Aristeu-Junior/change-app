@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Calendar as CalendarIcon,
   Dumbbell,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Flame,
   RotateCcw,
   Trash2
@@ -12,28 +14,139 @@ import { useApp } from '../../context/AppContext';
 import { formatDuration, displayWeight } from '../../utils/calc';
 import { Workout } from '../../types';
 
+const WEEKDAYS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+const MONTHS_PT = [
+  'Janeiro',
+  'Fevereiro',
+  'Março',
+  'Abril',
+  'Maio',
+  'Junho',
+  'Julho',
+  'Agosto',
+  'Setembro',
+  'Outubro',
+  'Novembro',
+  'Dezembro'
+];
+
+// Formata uma data ISO ou Date para YYYY-MM-DD no fuso horário local do usuário
+const toLocalDateKey = (dateInput: string | Date): string => {
+  const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const HistoryView: React.FC = () => {
   const { workouts, startWorkout, deleteWorkout, clearWorkouts, settings } = useApp();
   const [expandedWorkoutId, setExpandedWorkoutId] = useState<string | null>(null);
   const [confirmClearAll, setConfirmClearAll] = useState(false);
 
-  // Gera os últimos 28 dias para o mapa de calor
-  const calendarDays = useMemo(() => {
-    const days = [];
-    const today = new Date();
-    for (let i = 27; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(today.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
-      const count = workouts.filter((w) => w.start_time.startsWith(dateStr)).length;
+  const now = new Date();
+  const [viewYear, setViewYear] = useState<number>(() => now.getFullYear());
+  const [viewMonth, setViewMonth] = useState<number>(() => now.getMonth());
+  const [lastKnownMonthKey, setLastKnownMonthKey] = useState<string>(
+    () => `${now.getFullYear()}-${now.getMonth()}`
+  );
+
+  // Sempre que o mês virar, troca automaticamente o calendário para o novo mês vigente
+  useEffect(() => {
+    const checkMonthTurn = () => {
+      const current = new Date();
+      const currentKey = `${current.getFullYear()}-${current.getMonth()}`;
+      if (currentKey !== lastKnownMonthKey) {
+        setLastKnownMonthKey(currentKey);
+        setViewYear(current.getFullYear());
+        setViewMonth(current.getMonth());
+      }
+    };
+
+    const interval = window.setInterval(checkMonthTurn, 60000);
+    window.addEventListener('focus', checkMonthTurn);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', checkMonthTurn);
+    };
+  }, [lastKnownMonthKey]);
+
+  // Mapa de quantidade de treinos por dia (YYYY-MM-DD local)
+  const workoutsByDateMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    workouts.forEach((w) => {
+      const key = toLocalDateKey(w.start_time);
+      map[key] = (map[key] || 0) + 1;
+    });
+    return map;
+  }, [workouts]);
+
+  // Constrói o calendário completo do mês (do dia 1º até o último dia do mês: 28, 29, 30 ou 31)
+  const monthCalendarData = useMemo(() => {
+    const firstDayOfMonth = new Date(viewYear, viewMonth, 1);
+    const startWeekday = firstDayOfMonth.getDay(); // 0 (Dom) a 6 (Sáb)
+    const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate(); // 28, 29, 30 ou 31
+    const todayKey = toLocalDateKey(new Date());
+
+    const leadingEmptySlots = Array.from({ length: startWeekday }, (_, idx) => `empty-${idx}`);
+    const days: {
+      dateKey: string;
+      dayNumber: number;
+      workoutCount: number;
+      isToday: boolean;
+    }[] = [];
+
+    let monthTotalWorkouts = 0;
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const d = new Date(viewYear, viewMonth, day);
+      const dateKey = toLocalDateKey(d);
+      const count = workoutsByDateMap[dateKey] || 0;
+      monthTotalWorkouts += count;
+
       days.push({
-        date: dateStr,
-        dayOfMonth: d.getDate(),
-        workoutCount: count
+        dateKey,
+        dayNumber: day,
+        workoutCount: count,
+        isToday: dateKey === todayKey
       });
     }
-    return days;
-  }, [workouts]);
+
+    return {
+      leadingEmptySlots,
+      days,
+      daysInMonth,
+      monthTotalWorkouts
+    };
+  }, [viewYear, viewMonth, workoutsByDateMap]);
+
+  const isViewingCurrentMonth =
+    viewYear === new Date().getFullYear() && viewMonth === new Date().getMonth();
+
+  const handlePrevMonth = () => {
+    if (viewMonth === 0) {
+      setViewYear((y) => y - 1);
+      setViewMonth(11);
+    } else {
+      setViewMonth((m) => m - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (viewMonth === 11) {
+      setViewYear((y) => y + 1);
+      setViewMonth(0);
+    } else {
+      setViewMonth((m) => m + 1);
+    }
+  };
+
+  const handleResetToCurrentMonth = () => {
+    const current = new Date();
+    setViewYear(current.getFullYear());
+    setViewMonth(current.getMonth());
+  };
 
   const toggleExpand = (id: string) => {
     setExpandedWorkoutId(expandedWorkoutId === id ? null : id);
@@ -49,11 +162,11 @@ export const HistoryView: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-white">Histórico</h1>
-          <p className="text-xs text-zinc-400">Consistência de treinos & cargas reais</p>
+          <p className="text-xs text-zinc-400">Calendário mensal completo & cargas reais</p>
         </div>
 
-        {workouts.length > 0 && (
-          confirmClearAll ? (
+        {workouts.length > 0 &&
+          (confirmClearAll ? (
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => {
@@ -79,37 +192,96 @@ export const HistoryView: React.FC = () => {
               <Trash2 className="w-3.5 h-3.5" />
               <span>Limpar</span>
             </button>
-          )
-        )}
+          ))}
       </div>
 
-      {/* Card do Mapa de Calor (Heatmap) */}
+      {/* Calendário do Mês Inteiro (Do dia 1º até o último dia do mês no formato oficial) */}
       <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-3">
-        <div className="flex items-center justify-between text-xs font-bold text-zinc-300">
-          <div className="flex items-center gap-1.5">
-            <CalendarIcon className="w-4 h-4 text-white" />
-            <span>Frequência (Últimas 4 Semanas)</span>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <CalendarIcon className="w-4 h-4 text-white shrink-0" />
+            <div>
+              <h2 className="text-sm font-black text-white leading-tight">
+                {MONTHS_PT[viewMonth]} {viewYear}
+              </h2>
+              <span className="text-[10px] text-zinc-400 font-semibold block">
+                Dia 1 ao dia {monthCalendarData.daysInMonth} •{' '}
+                {monthCalendarData.monthTotalWorkouts}{' '}
+                {monthCalendarData.monthTotalWorkouts === 1 ? 'treino no mês' : 'treinos no mês'}
+              </span>
+            </div>
           </div>
-          <span className="text-zinc-400 font-semibold">
-            {workouts.length} {workouts.length === 1 ? 'Treino' : 'Treinos'}
-          </span>
+
+          <div className="flex items-center gap-1">
+            {!isViewingCurrentMonth && (
+              <button
+                type="button"
+                onClick={handleResetToCurrentMonth}
+                className="px-2 py-1 rounded-lg bg-white text-black text-[10px] font-black mr-1 transition"
+              >
+                Mês Atual
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handlePrevMonth}
+              className="p-1.5 rounded-lg bg-[#1c1c1f] hover:bg-zinc-800 border border-[#27272a] text-zinc-300 hover:text-white transition"
+              title="Mês anterior"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              className="p-1.5 rounded-lg bg-[#1c1c1f] hover:bg-zinc-800 border border-[#27272a] text-zinc-300 hover:text-white transition"
+              title="Próximo mês"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        {/* Grade 7 colunas x 4 linhas */}
-        <div className="grid grid-cols-7 gap-1.5 pt-1">
-          {calendarDays.map((d) => (
-            <div
-              key={d.date}
-              className={`aspect-square rounded-lg flex flex-col items-center justify-center text-[10px] font-bold transition ${
-                d.workoutCount > 0
-                  ? 'bg-white text-black shadow-md'
-                  : 'bg-[#1c1c1f] text-zinc-600'
-              }`}
-              title={`${d.date}: ${d.workoutCount} treinos`}
+        {/* Cabeçalho dos Dias da Semana */}
+        <div className="grid grid-cols-7 gap-1.5 pt-1 text-center">
+          {WEEKDAYS_PT.map((wd) => (
+            <span
+              key={wd}
+              className="text-[10px] font-black uppercase tracking-wider text-zinc-500 py-0.5"
             >
-              <span>{d.dayOfMonth}</span>
-            </div>
+              {wd}
+            </span>
           ))}
+        </div>
+
+        {/* Grade Oficial do Mês (Dia 1 até o último dia) */}
+        <div className="grid grid-cols-7 gap-1.5">
+          {monthCalendarData.leadingEmptySlots.map((emptyKey) => (
+            <div key={emptyKey} className="aspect-square rounded-lg bg-transparent" />
+          ))}
+
+          {monthCalendarData.days.map((d) => {
+            const trained = d.workoutCount > 0;
+            return (
+              <div
+                key={d.dateKey}
+                className={`aspect-square rounded-xl flex flex-col items-center justify-center text-xs font-black transition relative select-none ${
+                  trained
+                    ? 'bg-white text-black shadow-md'
+                    : d.isToday
+                    ? 'bg-[#1c1c1f] text-white border-2 border-white/60'
+                    : 'bg-[#1c1c1f] text-zinc-500 border border-[#27272a]/50'
+                }`}
+                title={`${d.dateKey}: ${d.workoutCount} ${
+                  d.workoutCount === 1 ? 'treino' : 'treinos'
+                }`}
+              >
+                <span>{d.dayNumber}</span>
+                {trained && (
+                  <span className="w-1 h-1 rounded-full bg-black mt-0.5" />
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -199,7 +371,10 @@ export const HistoryView: React.FC = () => {
                     <span>Carga: {displayWeight(w.total_volume_kg, settings.weight_unit)}</span>
                   </div>
                   <div className="text-zinc-400">
-                    <span>{w.total_sets} {w.total_sets === 1 ? 'série concluída' : 'séries concluídas'}</span>
+                    <span>
+                      {w.total_sets}{' '}
+                      {w.total_sets === 1 ? 'série concluída' : 'séries concluídas'}
+                    </span>
                   </div>
                   {(w.prs_hit || 0) > 0 && (
                     <div className="flex items-center gap-1 text-white bg-zinc-800 px-2 py-0.5 rounded-full border border-zinc-600 text-[10px] font-black">
@@ -221,7 +396,10 @@ export const HistoryView: React.FC = () => {
                       const maxW = Math.max(...completedSets.map((s) => Number(s.weight_kg) || 0));
                       const repsExample = completedSets[0]?.reps || 0;
                       return (
-                        <div key={idx} className="flex items-center justify-between text-xs text-zinc-300">
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between text-xs text-zinc-300"
+                        >
                           <span className="truncate pr-2 font-medium">
                             {completedSets.length}× {ex.title}
                           </span>
@@ -256,9 +434,12 @@ export const HistoryView: React.FC = () => {
                             <div className="space-y-1 pl-1">
                               {completedSets.map((s, sIdx) => (
                                 <div key={sIdx} className="flex justify-between text-zinc-300">
-                                  <span className="text-zinc-500 font-semibold">Série {sIdx + 1}</span>
+                                  <span className="text-zinc-500 font-semibold">
+                                    Série {sIdx + 1}
+                                  </span>
                                   <span className="font-black text-white">
-                                    {displayWeight(Number(s.weight_kg) || 0, settings.weight_unit)} × {s.reps} reps
+                                    {displayWeight(Number(s.weight_kg) || 0, settings.weight_unit)}{' '}
+                                    × {s.reps} reps
                                   </span>
                                 </div>
                               ))}

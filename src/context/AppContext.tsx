@@ -567,6 +567,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const cloudData = await pullUserFromCloudByEmail(user.email, user.id);
       if (cloudData) {
+        // Caso o administrador tenha negado o acesso desta conta remotamente, bloqueia imediatamente no Web App
+        if (cloudData.account_status === 'rejected' && !isAdminProfile(user)) {
+          localStorage.setItem('change_pending_google_email', user.email);
+          localStorage.removeItem('change_auth_session_active');
+          setIsAuthenticated(false);
+          setWorkoutModalOpen(false);
+          return;
+        }
+
         if (
           cloudData.email !== user.email ||
           cloudData.name !== user.name ||
@@ -685,19 +694,54 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   useEffect(() => {
-    if (isCloudConfigured() && isAuthenticated) {
-      if (isAdminProfile(currentUser)) {
-        refreshCloudUsers();
+    if (!isCloudConfigured() || !isAuthenticated) return;
+
+    const isAdmin = isAdminProfile(currentUser);
+
+    const syncAllFromCloud = () => {
+      if (isAdmin) {
         refreshAccessRequests();
-        const interval = window.setInterval(() => {
-          refreshAccessRequests();
-        }, 8000);
-        pullCloudDataForUser(currentUser);
-        return () => window.clearInterval(interval);
+        refreshCloudUsers();
+      } else if (currentUser.email) {
+        requestOrCheckGoogleAccess(currentUser.email).then((res) => {
+          if (res.status === 'rejected') {
+            localStorage.setItem('change_pending_google_email', currentUser.email);
+            localStorage.removeItem('change_auth_session_active');
+            setIsAuthenticated(false);
+            setWorkoutModalOpen(false);
+          }
+        });
       }
-      pullCloudDataForUser(currentUser);
+    };
+
+    if (isAdmin) {
+      refreshCloudUsers();
+      refreshAccessRequests();
     }
-  }, [currentUser.id, isAuthenticated]);
+    pullCloudDataForUser(currentUser);
+
+    const interval = window.setInterval(syncAllFromCloud, 3500);
+
+    const handleWakeUp = () => {
+      if (document.visibilityState === 'visible') {
+        syncAllFromCloud();
+        pullCloudDataForUser(currentUser);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleWakeUp);
+    window.addEventListener('focus', handleWakeUp);
+    window.addEventListener('pageshow', handleWakeUp);
+    window.addEventListener('online', handleWakeUp);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleWakeUp);
+      window.removeEventListener('focus', handleWakeUp);
+      window.removeEventListener('pageshow', handleWakeUp);
+      window.removeEventListener('online', handleWakeUp);
+    };
+  }, [currentUser.id, currentUser.email, isAuthenticated]);
 
   const reloadUserData = (userId: string, userName?: string) => {
     try {

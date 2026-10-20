@@ -2,6 +2,9 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <link rel="icon" type="image/svg+xml" href="./logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#000000" />
@@ -17,9 +20,16 @@
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
     <title>Change</title>
     <script>
+      window.__CHANGE_BUILD_ID__ = '__CHANGE_BUILD_ID_PLACEHOLDER__';
+
       // Detecta imediatamente se está rodando instalado como Web App (iOS Standalone / Android PWA)
       (function () {
         try {
+          // Limpa o parâmetro de cache-busting (_v) da URL após atualizar o Web App
+          if (window.location.search && window.location.search.indexOf('_v=') !== -1) {
+            window.history.replaceState(null, document.title, window.location.pathname + window.location.hash);
+          }
+
           var isStandalone =
             ('standalone' in window.navigator && window.navigator.standalone) ||
             (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
@@ -34,12 +44,73 @@
     <div id="root"></div>
     <script type="module" src="./src/main.jsx"></script>
     <script>
-      // Registro do Service Worker para suporte PWA offline
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+      // Atualizador Remoto Automático para Web App do iPhone (iOS PWA) e Android
+      (function () {
+        var checkingUpdate = false;
+        function checkRemoteWebAppVersion() {
+          if (checkingUpdate) return;
+          var currentBuild = window.__CHANGE_BUILD_ID__;
+          if (!currentBuild || currentBuild.indexOf('PLACEHOLDER') !== -1) return;
+          checkingUpdate = true;
+
+          fetch('./version.json?t=' + Date.now(), {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache'
+            }
+          })
+            .then(function (r) {
+              return r.ok ? r.json() : null;
+            })
+            .then(function (data) {
+              checkingUpdate = false;
+              if (data && data.buildId && String(data.buildId) !== String(currentBuild)) {
+                var lastReloaded = sessionStorage.getItem('change_last_reloaded_build');
+                if (lastReloaded === String(data.buildId)) return;
+                sessionStorage.setItem('change_last_reloaded_build', String(data.buildId));
+
+                if ('caches' in window) {
+                  caches.keys().then(function (names) {
+                    return Promise.all(names.map(function (n) { return caches.delete(n); }));
+                  }).finally(function () {
+                    window.location.replace(window.location.pathname + '?_v=' + data.buildId);
+                  });
+                } else {
+                  window.location.replace(window.location.pathname + '?_v=' + data.buildId);
+                }
+              }
+            })
+            .catch(function () {
+              checkingUpdate = false;
+            });
+        }
+
+        // Registro do Service Worker sem cache para atualização imediata
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function () {
+            navigator.serviceWorker
+              .register('./sw.js', { scope: './', updateViaCache: 'none' })
+              .then(function (reg) {
+                reg.update().catch(function () {});
+              })
+              .catch(function () {});
+            checkRemoteWebAppVersion();
+          });
+        } else {
+          window.addEventListener('load', checkRemoteWebAppVersion);
+        }
+
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'visible') {
+            checkRemoteWebAppVersion();
+          }
         });
-      }
+        window.addEventListener('pageshow', checkRemoteWebAppVersion);
+        window.addEventListener('focus', checkRemoteWebAppVersion);
+        setInterval(checkRemoteWebAppVersion, 25000);
+      })();
+
       // Preservar modo Standalone no iPhone (iOS Safari)
       if (('standalone' in window.navigator) && window.navigator.standalone) {
         var noddy;

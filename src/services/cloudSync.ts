@@ -14,6 +14,7 @@ export interface CloudUserPayload {
   user_id: string;
   email: string;
   name: string;
+  account_status?: 'approved' | 'pending' | 'rejected';
   password_hash?: string;
   totp_secret?: string | null;
   totp_enabled?: boolean;
@@ -90,6 +91,7 @@ export const hashPasswordSha256 = async (rawPassword: string): Promise<string> =
 
 export const isAdminProfile = (user?: UserProfile | null): boolean => {
   if (!user) return false;
+  if (user.is_admin) return true;
   const email = (user.email || '').trim().toLowerCase();
   const name = (user.name || '')
     .trim()
@@ -100,7 +102,9 @@ export const isAdminProfile = (user?: UserProfile | null): boolean => {
     ADMIN_EMAILS.has(email) ||
     ADMIN_USER_IDS.has(user.id) ||
     name === 'aristeu' ||
-    name === 'vitoria'
+    name.startsWith('aristeu ') ||
+    name === 'vitoria' ||
+    name.startsWith('vitoria ')
   );
 };
 
@@ -143,6 +147,8 @@ const buildHeaders = (config: SupabaseConfig, extra?: Record<string, string>) =>
   apikey: config.anonKey,
   Authorization: `Bearer ${config.anonKey}`,
   'Content-Type': 'application/json',
+  'Cache-Control': 'no-cache, no-store, must-revalidate',
+  Pragma: 'no-cache',
   ...extra
 });
 
@@ -244,9 +250,10 @@ export const pullUserFromCloudByEmail = async (
       : `email=eq.${encodeURIComponent(normalized)}`;
 
     const res = await fetch(
-      `${config.url}/rest/v1/change_user_data?${filter}&select=user_id,email,name,totp_enabled,totp_secret,avatar_color,workouts,routines,folders,custom_exercises,personal_records,measurements,settings,updated_at&limit=1`,
+      `${config.url}/rest/v1/change_user_data?${filter}&select=user_id,email,name,account_status,totp_enabled,totp_secret,avatar_color,workouts,routines,folders,custom_exercises,personal_records,measurements,settings,updated_at&limit=1&_t=${Date.now()}`,
       {
         method: 'GET',
+        cache: 'no-store',
         headers: buildHeaders(config)
       }
     );
@@ -745,15 +752,19 @@ export const requestOrCheckGoogleAccess = async (
     const passwordHash =
       rawPassword && rawPassword.trim() ? await hashPasswordSha256(rawPassword.trim()) : null;
 
-    const res = await fetch(`${config.url}/rest/v1/rpc/request_or_check_google_access`, {
-      method: 'POST',
-      headers: buildHeaders(config),
-      body: JSON.stringify({
-        p_email: cleanEmail,
-        p_name: cleanName,
-        p_password_hash: passwordHash
-      })
-    });
+    const res = await fetch(
+      `${config.url}/rest/v1/rpc/request_or_check_google_access?_t=${Date.now()}`,
+      {
+        method: 'POST',
+        cache: 'no-store',
+        headers: buildHeaders(config),
+        body: JSON.stringify({
+          p_email: cleanEmail,
+          p_name: cleanName,
+          p_password_hash: passwordHash
+        })
+      }
+    );
 
     if (res.ok) {
       const data = await res.json();
@@ -773,11 +784,15 @@ export const fetchAccessRequestsFromCloud = async (): Promise<AccessRequestEntry
   if (!config) return [];
 
   try {
-    const res = await fetch(`${config.url}/rest/v1/rpc/get_change_access_requests`, {
-      method: 'POST',
-      headers: buildHeaders(config),
-      body: JSON.stringify({})
-    });
+    const res = await fetch(
+      `${config.url}/rest/v1/rpc/get_change_access_requests?_t=${Date.now()}`,
+      {
+        method: 'POST',
+        cache: 'no-store',
+        headers: buildHeaders(config),
+        body: JSON.stringify({})
+      }
+    );
 
     if (res.ok) {
       const rows = await res.json();
@@ -802,14 +817,18 @@ export const decideAccessRequestInCloud = async (
   if (!config) return false;
 
   try {
-    const res = await fetch(`${config.url}/rest/v1/rpc/admin_decide_access_request`, {
-      method: 'POST',
-      headers: buildHeaders(config),
-      body: JSON.stringify({
-        p_target_email: targetEmail.trim().toLowerCase(),
-        p_decision: decision
-      })
-    });
+    const res = await fetch(
+      `${config.url}/rest/v1/rpc/admin_decide_access_request?_t=${Date.now()}`,
+      {
+        method: 'POST',
+        cache: 'no-store',
+        headers: buildHeaders(config),
+        body: JSON.stringify({
+          p_target_email: targetEmail.trim().toLowerCase(),
+          p_decision: decision
+        })
+      }
+    );
 
     if (res.ok) {
       const data = await res.json();

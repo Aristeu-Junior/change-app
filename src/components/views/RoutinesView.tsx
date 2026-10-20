@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Play,
   Plus,
@@ -14,17 +14,34 @@ import {
   Moon,
   Users,
   FolderPlus,
-  Cloud
+  Cloud,
+  Flame,
+  CheckCircle2,
+  Clock,
+  X
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { Routine } from '../../types';
+import { Routine, ExerciseTemplate } from '../../types';
 import { RoutineEditorModal } from './RoutineEditorModal';
 import { UserAccountModal } from '../UserAccountModal';
+import { ExerciseVisualDemo } from '../ExerciseVisualDemo';
+
+interface RoutineQueueMeta {
+  routine: Routine;
+  lastDoneTime: number;
+  lastDoneDateStr: string | null;
+  doneThisWeek: boolean;
+  isDoneInCurrentCycle: boolean;
+  isTopRecommended: boolean;
+  isNextInQueue: boolean;
+}
 
 export const RoutinesView: React.FC = () => {
   const {
     routines,
     folders,
+    workouts,
+    exercises: allTemplates,
     startWorkout,
     deleteRoutine,
     saveRoutine,
@@ -45,10 +62,132 @@ export const RoutinesView: React.FC = () => {
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderTitle, setNewFolderTitle] = useState('');
 
+  // Modal de Confirmação ao tentar repetir um treino já realizado na semana / ciclo
+  const [repeatConfirmRoutine, setRepeatConfirmRoutine] = useState<{
+    routine: Routine;
+    lastDoneDateStr: string;
+    recommendedAlternative?: Routine | null;
+  } | null>(null);
+
+  // Modal rápido para visualizar a execução 3D de um exercício direto do card do plano
+  const [previewExercise3D, setPreviewExercise3D] = useState<ExerciseTemplate | null>(null);
+
   const isLight = theme === 'light';
 
-  const handleStartRoutine = (routineId: string) => {
-    startWorkout(routineId);
+  // Mapa rápido de ExerciseTemplate para exibir miniaturas 3D dentro dos planos de treino
+  const templateMap = useMemo(() => {
+    const map: Record<string, ExerciseTemplate> = {};
+    allTemplates.forEach((t) => {
+      map[t.id] = t;
+      map[t.title.toLowerCase()] = t;
+    });
+    return map;
+  }, [allTemplates]);
+
+  // Calcula metadados de fila de prioridade para uma lista/categoria de treinos
+  const buildPriorityQueueForList = (list: Routine[]): RoutineQueueMeta[] => {
+    if (list.length === 0) return [];
+
+    const now = Date.now();
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+
+    // 1. Descobre quando cada rotina foi feita pela última vez no histórico
+    const withLastTime = list.map((r, originalIdx) => {
+      const matchedWorkout = workouts.find(
+        (w) =>
+          w.routine_id === r.id ||
+          w.title.trim().toLowerCase() === r.title.trim().toLowerCase()
+      );
+      const lastTime = matchedWorkout
+        ? new Date(matchedWorkout.end_time || matchedWorkout.start_time).getTime()
+        : 0;
+      const doneThisWeek = lastTime > 0 && now - lastTime <= sevenDaysMs;
+
+      let lastDoneDateStr: string | null = null;
+      if (lastTime > 0) {
+        const diffDays = Math.floor((now - lastTime) / (24 * 60 * 60 * 1000));
+        if (diffDays === 0) lastDoneDateStr = 'Hoje';
+        else if (diffDays === 1) lastDoneDateStr = 'Ontem';
+        else lastDoneDateStr = `Há ${diffDays} dias`;
+      }
+
+      return {
+        routine: r,
+        originalIdx,
+        lastDoneTime: lastTime,
+        lastDoneDateStr,
+        doneThisWeek
+      };
+    });
+
+    // 2. Se houver apenas 1 treino na lista, retorna direto
+    if (withLastTime.length === 1) {
+      const item = withLastTime[0];
+      return [
+        {
+          routine: item.routine,
+          lastDoneTime: item.lastDoneTime,
+          lastDoneDateStr: item.lastDoneDateStr,
+          doneThisWeek: item.doneThisWeek,
+          isDoneInCurrentCycle: item.doneThisWeek,
+          isTopRecommended: !item.doneThisWeek,
+          isNextInQueue: false
+        }
+      ];
+    }
+
+    // 3. Ordena a fila de prioridade:
+    // Quem NUNCA foi feito (lastDoneTime === 0) ou foi feito HÁ MAIS TEMPO fica no TOPO (Recomendado).
+    // Quem acabou de ser feito (maior lastDoneTime) vai para o FINAL da fila!
+    const sorted = [...withLastTime].sort((a, b) => {
+      if (a.lastDoneTime === 0 && b.lastDoneTime === 0) {
+        return a.originalIdx - b.originalIdx;
+      }
+      if (a.lastDoneTime === 0) return -1;
+      if (b.lastDoneTime === 0) return 1;
+      return a.lastDoneTime - b.lastDoneTime;
+    });
+
+    // Verifica se algum treino do grupo já foi feito nesta semana
+    const anyDoneThisWeek = sorted.some((item) => item.doneThisWeek);
+    // Se todos já foram feitos na semana, o ciclo reiniciou e o mais antigo volta a ser a recomendação #1
+    const allDoneThisWeek = sorted.every((item) => item.doneThisWeek);
+
+    return sorted.map((item, idx) => {
+      // Considera "já feito no ciclo atual" se foi feito na semana e (não é o primeiro da fila após fechar ciclo, ou é o último feito)
+      const isDoneInCurrentCycle = allDoneThisWeek
+        ? idx > 0 && item.doneThisWeek
+        : item.doneThisWeek;
+
+      return {
+        routine: item.routine,
+        lastDoneTime: item.lastDoneTime,
+        lastDoneDateStr: item.lastDoneDateStr,
+        doneThisWeek: item.doneThisWeek,
+        isDoneInCurrentCycle,
+        isTopRecommended: anyDoneThisWeek && idx === 0,
+        isNextInQueue: anyDoneThisWeek && idx === 1 && sorted.length > 2 && !isDoneInCurrentCycle
+      };
+    });
+  };
+
+  // Ao clicar em Iniciar: verifica se já treinou este plano na semana para exibir o aviso de confirmação
+  const handleStartRoutineClick = (
+    meta: RoutineQueueMeta,
+    groupQueue: RoutineQueueMeta[]
+  ) => {
+    if (meta.doneThisWeek) {
+      const topAlt = groupQueue.find(
+        (m) => m.routine.id !== meta.routine.id && !m.isDoneInCurrentCycle
+      );
+      setRepeatConfirmRoutine({
+        routine: meta.routine,
+        lastDoneDateStr: meta.lastDoneDateStr || 'nesta semana',
+        recommendedAlternative: topAlt ? topAlt.routine : null
+      });
+      return;
+    }
+    startWorkout(meta.routine.id);
   };
 
   const handleDuplicateRoutine = (routine: Routine) => {
@@ -91,100 +230,199 @@ export const RoutinesView: React.FC = () => {
     }
   });
 
-  const renderRoutineCard = (r: Routine) => (
-    <div
-      key={r.id}
-      className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md flex flex-col gap-3 relative transition hover:border-zinc-500 text-white"
-    >
-      <div className="flex items-start justify-between">
-        <div>
-          <h3 className="text-sm font-bold text-white hover:text-zinc-300 transition">
-            {r.title}
-          </h3>
-          <p className="text-xs text-zinc-400 mt-1 line-clamp-1">
-            {r.exercises.map((e) => e.title).join(', ') || 'Nenhum exercício adicionado'}
-          </p>
-        </div>
-
-        {/* Menu de Opções (Editar, Duplicar, Excluir) */}
-        <div className="relative">
-          <button
-            onClick={() =>
-              setActiveMenuRoutineId(activeMenuRoutineId === r.id ? null : r.id)
-            }
-            className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition"
-            title="Mais opções do plano"
-          >
-            <MoreVertical className="w-4 h-4" />
-          </button>
-
-          {activeMenuRoutineId === r.id && (
-            <div className="absolute right-0 top-8 z-30 w-44 bg-[#1c1c1f] border border-[#3f3f46] rounded-xl shadow-2xl py-1 text-xs text-zinc-200 animate-in fade-in duration-100">
-              <button
-                onClick={() => {
-                  setEditingRoutine(r);
-                  setIsEditorOpen(true);
-                  setActiveMenuRoutineId(null);
-                }}
-                className="w-full px-3 py-2 text-left hover:bg-zinc-800 flex items-center gap-2"
-              >
-                <Edit2 className="w-3.5 h-3.5" /> Editar Plano
-              </button>
-              <button
-                onClick={() => handleDuplicateRoutine(r)}
-                className="w-full px-3 py-2 text-left hover:bg-zinc-800 flex items-center gap-2"
-              >
-                <Copy className="w-3.5 h-3.5" /> Duplicar Plano
-              </button>
-              <div className="h-px bg-[#27272a] my-1" />
-              <button
-                onClick={() => {
-                  setRoutineToDelete(r);
-                  setActiveMenuRoutineId(null);
-                }}
-                className="w-full px-3 py-2 text-left text-red-400 hover:bg-red-950/40 flex items-center gap-2"
-              >
-                <Trash2 className="w-3.5 h-3.5" /> Excluir Plano
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Rodapé do Card com Botão Iniciar e Editar Rápido */}
-      <div className="flex items-center justify-between pt-2 border-t border-[#27272a]">
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] text-zinc-500 font-semibold">
-            {r.exercises.length} {r.exercises.length === 1 ? 'Exercício' : 'Exercícios'}
-          </span>
-          <button
-            onClick={() => {
-              setEditingRoutine(r);
-              setIsEditorOpen(true);
-            }}
-            className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 font-semibold underline"
-          >
-            <Edit2 className="w-3 h-3" /> Editar
-          </button>
-        </div>
-
-        <button
-          onClick={() => handleStartRoutine(r.id)}
-          className="px-4 py-2 bg-white text-black font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-md active:scale-95 transition"
-        >
-          <Play className="w-3 h-3 fill-black" />
-          Iniciar
-        </button>
-      </div>
-    </div>
+  const uncategorizedQueue = useMemo(
+    () => buildPriorityQueueForList(uncategorized),
+    [uncategorized, workouts]
   );
+
+  const renderRoutineCard = (meta: RoutineQueueMeta, groupQueue: RoutineQueueMeta[]) => {
+    const r = meta.routine;
+
+    return (
+      <div
+        key={r.id}
+        className={`rounded-2xl p-4 shadow-md flex flex-col gap-3 relative transition text-white border ${
+          meta.isTopRecommended
+            ? 'bg-[#141416] border-white shadow-xl'
+            : meta.isDoneInCurrentCycle
+            ? 'bg-[#111113] border-[#222225] opacity-80 hover:opacity-100'
+            : 'bg-[#141416] border-[#27272a] hover:border-zinc-500'
+        }`}
+      >
+        {/* Badges da Fila de Prioridade (Recomendado / Próximo / Já Treinado na Semana) */}
+        {(meta.isTopRecommended || meta.isNextInQueue || meta.doneThisWeek) && (
+          <div className="flex items-center justify-between gap-2 flex-wrap -mb-1">
+            {meta.isTopRecommended ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white text-black text-[10px] font-black uppercase tracking-wider shadow-sm">
+                <Flame className="w-3 h-3 fill-black" />
+                <span>Recomendado Agora • 1º da Fila</span>
+              </span>
+            ) : meta.isNextInQueue ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-600 text-zinc-200 text-[10px] font-bold uppercase tracking-wider">
+                <Clock className="w-3 h-3" />
+                <span>Próximo na Fila</span>
+              </span>
+            ) : (
+              <span />
+            )}
+
+            {meta.doneThisWeek && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-700 text-zinc-400 text-[10px] font-bold">
+                <CheckCircle2 className="w-3 h-3 text-zinc-300" />
+                <span>Já treinado ({meta.lastDoneDateStr})</span>
+              </span>
+            )}
+          </div>
+        )}
+
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-sm font-black text-white hover:text-zinc-300 transition">
+              {r.title}
+            </h3>
+            {r.notes && (
+              <p className="text-[11px] text-zinc-400 mt-0.5 line-clamp-1">{r.notes}</p>
+            )}
+          </div>
+
+          {/* Menu de Opções (Editar, Duplicar, Excluir) */}
+          <div className="relative">
+            <button
+              onClick={() =>
+                setActiveMenuRoutineId(activeMenuRoutineId === r.id ? null : r.id)
+              }
+              className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition"
+              title="Mais opções do plano"
+            >
+              <MoreVertical className="w-4 h-4" />
+            </button>
+
+            {activeMenuRoutineId === r.id && (
+              <div className="absolute right-0 top-8 z-30 w-44 bg-[#1c1c1f] border border-[#3f3f46] rounded-xl shadow-2xl py-1 text-xs text-zinc-200 animate-in fade-in duration-100">
+                <button
+                  onClick={() => {
+                    setEditingRoutine(r);
+                    setIsEditorOpen(true);
+                    setActiveMenuRoutineId(null);
+                  }}
+                  className="w-full px-3 py-2 text-left hover:bg-zinc-800 flex items-center gap-2"
+                >
+                  <Edit2 className="w-3.5 h-3.5" /> Editar Plano
+                </button>
+                <button
+                  onClick={() => handleDuplicateRoutine(r)}
+                  className="w-full px-3 py-2 text-left hover:bg-zinc-800 flex items-center gap-2"
+                >
+                  <Copy className="w-3.5 h-3.5" /> Duplicar Plano
+                </button>
+                <div className="h-px bg-[#27272a] my-1" />
+                <button
+                  onClick={() => {
+                    setRoutineToDelete(r);
+                    setActiveMenuRoutineId(null);
+                  }}
+                  className="w-full px-3 py-2 text-left text-red-400 hover:bg-red-950/40 flex items-center gap-2"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Excluir Plano
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Visualização 3D dos Exercícios dentro do próprio Plano de Treino */}
+        {r.exercises.length > 0 ? (
+          <div className="flex gap-2 overflow-x-auto py-1 no-scrollbar -mx-1 px-1">
+            {r.exercises.map((ex, idx) => {
+              const tpl =
+                templateMap[ex.exercise_template_id] ||
+                templateMap[ex.title.toLowerCase()];
+              const thumbUrl = tpl?.gif_id
+                ? `https://cdn.jsdelivr.net/gh/omercotkd/exercises-gifs@main/assets/${tpl.gif_id}.gif`
+                : tpl?.gif_url || null;
+
+              return (
+                <button
+                  key={`${r.id}-${ex.id}-${idx}`}
+                  type="button"
+                  onClick={() => {
+                    if (tpl) setPreviewExercise3D(tpl);
+                  }}
+                  className="flex items-center gap-2 p-1.5 pr-2.5 rounded-xl bg-[#18181b] hover:bg-[#222226] border border-[#27272a] shrink-0 text-left transition active:scale-95 max-w-[195px]"
+                  title="Toque para ver a execução 3D deste exercício"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-white border border-[#27272a] overflow-hidden shrink-0 flex items-center justify-center">
+                    {thumbUrl ? (
+                      <img
+                        src={thumbUrl}
+                        alt={ex.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover pointer-events-none"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-[#121214] flex items-center justify-center">
+                        <Dumbbell className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[11px] font-bold text-white truncate block">
+                      {ex.title}
+                    </span>
+                    <span className="text-[9px] text-zinc-400 font-semibold block">
+                      {ex.sets.length} {ex.sets.length === 1 ? 'série' : 'séries'} • Ver 3D
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-xs text-zinc-500 italic">Nenhum exercício adicionado</p>
+        )}
+
+        {/* Rodapé do Card com Botão Iniciar e Editar Rápido */}
+        <div className="flex items-center justify-between pt-2 border-t border-[#27272a]">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-zinc-500 font-semibold">
+              {r.exercises.length} {r.exercises.length === 1 ? 'Exercício' : 'Exercícios'}
+            </span>
+            <button
+              onClick={() => {
+                setEditingRoutine(r);
+                setIsEditorOpen(true);
+              }}
+              className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 font-semibold underline"
+            >
+              <Edit2 className="w-3 h-3" /> Editar
+            </button>
+          </div>
+
+          <button
+            onClick={() => handleStartRoutineClick(meta, groupQueue)}
+            className={`px-4 py-2 font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-md active:scale-95 transition ${
+              meta.isDoneInCurrentCycle
+                ? 'bg-[#222226] hover:bg-zinc-700 text-zinc-200 border border-[#3f3f46]'
+                : 'bg-white hover:bg-zinc-200 text-black'
+            }`}
+          >
+            <Play
+              className={`w-3 h-3 ${
+                meta.isDoneInCurrentCycle ? 'fill-zinc-200' : 'fill-black'
+              }`}
+            />
+            <span>{meta.isDoneInCurrentCycle ? 'Repetir' : 'Iniciar'}</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col min-h-full view-container space-y-4 text-white">
       {/* Topo Superior: Marca CHANGE, Perfil Ativo e Botão Modo Claro/Escuro */}
       <div className="flex items-center justify-between gap-2 pb-1">
         <div className="flex items-center gap-2.5 min-w-0">
-          {/* Logo CHANGE com haltere */}
           <div className="w-8 h-8 rounded-xl bg-white text-black font-black flex items-center justify-center text-xs shadow-md shrink-0 relative">
             <Dumbbell className="w-4 h-4 stroke-[2.5] text-black" />
           </div>
@@ -213,7 +451,6 @@ export const RoutinesView: React.FC = () => {
           </div>
         </div>
 
-        {/* Botão de Alternância de Tema P&B (Sol / Lua) */}
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={toggleTheme}
@@ -235,7 +472,7 @@ export const RoutinesView: React.FC = () => {
         </div>
       </div>
 
-      {/* BOTÃO HERO: MONTAR NOVO PLANO DE TREINO (Ação Primária em Destaque) */}
+      {/* BOTÃO HERO: MONTAR NOVO PLANO DE TREINO */}
       <div className="grid grid-cols-1 gap-2.5">
         <button
           onClick={() => {
@@ -271,15 +508,22 @@ export const RoutinesView: React.FC = () => {
         </button>
       </div>
 
-      {/* Divisões e Planos do Usuário */}
+      {/* Divisões e Planos do Usuário com Fila de Prioridade Inteligente */}
       <div className="space-y-4 pt-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-black uppercase tracking-wider text-zinc-400">
-            Seus Planos de Treino ({routines.length})
-          </span>
+          <div>
+            <span className="text-xs font-black uppercase tracking-wider text-zinc-400 block">
+              Seus Planos de Treino ({routines.length})
+            </span>
+            {routines.length > 1 && (
+              <span className="text-[10px] text-zinc-500">
+                Ordenados automaticamente por fila de prioridade (próximo treino no topo)
+              </span>
+            )}
+          </div>
           <button
             onClick={() => setIsCreatingFolder(!isCreatingFolder)}
-            className="text-xs font-bold text-white hover:underline flex items-center gap-1"
+            className="text-xs font-bold text-white hover:underline flex items-center gap-1 shrink-0"
           >
             <FolderPlus className="w-3.5 h-3.5" />
             <span>+ Nova Pasta</span>
@@ -296,7 +540,7 @@ export const RoutinesView: React.FC = () => {
               type="text"
               value={newFolderTitle}
               onChange={(e) => setNewFolderTitle(e.target.value)}
-              placeholder="Nome da pasta (Ex: Meus Treinos)"
+              placeholder="Nome da pasta (Ex: Divisão ABC)"
               className="flex-1 bg-[#121214] border border-[#27272a] rounded-lg px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white"
               autoFocus
             />
@@ -343,16 +587,17 @@ export const RoutinesView: React.FC = () => {
           </div>
         )}
 
-        {/* Pastas */}
+        {/* Pastas (Com Fila de Prioridade interna para A, B, C...) */}
         {folders.map((f) => {
-          const list = routinesByFolder[f.id] || [];
+          const rawList = routinesByFolder[f.id] || [];
+          const folderQueue = buildPriorityQueueForList(rawList);
           return (
             <div key={f.id} className="space-y-2.5">
               <div className="flex items-center justify-between text-xs font-bold text-zinc-300">
                 <div className="flex items-center gap-2">
                   <Folder className="w-4 h-4 text-white" />
                   <span className="text-sm font-bold text-white">{f.title}</span>
-                  <span className="text-xs text-zinc-500 font-normal">({list.length})</span>
+                  <span className="text-xs text-zinc-500 font-normal">({folderQueue.length})</span>
                 </div>
                 <button
                   onClick={() => deleteFolder(f.id)}
@@ -363,30 +608,136 @@ export const RoutinesView: React.FC = () => {
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {list.length === 0 ? (
-                  <p className="text-xs text-zinc-500 italic pl-6 col-span-full">Nenhum plano nesta pasta ainda.</p>
+                {folderQueue.length === 0 ? (
+                  <p className="text-xs text-zinc-500 italic pl-6 col-span-full">
+                    Nenhum plano nesta pasta ainda.
+                  </p>
                 ) : (
-                  list.map(renderRoutineCard)
+                  folderQueue.map((meta) => renderRoutineCard(meta, folderQueue))
                 )}
               </div>
             </div>
           );
         })}
 
-        {/* Planos Soltos (Sem pasta) */}
-        {uncategorized.length > 0 && (
+        {/* Planos Soltos (Com Fila de Prioridade automática) */}
+        {uncategorizedQueue.length > 0 && (
           <div className="space-y-2.5">
             {folders.length > 0 && (
               <div className="flex items-center gap-2 text-sm font-bold text-white">
                 <Dumbbell className="w-4 h-4 text-white" />
                 <span>Planos Principais</span>
-                <span className="text-xs text-zinc-500 font-normal">({uncategorized.length})</span>
+                <span className="text-xs text-zinc-500 font-normal">
+                  ({uncategorizedQueue.length})
+                </span>
               </div>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{uncategorized.map(renderRoutineCard)}</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {uncategorizedQueue.map((meta) => renderRoutineCard(meta, uncategorizedQueue))}
+            </div>
           </div>
         )}
       </div>
+
+      {/* Modal de Confirmação quando o usuário tenta repetir um treino já realizado na semana */}
+      {repeatConfirmRoutine && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="w-full max-w-sm bg-[#141416] border border-[#27272a] rounded-3xl p-6 shadow-2xl text-center space-y-4 text-white">
+            <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 text-white flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="text-base font-black text-white">
+                Repetir este treino novamente?
+              </h3>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                Você realmente quer fazer o treino{' '}
+                <strong className="text-white">"{repeatConfirmRoutine.routine.title}"</strong> de
+                novo? Você já treinou isso essa semana (
+                <strong>{repeatConfirmRoutine.lastDoneDateStr.toLowerCase()}</strong>).
+              </p>
+              {repeatConfirmRoutine.recommendedAlternative && (
+                <p className="text-[11px] text-zinc-400 pt-1">
+                  Próximo recomendado na sua fila:{' '}
+                  <strong className="text-white">
+                    {repeatConfirmRoutine.recommendedAlternative.title}
+                  </strong>
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-2 pt-1">
+              {repeatConfirmRoutine.recommendedAlternative && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const altId = repeatConfirmRoutine.recommendedAlternative!.id;
+                    setRepeatConfirmRoutine(null);
+                    startWorkout(altId);
+                  }}
+                  className="w-full py-3 bg-white hover:bg-zinc-200 text-black font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition active:scale-95"
+                >
+                  Iniciar Recomendado: {repeatConfirmRoutine.recommendedAlternative.title}
+                </button>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRepeatConfirmRoutine(null)}
+                  className="flex-1 py-2.5 bg-[#27272a] hover:bg-zinc-700 text-zinc-200 font-bold text-xs rounded-xl transition"
+                >
+                  Não, Voltar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const id = repeatConfirmRoutine.routine.id;
+                    setRepeatConfirmRoutine(null);
+                    startWorkout(id);
+                  }}
+                  className={`flex-1 py-2.5 font-black text-xs rounded-xl transition ${
+                    repeatConfirmRoutine.recommendedAlternative
+                      ? 'bg-[#18181b] hover:bg-zinc-800 border border-white/30 text-white'
+                      : 'bg-white hover:bg-zinc-200 text-black'
+                  }`}
+                >
+                  Sim, Fazer de Novo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Rápido de Demonstração 3D de Exercício dentro do Plano */}
+      {previewExercise3D && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPreviewExercise3D(null);
+          }}
+        >
+          <div className="w-full max-w-md bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl p-4 shadow-2xl space-y-3 text-white modal-safe-sheet">
+            <div className="flex items-center justify-between pb-2 border-b border-[#27272a]">
+              <div>
+                <h3 className="text-sm font-black text-white">{previewExercise3D.title}</h3>
+                <span className="text-[11px] text-zinc-400 capitalize">
+                  {previewExercise3D.primary_muscle_group} • {previewExercise3D.equipment}
+                </span>
+              </div>
+              <button
+                onClick={() => setPreviewExercise3D(null)}
+                className="p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <ExerciseVisualDemo exercise={previewExercise3D} />
+          </div>
+        </div>
+      )}
 
       {/* Modal de Confirmação de Exclusão */}
       {routineToDelete && (

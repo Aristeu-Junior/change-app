@@ -96,20 +96,43 @@ export const AuthLoginScreen: React.FC = () => {
     if (mode !== 'google_pending' || !identifier.trim()) return;
 
     const cleanEmail = identifier.trim().toLowerCase();
-    const interval = window.setInterval(async () => {
+    let active = true;
+
+    const checkStatusNow = async () => {
+      if (!active) return;
       const res = await requestOrCheckGoogleAccess(cleanEmail);
+      if (!active) return;
       if (res.status === 'approved' && res.account) {
-        window.clearInterval(interval);
         localStorage.removeItem('change_pending_google_email');
         setApprovedCloudAccount(res.account);
         setMode('google_approved');
       } else if (res.status === 'rejected') {
-        window.clearInterval(interval);
         setMode('access_denied');
       }
-    }, 3000);
+    };
 
-    return () => window.clearInterval(interval);
+    checkStatusNow();
+    const interval = window.setInterval(checkStatusNow, 2500);
+
+    const handleWake = () => {
+      if (document.visibilityState === 'visible') {
+        checkStatusNow();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleWake);
+    window.addEventListener('focus', checkStatusNow);
+    window.addEventListener('pageshow', checkStatusNow);
+    window.addEventListener('online', checkStatusNow);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleWake);
+      window.removeEventListener('focus', checkStatusNow);
+      window.removeEventListener('pageshow', checkStatusNow);
+      window.removeEventListener('online', checkStatusNow);
+    };
   }, [mode, identifier]);
 
   const resetMessages = () => {
@@ -958,17 +981,41 @@ export const AuthLoginScreen: React.FC = () => {
               <span>Verificando resposta do administrador em tempo real...</span>
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                localStorage.removeItem('change_pending_google_email');
-                resetMessages();
-                setMode('login');
-              }}
-              className="text-xs font-bold text-zinc-400 hover:text-white underline transition"
-            >
-              Voltar para a tela inicial
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={async () => {
+                  const cleanEmail = identifier.trim().toLowerCase();
+                  if (!cleanEmail) return;
+                  setIsLoading(true);
+                  const res = await requestOrCheckGoogleAccess(cleanEmail);
+                  setIsLoading(false);
+                  if (res.status === 'approved' && res.account) {
+                    localStorage.removeItem('change_pending_google_email');
+                    setApprovedCloudAccount(res.account);
+                    setMode('google_approved');
+                  } else if (res.status === 'rejected') {
+                    setMode('access_denied');
+                  }
+                }}
+                className="w-full py-3 bg-white text-black font-black text-xs rounded-xl shadow hover:bg-zinc-200 transition active:scale-95"
+              >
+                {isLoading ? 'Verificando...' : 'Verificar Liberação Agora'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem('change_pending_google_email');
+                  resetMessages();
+                  setMode('login');
+                }}
+                className="text-xs font-bold text-zinc-400 hover:text-white underline transition py-1"
+              >
+                Voltar para a tela inicial
+              </button>
+            </div>
           </div>
         )}
 

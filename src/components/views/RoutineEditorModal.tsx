@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, FolderPlus, Sparkles, ChevronRight, RotateCcw } from 'lucide-react';
+import { X, Plus, Trash2, FolderPlus, Sparkles, ChevronRight, RotateCcw, Dumbbell, Eye } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Routine, WorkoutExercise, ExerciseTemplate } from '../../types';
 import { ExerciseSearchModal } from '../ExerciseSearchModal';
+import { ExerciseVisualDemo } from '../ExerciseVisualDemo';
 import { POPULAR_ROUTINE_PRESETS, RoutinePreset } from '../../data/defaultRoutines';
 
 interface RoutineEditorModalProps {
@@ -16,7 +17,7 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
   isOpen,
   onClose
 }) => {
-  const { folders, createFolder, saveRoutine } = useApp();
+  const { folders, createFolder, saveRoutine, exercises: allTemplates } = useApp();
 
   const [title, setTitle] = useState('');
   const [folderId, setFolderId] = useState<number | null>(null);
@@ -26,6 +27,7 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderTitle, setNewFolderTitle] = useState('');
   const [showPresets, setShowPresets] = useState(true);
+  const [preview3DExId, setPreview3DExId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -340,22 +342,68 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                 </button>
               </div>
 
-              {exercises.map((ex, exIdx) => (
-                <div
-                  key={ex.id}
-                  className="bg-[#18181b] border border-[#27272a] rounded-2xl p-3.5 space-y-2.5"
-                >
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-white">{ex.title}</h4>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveExercise(exIdx)}
-                      className="p-1 text-zinc-500 hover:text-red-400 transition"
-                      title="Remover do plano"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+              {exercises.map((ex, exIdx) => {
+                const tpl =
+                  allTemplates.find((t) => t.id === ex.exercise_template_id) ||
+                  allTemplates.find((t) => t.title.toLowerCase() === ex.title.toLowerCase());
+                const thumbUrl = tpl?.gif_id
+                  ? `https://cdn.jsdelivr.net/gh/omercotkd/exercises-gifs@main/assets/${tpl.gif_id}.gif`
+                  : tpl?.gif_url || null;
+                const isPreviewing3D = preview3DExId === ex.id;
+
+                return (
+                  <div
+                    key={ex.id}
+                    className="bg-[#18181b] border border-[#27272a] rounded-2xl p-3.5 space-y-2.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <button
+                          type="button"
+                          onClick={() => setPreview3DExId(isPreviewing3D ? null : ex.id)}
+                          className="w-11 h-11 rounded-xl bg-white border border-[#27272a] overflow-hidden shrink-0 flex items-center justify-center relative group"
+                          title="Toque para expandir a visualização 3D"
+                        >
+                          {thumbUrl ? (
+                            <img
+                              src={thumbUrl}
+                              alt={ex.title}
+                              loading="lazy"
+                              className="w-full h-full object-cover pointer-events-none"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-[#121214] flex items-center justify-center">
+                              <Dumbbell className="w-4 h-4 text-white" />
+                            </div>
+                          )}
+                        </button>
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-bold text-white truncate">{ex.title}</h4>
+                          <button
+                            type="button"
+                            onClick={() => setPreview3DExId(isPreviewing3D ? null : ex.id)}
+                            className="text-[10px] text-zinc-400 hover:text-white flex items-center gap-1 mt-0.5 font-semibold"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>{isPreviewing3D ? 'Ocultar 3D' : 'Ver Execução 3D'}</span>
+                          </button>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveExercise(exIdx)}
+                        className="p-1 text-zinc-500 hover:text-red-400 transition shrink-0"
+                        title="Remover do plano"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {isPreviewing3D && tpl && (
+                      <div className="pt-1">
+                        <ExerciseVisualDemo exercise={tpl} />
+                      </div>
+                    )}
 
                   {/* Séries do exercício no plano */}
                   <div className="space-y-1.5">
@@ -412,15 +460,16 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                     ))}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleAddSet(exIdx)}
-                    className="text-xs text-zinc-300 font-semibold hover:text-white flex items-center gap-1 pt-1"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Adicionar Série
-                  </button>
-                </div>
-              ))}
+                    <button
+                      type="button"
+                      onClick={() => handleAddSet(exIdx)}
+                      className="text-xs text-zinc-300 font-semibold hover:text-white flex items-center gap-1 pt-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Adicionar Série
+                    </button>
+                  </div>
+                );
+              })}
 
               <button
                 type="button"
