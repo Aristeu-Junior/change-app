@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dumbbell, Lock, User, Eye, EyeOff, Sun, Moon, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Dumbbell, Lock, Mail, Eye, EyeOff, Sun, Moon, ShieldCheck, ArrowRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export const AuthLoginScreen: React.FC = () => {
@@ -16,7 +16,7 @@ export const AuthLoginScreen: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!identifier.trim() || !password.trim()) {
-      setErrorMsg('Preencha seu usuário/e-mail e sua senha.');
+      setErrorMsg('Insira o seu e-mail e a sua senha.');
       return;
     }
 
@@ -26,7 +26,7 @@ export const AuthLoginScreen: React.FC = () => {
     setIsLoading(false);
 
     if (!result) {
-      setErrorMsg('Usuário/e-mail ou senha incorretos. Verifique seus dados.');
+      setErrorMsg('E-mail ou senha incorretos. Verifique seus dados.');
     }
   };
 
@@ -76,13 +76,13 @@ export const AuthLoginScreen: React.FC = () => {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#141416] border border-[#27272a] text-[10px] font-black uppercase tracking-wider text-zinc-400">
               <Lock className="w-3 h-3 text-white" />
-              <span>Acesso Individual e Isolado</span>
+              <span>Acesso Individual</span>
             </div>
             <h1 className="text-3xl font-black tracking-tight text-white leading-tight">
               Bem-vindo ao Change.
             </h1>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              Entre com sua conta exclusiva para acessar seus planos de treino, histórico de cargas reais e evoluções na nuvem.
+              Entre com sua conta para acessar seus planos de treino, histórico de cargas e ranking.
             </p>
           </div>
 
@@ -96,15 +96,15 @@ export const AuthLoginScreen: React.FC = () => {
 
             <div className="space-y-1.5">
               <label className="text-[11px] uppercase tracking-wider font-black text-zinc-400 block">
-                E-mail ou Nome de Usuário
+                E-mail
               </label>
               <div className="relative">
-                <User className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="Ex: aristeu, vitoria ou seu@email.com"
+                  placeholder="Insira o seu e-mail"
                   autoComplete="username"
                   required
                   className="w-full bg-[#141416] border border-[#27272a] focus:border-white rounded-xl pl-10 pr-4 py-3.5 text-xs font-bold text-white placeholder-zinc-500 focus:outline-none transition"
@@ -122,7 +122,7 @@ export const AuthLoginScreen: React.FC = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Digite sua senha de acesso"
+                  placeholder="Insira a sua senha"
                   autoComplete="current-password"
                   required
                   className="w-full bg-[#141416] border border-[#27272a] focus:border-white rounded-xl pl-10 pr-10 py-3.5 text-xs font-bold text-white placeholder-zinc-500 focus:outline-none transition"
@@ -143,17 +143,17 @@ export const AuthLoginScreen: React.FC = () => {
               disabled={isLoading}
               className="w-full py-4 bg-white hover:bg-zinc-200 text-black font-black text-xs uppercase tracking-widest rounded-xl shadow-xl flex items-center justify-center gap-2 transition active:scale-98 disabled:opacity-50 mt-2"
             >
-              <span>{isLoading ? 'Autenticando na Nuvem...' : 'Entrar na Minha Conta'}</span>
+              <span>{isLoading ? 'Entrando...' : 'Entrar'}</span>
               {!isLoading && <ArrowRight className="w-4 h-4" />}
             </button>
           </form>
         </div>
 
-        {/* Rodapé informativo: Somente Aristeu e Vitória cadastram novos usuários */}
+        {/* Rodapé discreto sem expor nomes de administradores */}
         <div className="pt-4 border-t border-[#27272a] flex items-start gap-2.5 text-left">
           <ShieldCheck className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
           <p className="text-[11px] text-zinc-400 leading-relaxed">
-            <strong>Acesso restrito a convidados:</strong> Novos cadastros são criados exclusivamente pelos administradores (<strong>Aristeu</strong> e <strong>Vitória</strong>). Cada conta acessa apenas os seus próprios treinos.
+            Plataforma fechada para membros convidados. Cada conta possui acesso isolado e criptografado aos próprios treinos.
           </p>
         </div>
       </div>

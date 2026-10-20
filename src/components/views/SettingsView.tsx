@@ -9,18 +9,11 @@ import {
   Download,
   Upload,
   Check,
-  ShieldCheck,
-  Cloud,
-  RefreshCw
+  ShieldCheck
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { playGymTone, triggerHaptic } from '../../utils/calc';
 import { UserAccountModal } from '../UserAccountModal';
-import {
-  getSupabaseConfig,
-  saveSupabaseConfig,
-  testCloudConnection
-} from '../../services/cloudSync';
 
 export const SettingsView: React.FC = () => {
   const {
@@ -31,40 +24,12 @@ export const SettingsView: React.FC = () => {
     theme,
     toggleTheme,
     currentUser,
-    isCurrentUserAdmin,
-    cloudStatus,
-    syncNowWithCloud
+    isCurrentUserAdmin
   } = useApp();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
-
-  const existingCloud = getSupabaseConfig();
-  const [supabaseUrl, setSupabaseUrl] = useState(existingCloud?.url || '');
-  const [supabaseAnonKey, setSupabaseAnonKey] = useState(existingCloud?.anonKey || '');
-  const [cloudMsg, setCloudMsg] = useState<string | null>(null);
-  const [isTestingCloud, setIsTestingCloud] = useState(false);
-
-  const handleSaveCloudConfig = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!supabaseUrl.trim() || !supabaseAnonKey.trim()) {
-      saveSupabaseConfig(null);
-      setCloudMsg('Conector removido.');
-      return;
-    }
-
-    setIsTestingCloud(true);
-    const config = { url: supabaseUrl.trim(), anonKey: supabaseAnonKey.trim() };
-    saveSupabaseConfig(config);
-    const result = await testCloudConnection(config);
-    if (result.ok) {
-      await syncNowWithCloud();
-    }
-    setIsTestingCloud(false);
-    setCloudMsg(result.message);
-    setTimeout(() => setCloudMsg(null), 5000);
-  };
 
   const handleExport = () => {
     const jsonStr = exportDataJson();
@@ -100,10 +65,10 @@ export const SettingsView: React.FC = () => {
       {/* Topo */}
       <div>
         <h1 className="text-2xl font-black text-white">Ajustes</h1>
-        <p className="text-xs text-zinc-400">Perfis, nuvem, tema & preferências</p>
+        <p className="text-xs text-zinc-400">Conta, tema & preferências de treino</p>
       </div>
 
-      {/* CONTA DO ATLETA E GESTÃO DE CONVIDADOS (ADMIN: ARISTEU & VITÓRIA) */}
+      {/* CONTA DO ATLETA E GESTÃO DE CONVIDADOS */}
       <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-xs uppercase font-bold text-zinc-400 block">
@@ -134,56 +99,6 @@ export const SettingsView: React.FC = () => {
             <span>{isCurrentUserAdmin ? 'Cadastrar / Conta' : 'Minha Conta'}</span>
           </button>
         </div>
-      </div>
-
-      {/* STATUS DE SINCRONIZAÇÃO EM NUVEM (SUPABASE) */}
-      <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Cloud className="w-4 h-4 text-white" />
-            <span className="text-xs uppercase font-bold text-zinc-400">
-              Banco em Nuvem (Supabase São Paulo)
-            </span>
-          </div>
-          <span
-            className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-              cloudStatus === 'synced'
-                ? 'bg-white text-black'
-                : cloudStatus === 'syncing'
-                ? 'bg-zinc-700 text-white'
-                : 'bg-[#1c1c1f] text-zinc-400 border border-[#27272a]'
-            }`}
-          >
-            {cloudStatus === 'synced' && 'Sincronizado'}
-            {cloudStatus === 'syncing' && 'Sincronizando...'}
-            {cloudStatus === 'idle' && 'Conectado'}
-            {cloudStatus === 'error' && 'Requer Tabela'}
-            {cloudStatus === 'unconfigured' && 'Modo Local Ativo'}
-          </span>
-        </div>
-
-        <p className="text-xs text-zinc-400 leading-relaxed">
-          Seus treinos e cargas ficam salvos de forma isolada na nuvem do perfil <strong>{currentUser.name}</strong>.
-        </p>
-
-        {isCurrentUserAdmin && cloudMsg && (
-          <div className="p-2.5 bg-[#18181b] border border-white/30 rounded-xl text-xs font-bold text-white">
-            {cloudMsg}
-          </div>
-        )}
-
-        {isCurrentUserAdmin && (
-          <form onSubmit={handleSaveCloudConfig} className="space-y-2.5 pt-1">
-            <button
-              type="button"
-              onClick={() => syncNowWithCloud()}
-              className="w-full py-2.5 bg-[#18181b] hover:bg-[#222226] border border-[#27272a] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isTestingCloud ? 'animate-spin' : ''}`} />
-              <span>Forçar Sincronização com a Nuvem Agora</span>
-            </button>
-          </form>
-        )}
       </div>
 
       {/* TEMA PRETO E BRANCO & BRANCO E PRETO */}
@@ -425,7 +340,7 @@ export const SettingsView: React.FC = () => {
         <div className="flex items-center gap-1.5 font-black text-sm tracking-widest text-white">
           <span>CHANGE</span>
         </div>
-        <p className="text-[10px]">Aplicativo multi-usuário de musculação • Rápido, Offline & Nuvem</p>
+        <p className="text-[10px]">Plataforma de Treinamento & Performance</p>
       </div>
 
       {/* Modal de Gestão de Usuários */}

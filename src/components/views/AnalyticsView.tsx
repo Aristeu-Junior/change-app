@@ -12,7 +12,8 @@ import {
   Users,
   RefreshCw,
   Award,
-  ChevronRight
+  Share2,
+  CheckCircle2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { displayWeight } from '../../utils/calc';
@@ -24,6 +25,7 @@ import {
   RankInfo
 } from '../../utils/hevyRank';
 import { fetchCloudLeaderboard, LeaderboardEntry } from '../../services/cloudSync';
+import { ShareRankModal } from '../ShareRankModal';
 
 // Emblema Hexagonal Geométrico no estilo Hevy Rank
 const HevyRankEmblem: React.FC<{ rank: RankInfo; size?: 'sm' | 'md' | 'lg' }> = ({
@@ -59,6 +61,16 @@ const HevyRankEmblem: React.FC<{ rank: RankInfo; size?: 'sm' | 'md' | 'lg' }> = 
   );
 };
 
+// Conta treinos concluídos nos últimos 7 dias (Check-ins semanais estilo GymRats)
+const countWeeklyWorkouts = (wList: Workout[]): number => {
+  const now = Date.now();
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  return wList.filter((w) => {
+    const t = new Date(w.end_time || w.start_time).getTime();
+    return now - t <= sevenDaysMs;
+  }).length;
+};
+
 export const AnalyticsView: React.FC = () => {
   const {
     workouts,
@@ -71,12 +83,13 @@ export const AnalyticsView: React.FC = () => {
   } = useApp();
 
   const [activeSubTab, setActiveSubTab] = useState<'my_rank' | 'leaderboard' | 'stats'>('my_rank');
-  const [leaderboardFilter, setLeaderboardFilter] = useState<'score' | 'workouts' | 'exercise'>(
-    'score'
-  );
+  const [leaderboardFilter, setLeaderboardFilter] = useState<
+    'score' | 'weekly' | 'workouts' | 'exercise'
+  >('score');
   const [selectedExerciseId, setSelectedExerciseId] = useState<string>('bench-press-barbell');
   const [cloudEntries, setCloudEntries] = useState<LeaderboardEntry[]>([]);
   const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const [isAddingMeasurement, setIsAddingMeasurement] = useState(false);
   const [measWeight, setMeasWeight] = useState<string>('');
@@ -116,7 +129,7 @@ export const AnalyticsView: React.FC = () => {
       .sort((a, b) => b.rank.score - a.rank.score);
   }, [personalRecords]);
 
-  // Processa a lista consolidada do Ranking de Amigos (Aristeu, Vitória e Amigos)
+  // Processa a lista consolidada do Ranking de Amigos (Estilo GymRats + Hevy)
   const rankedAthletes = useMemo(() => {
     const byEmail = new Map<
       string,
@@ -139,7 +152,6 @@ export const AnalyticsView: React.FC = () => {
       });
     });
 
-    // Garante que os dados locais em tempo real do usuário logado estejam atualizados no ranking
     byEmail.set(currentUser.email.toLowerCase(), {
       name: currentUser.name,
       email: currentUser.email.toLowerCase(),
@@ -150,6 +162,7 @@ export const AnalyticsView: React.FC = () => {
     const list = Array.from(byEmail.values()).map((item) => {
       const rankInfo = calculateAthleteOverallRank(item.workouts, item.prs);
       const totalSetsCount = item.workouts.reduce((acc, w) => acc + (w.total_sets || 0), 0);
+      const weeklyWorkouts = countWeeklyWorkouts(item.workouts);
       const exPr = item.prs[selectedExerciseId];
       const exerciseWeight = exPr ? exPr.max_weight_kg : 0;
       const exerciseReps = exPr ? exPr.max_reps : 0;
@@ -158,12 +171,18 @@ export const AnalyticsView: React.FC = () => {
         ...item,
         rankInfo,
         workoutsCount: item.workouts.length,
+        weeklyWorkouts,
         totalSetsCount,
         exerciseWeight,
         exerciseReps
       };
     });
 
+    if (leaderboardFilter === 'weekly') {
+      return list.sort(
+        (a, b) => b.weeklyWorkouts - a.weeklyWorkouts || b.rankInfo.score - a.rankInfo.score
+      );
+    }
     if (leaderboardFilter === 'workouts') {
       return list.sort(
         (a, b) => b.workoutsCount - a.workoutsCount || b.rankInfo.score - a.rankInfo.score
@@ -176,6 +195,49 @@ export const AnalyticsView: React.FC = () => {
     }
     return list.sort((a, b) => b.rankInfo.score - a.rankInfo.score);
   }, [cloudEntries, currentUser, workouts, personalRecords, leaderboardFilter, selectedExerciseId]);
+
+  // Mural de Check-ins Recentes da Turma (Estilo GymRats)
+  const clubFeed = useMemo(() => {
+    const events: {
+      athleteName: string;
+      workoutTitle: string;
+      date: string;
+      loadKg: number;
+      sets: number;
+    }[] = [];
+
+    rankedAthletes.forEach((ath) => {
+      ath.workouts.slice(0, 5).forEach((w) => {
+        events.push({
+          athleteName: ath.name,
+          workoutTitle: w.title,
+          date: w.end_time || w.start_time,
+          loadKg: w.total_volume_kg || 0,
+          sets: w.total_sets || 0
+        });
+      });
+    });
+
+    return events
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 8);
+  }, [rankedAthletes]);
+
+  const myPosition = useMemo(() => {
+    const idx = rankedAthletes.findIndex(
+      (a) => a.email.toLowerCase() === currentUser.email.toLowerCase()
+    );
+    return idx !== -1 ? idx + 1 : 1;
+  }, [rankedAthletes, currentUser.email]);
+
+  const myWeeklyWorkouts = useMemo(() => countWeeklyWorkouts(workouts), [workouts]);
+
+  const bestPrText = useMemo(() => {
+    const prs = Object.values(personalRecords);
+    if (prs.length === 0) return 'Em busca do primeiro PR';
+    const best = [...prs].sort((a, b) => b.max_weight_kg - a.max_weight_kg)[0];
+    return `${best.exercise_title}: ${best.max_weight_kg} kg (${best.max_reps} reps)`;
+  }, [personalRecords]);
 
   const totalVolume = useMemo(() => {
     return workouts.reduce((acc, w) => acc + (w.total_volume_kg || 0), 0);
@@ -271,15 +333,21 @@ export const AnalyticsView: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-full px-4 pt-4 pb-28 space-y-4 text-white">
-      {/* Topo */}
-      <div className="flex items-center justify-between">
+      {/* Topo com Botão de Compartilhar Rank Estilo GymRats */}
+      <div className="flex items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-black text-white">Rank & Evolução</h1>
+          <h1 className="text-2xl font-black text-white">Rank & Competição</h1>
           <p className="text-xs text-zinc-400">
-            Patentes de força estilo Hevy, Ranking de Amigos & PRs
+            Patentes Hevy, Check-ins GymRats & Placar da Turma
           </p>
         </div>
-        <HevyRankEmblem rank={overallRank} size="sm" />
+        <button
+          onClick={() => setIsShareModalOpen(true)}
+          className="px-3 py-2 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition active:scale-95 shrink-0"
+        >
+          <Share2 className="w-3.5 h-3.5" />
+          <span>Compartilhar Rank</span>
+        </button>
       </div>
 
       {/* Seletor de Sub-Abas: Meu Rank | Ranking Amigos | Estatísticas */}
@@ -305,7 +373,7 @@ export const AnalyticsView: React.FC = () => {
           }`}
         >
           <Crown className="w-3.5 h-3.5" />
-          <span>Ranking</span>
+          <span>Competição</span>
         </button>
 
         <button
@@ -333,14 +401,17 @@ export const AnalyticsView: React.FC = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                    Patente Geral • {currentUser.name}
+                    Patente Geral • #{myPosition} do Grupo
                   </span>
                   <span className="text-xs font-black text-white">{overallRank.score} PTS</span>
                 </div>
                 <h2 className="text-xl font-black text-white mt-0.5">{overallRank.fullLabel}</h2>
                 <p className="text-[11px] text-zinc-400 mt-0.5">
                   {overallRank.nextTierLabel
-                    ? `Faltam ${Math.max(0, (overallRank.nextTargetValue || 0) - overallRank.score)} pts para ${overallRank.nextTierLabel}`
+                    ? `Faltam ${Math.max(
+                        0,
+                        (overallRank.nextTargetValue || 0) - overallRank.score
+                      )} pts para ${overallRank.nextTierLabel}`
                     : 'Você atingiu a patente máxima da academia!'}
                 </p>
               </div>
@@ -360,22 +431,14 @@ export const AnalyticsView: React.FC = () => {
               </div>
             </div>
 
-            {/* Escala de Patentes Hevy */}
-            <div className="pt-2 border-t border-[#27272a] flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-zinc-500 overflow-x-auto gap-1 no-scrollbar">
-              {['Ferro', 'Bronze', 'Prata', 'Ouro', 'Platina', 'Diamante', 'Titã'].map((tName) => {
-                const isActive = overallRank.tierName === tName;
-                return (
-                  <span
-                    key={tName}
-                    className={`px-2 py-1 rounded-lg whitespace-nowrap ${
-                      isActive ? 'bg-white text-black font-black' : 'bg-[#18181b] text-zinc-500'
-                    }`}
-                  >
-                    {tName}
-                  </span>
-                );
-              })}
-            </div>
+            {/* Botão Rápido: Gerar Card de Rank para Desafiar Amigos */}
+            <button
+              onClick={() => setIsShareModalOpen(true)}
+              className="w-full py-2.5 bg-[#18181b] hover:bg-[#222226] border border-[#27272a] rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition active:scale-98"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>Gerar Card do Meu Rank para WhatsApp / Stories</span>
+            </button>
           </div>
 
           {/* Rank por Grupo Muscular (8 Grupos Estilo Hevy) */}
@@ -473,7 +536,7 @@ export const AnalyticsView: React.FC = () => {
       )}
 
       {/* =========================================================
-          ABA 2: RANKING DE AMIGOS (LEADERBOARD NA NUVEM)
+          ABA 2: COMPETIÇÃO & RANKING DE AMIGOS (ESTILO GYMRATS + HEVY)
          ========================================================= */}
       {activeSubTab === 'leaderboard' && (
         <div className="space-y-4 animate-in fade-in duration-150">
@@ -483,7 +546,7 @@ export const AnalyticsView: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-white" />
                 <span className="text-xs font-black uppercase tracking-wider text-white">
-                  Ranking Geral (Nuvem)
+                  Placar da Competição
                 </span>
               </div>
               <button
@@ -498,30 +561,40 @@ export const AnalyticsView: React.FC = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-4 gap-1.5">
               <button
                 onClick={() => setLeaderboardFilter('score')}
-                className={`py-2 px-2 rounded-xl text-[11px] font-black transition ${
+                className={`py-2 px-1.5 rounded-xl text-[10px] font-black transition ${
                   leaderboardFilter === 'score'
                     ? 'bg-white text-black'
                     : 'bg-[#18181b] text-zinc-400 border border-[#27272a]'
                 }`}
               >
-                Por Patente (PTS)
+                Patente (PTS)
+              </button>
+              <button
+                onClick={() => setLeaderboardFilter('weekly')}
+                className={`py-2 px-1.5 rounded-xl text-[10px] font-black transition ${
+                  leaderboardFilter === 'weekly'
+                    ? 'bg-white text-black'
+                    : 'bg-[#18181b] text-zinc-400 border border-[#27272a]'
+                }`}
+              >
+                Na Semana
               </button>
               <button
                 onClick={() => setLeaderboardFilter('workouts')}
-                className={`py-2 px-2 rounded-xl text-[11px] font-black transition ${
+                className={`py-2 px-1.5 rounded-xl text-[10px] font-black transition ${
                   leaderboardFilter === 'workouts'
                     ? 'bg-white text-black'
                     : 'bg-[#18181b] text-zinc-400 border border-[#27272a]'
                 }`}
               >
-                Mais Treinos
+                Total Treinos
               </button>
               <button
                 onClick={() => setLeaderboardFilter('exercise')}
-                className={`py-2 px-2 rounded-xl text-[11px] font-black transition ${
+                className={`py-2 px-1.5 rounded-xl text-[10px] font-black transition ${
                   leaderboardFilter === 'exercise'
                     ? 'bg-white text-black'
                     : 'bg-[#18181b] text-zinc-400 border border-[#27272a]'
@@ -552,7 +625,7 @@ export const AnalyticsView: React.FC = () => {
             )}
           </div>
 
-          {/* Lista Classificada dos Atletas (Aristeu, Vitória e Amigos) */}
+          {/* Lista Classificada dos Atletas */}
           <div className="space-y-2">
             {rankedAthletes.map((athlete, idx) => {
               const position = idx + 1;
@@ -598,7 +671,7 @@ export const AnalyticsView: React.FC = () => {
                       </div>
                       <span className="text-[10px] text-zinc-400 block">
                         Patente: <strong className="text-zinc-200">{athlete.rankInfo.fullLabel}</strong> •{' '}
-                        {athlete.workoutsCount} treinos
+                        {athlete.weeklyWorkouts}x na semana
                       </span>
                     </div>
                   </div>
@@ -611,8 +684,16 @@ export const AnalyticsView: React.FC = () => {
                           {athlete.rankInfo.score} PTS
                         </span>
                         <span className="text-[10px] text-zinc-400">
-                          {athlete.totalSetsCount} séries
+                          {athlete.workoutsCount} treinos
                         </span>
+                      </>
+                    )}
+                    {leaderboardFilter === 'weekly' && (
+                      <>
+                        <span className="text-sm font-black text-white block">
+                          {athlete.weeklyWorkouts} check-ins
+                        </span>
+                        <span className="text-[10px] text-zinc-400">Últimos 7 dias</span>
                       </>
                     )}
                     {leaderboardFilter === 'workouts' && (
@@ -639,6 +720,56 @@ export const AnalyticsView: React.FC = () => {
                 </div>
               );
             })}
+          </div>
+
+          {/* Mural de Check-ins da Turma (Estilo GymRats) */}
+          <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Flame className="w-4 h-4 text-white" />
+                <span className="text-xs font-black uppercase tracking-wider text-white">
+                  Mural de Check-ins da Turma (GymRats)
+                </span>
+              </div>
+              <span className="text-[10px] text-zinc-500 font-bold">Ao vivo</span>
+            </div>
+
+            {clubFeed.length === 0 ? (
+              <p className="text-xs text-zinc-500 italic py-2">
+                Nenhum check-in registrado ainda. Conclua um treino para liderar o mural da turma!
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {clubFeed.map((ev, idx) => (
+                  <div
+                    key={idx}
+                    className="p-2.5 rounded-xl bg-[#18181b] border border-[#27272a] flex items-center justify-between gap-2 text-xs"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
+                      <div className="min-w-0">
+                        <span className="text-white font-bold block truncate">
+                          <strong>{ev.athleteName}</strong> concluiu{' '}
+                          <span className="text-zinc-300">{ev.workoutTitle}</span>
+                        </span>
+                        <span className="text-[10px] text-zinc-500">
+                          {new Date(ev.date).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-xs font-black text-white block">{ev.loadKg} kg</span>
+                      <span className="text-[10px] text-zinc-400">{ev.sets} séries</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -844,6 +975,27 @@ export const AnalyticsView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de Compartilhamento do Card de Rank (Estilo GymRats) */}
+      <ShareRankModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        athleteName={currentUser.name}
+        rankInfo={overallRank}
+        position={myPosition}
+        totalAthletes={rankedAthletes.length}
+        workoutsCount={workouts.length}
+        weeklyWorkouts={myWeeklyWorkouts}
+        totalSets={totalSets}
+        bestPrText={bestPrText}
+        competitors={rankedAthletes.map((a) => ({
+          name: a.name,
+          rankLabel: a.rankInfo.fullLabel,
+          score: a.rankInfo.score,
+          workoutsCount: a.workoutsCount,
+          weeklyWorkouts: a.weeklyWorkouts
+        }))}
+      />
     </div>
   );
 };

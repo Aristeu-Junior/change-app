@@ -113,23 +113,15 @@ export const getSupabaseConfig = (): SupabaseConfig | null => {
   const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
   const envKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
 
-  if (envUrl && envKey) {
-    return { url: envUrl.replace(/\/$/, ''), anonKey: envKey.trim() };
-  }
-
   try {
-    const saved = localStorage.getItem(STORAGE_CONFIG_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed?.url && parsed?.anonKey) {
-        return {
-          url: parsed.url.replace(/\/$/, ''),
-          anonKey: parsed.anonKey.trim()
-        };
-      }
-    }
+    // Limpa qualquer configuração antiga exposta no localStorage
+    localStorage.removeItem(STORAGE_CONFIG_KEY);
   } catch {
     // Ignore
+  }
+
+  if (envUrl && envKey) {
+    return { url: envUrl.replace(/\/$/, ''), anonKey: envKey.trim() };
   }
 
   return {
