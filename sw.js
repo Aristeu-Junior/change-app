@@ -1,4 +1,4 @@
-const CACHE_NAME = 'change-workout-v6';
+const CACHE_NAME = 'change-workout-v7';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -18,9 +18,23 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
+  const url = new URL(event.request.url);
+
+  // Nunca usar cache para chamadas ao Supabase ou version.json ou navegação HTML
+  if (
+    url.hostname.includes('supabase.co') ||
+    url.pathname.endsWith('version.json') ||
+    event.request.mode === 'navigate'
+  ) {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' }).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   // Network-first para garantir que atualizações de layout e código apareçam imediatamente no Web App
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: 'no-cache' })
       .then((networkResponse) => {
         return networkResponse;
       })
