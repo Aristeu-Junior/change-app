@@ -18,13 +18,15 @@ import {
   Flame,
   CheckCircle2,
   Clock,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Routine, ExerciseTemplate } from '../../types';
 import { RoutineEditorModal } from './RoutineEditorModal';
 import { UserAccountModal } from '../UserAccountModal';
 import { ExerciseVisualDemo } from '../ExerciseVisualDemo';
+import { POPULAR_FOLDER_PRESETS, FolderPreset } from '../../data/defaultRoutines';
 
 interface RoutineQueueMeta {
   routine: Routine;
@@ -47,6 +49,7 @@ export const RoutinesView: React.FC = () => {
     saveRoutine,
     deleteFolder,
     createFolder,
+    addFolderWithPreset,
     currentUser,
     isCurrentUserAdmin,
     cloudStatus,
@@ -61,6 +64,7 @@ export const RoutinesView: React.FC = () => {
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderTitle, setNewFolderTitle] = useState('');
+  const [showSuggestedFolders, setShowSuggestedFolders] = useState(false);
 
   // Modal de Confirmação ao tentar repetir um treino já realizado na semana / ciclo
   const [repeatConfirmRoutine, setRepeatConfirmRoutine] = useState<{
@@ -339,6 +343,11 @@ export const RoutinesView: React.FC = () => {
     createFolder(newFolderTitle.trim());
     setNewFolderTitle('');
     setIsCreatingFolder(false);
+  };
+
+  const handleAddFolderPreset = (fPreset: FolderPreset) => {
+    addFolderWithPreset(fPreset.title, fPreset.routines);
+    setShowSuggestedFolders(false);
   };
 
   // Agrupamento por pasta
@@ -684,6 +693,70 @@ export const RoutinesView: React.FC = () => {
           </form>
         )}
 
+        {/* Seção Compacta e Recolhível de Pastas de Treino Sugeridas (ABC, Upper/Lower, ABCD...) */}
+        <div className="bg-[#141416] border border-[#27272a] rounded-xl overflow-hidden transition">
+          <button
+            type="button"
+            onClick={() => setShowSuggestedFolders(!showSuggestedFolders)}
+            className="w-full px-3 py-2.5 flex items-center justify-between text-left hover:bg-[#18181b] transition"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <Sparkles className="w-3.5 h-3.5 text-white shrink-0" />
+              <span className="text-xs font-black text-white truncate">
+                Sugestões de Divisões Prontas (Pastas com Treinos)
+              </span>
+            </div>
+            <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-400 shrink-0">
+              <span>{showSuggestedFolders ? 'Recolher' : 'Ver divisões'}</span>
+              <ChevronRight
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  showSuggestedFolders ? 'rotate-90' : ''
+                }`}
+              />
+            </div>
+          </button>
+
+          {showSuggestedFolders && (
+            <div className="p-3 border-t border-[#27272a] space-y-2 bg-[#0d0d0f] animate-in fade-in duration-150">
+              <p className="text-[11px] text-zinc-400">
+                Toque para adicionar a pasta completa com todos os treinos da divisão já organizados dentro dela:
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                {POPULAR_FOLDER_PRESETS.map((fPreset) => (
+                  <div
+                    key={fPreset.id}
+                    className="p-3 rounded-xl bg-[#141416] border border-[#27272a] hover:border-zinc-500 transition flex flex-col justify-between gap-2.5"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-white text-black">
+                          {fPreset.tag}
+                        </span>
+                        <span className="text-[10px] text-zinc-400 font-bold">
+                          {fPreset.routines.map((r) => r.title.split('—')[0].trim()).join(' • ')}
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-black text-white">{fPreset.title}</h4>
+                      <p className="text-[10px] text-zinc-400 line-clamp-2 mt-0.5">
+                        {fPreset.description}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleAddFolderPreset(fPreset)}
+                      className="w-full py-2 bg-[#222226] hover:bg-white text-white hover:text-black rounded-lg text-[11px] font-black transition active:scale-95 flex items-center justify-center gap-1.5 border border-[#2e2e34]"
+                    >
+                      <FolderPlus className="w-3.5 h-3.5" />
+                      <span>Adicionar Pasta Completa</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Estado Vazio Limpo na Primeira Tela */}
         {routines.length === 0 && folders.length === 0 && (
           <div className="bg-[#141416] border border-dashed border-[#27272a] rounded-2xl p-6 text-center space-y-3">
@@ -698,16 +771,25 @@ export const RoutinesView: React.FC = () => {
                 Sua tela inicial está limpa para você definir exatamente quais treinos vai começar a fazer.
               </p>
             </div>
-            <button
-              onClick={() => {
-                setEditingRoutine(null);
-                setIsEditorOpen(true);
-              }}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white text-black rounded-xl text-xs font-black transition active:scale-95 shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Montar Meu Primeiro Treino</span>
-            </button>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <button
+                onClick={() => {
+                  setEditingRoutine(null);
+                  setIsEditorOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white text-black rounded-xl text-xs font-black transition active:scale-95 shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Montar Meu Primeiro Treino</span>
+              </button>
+              <button
+                onClick={() => setShowSuggestedFolders(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#1e1e22] hover:bg-[#27272c] border border-[#2e2e34] text-white rounded-xl text-xs font-bold transition active:scale-95"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Ver Pastas Prontas (ABC, Upper/Lower)</span>
+              </button>
+            </div>
           </div>
         )}
 

@@ -44,7 +44,14 @@ export const AuthLoginScreen: React.FC = () => {
   const { loginUserWith2FA, loginWithCloudPayload, theme, toggleTheme } = useApp();
 
   const [mode, setMode] = useState<AuthMode>('login');
-  const [identifier, setIdentifier] = useState('');
+  const [identifier, setIdentifier] = useState(() => {
+    try {
+      const saved = getSavedDeviceSession();
+      return saved?.email || '';
+    } catch {
+      return '';
+    }
+  });
   const [password, setPassword] = useState('');
   const [totpCode, setTotpCode] = useState('');
   const [newRecoveryPassword, setNewRecoveryPassword] = useState('');
@@ -58,10 +65,7 @@ export const AuthLoginScreen: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  const [savedDevice, setSavedDevice] = useState(() => getSavedDeviceSession());
   const [rememberDevice, setRememberDevice] = useState(true);
-  const [showOtherLogin, setShowOtherLogin] = useState(false);
 
   const isLight = theme === 'light';
 
@@ -142,29 +146,6 @@ export const AuthLoginScreen: React.FC = () => {
   const resetMessages = () => {
     setErrorMsg(null);
     setSuccessMsg(null);
-  };
-
-  // Acesso Rápido com 1 toque vinculando o celular permanentemente a Aristeu ou Vitória
-  const handleQuickLogin = async (targetEmail: string, presetPassword = '123456') => {
-    setIsLoading(true);
-    resetMessages();
-    try {
-      const result = await loginUserWith2FA(targetEmail, presetPassword);
-      if (result.ok) {
-        return;
-      }
-      setIdentifier(targetEmail);
-      if (result.requires2FA) {
-        setMode('two_factor');
-        return;
-      }
-      setErrorMsg(result.error || 'Digite sua senha para confirmar o acesso neste aparelho.');
-      setShowOtherLogin(true);
-    } catch {
-      setErrorMsg('Falha de conexão com o servidor.');
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   // 1. Login Padrão Seguro (E-mail + Senha -> e 2FA se ativo)
@@ -370,20 +351,20 @@ export const AuthLoginScreen: React.FC = () => {
         </div>
 
         {/* =========================================================
-            MODO 1: TELA DE LOGIN PRINCIPAL (ACESSO RÁPIDO E PERSISTENTE POR DISPOSITIVO)
+            MODO 1: TELA DE LOGIN PRINCIPAL (100% LIMPA E DISCRETA)
            ========================================================= */}
         {mode === 'login' && (
           <div className="my-auto py-6 space-y-5 animate-in fade-in duration-150">
             <div className="space-y-2">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#141416] border border-[#27272a] text-[10px] font-black uppercase tracking-wider text-zinc-400">
-                <Smartphone className="w-3 h-3 text-white" />
-                <span>Acesso Seguro por Aparelho</span>
+                <Lock className="w-3 h-3 text-white" />
+                <span>Acesso Seguro</span>
               </div>
               <h1 className="text-3xl font-black tracking-tight text-white leading-tight">
-                Bem-vindo ao Change.
+                Entrar no Change.
               </h1>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Seus treinos e histórico ficam salvos diretamente neste celular para você entrar com 1 toque.
+                Entre com seu e-mail e sua senha para acessar seus treinos e rotinas personalizadas.
               </p>
             </div>
 
@@ -393,179 +374,84 @@ export const AuthLoginScreen: React.FC = () => {
               </div>
             )}
 
-            {/* SE JÁ HOUVER DISPOSITIVO SALVO ANTERIORMENTE */}
-            {savedDevice && !showOtherLogin && (
-              <div className="p-4 rounded-2xl bg-[#141416] border border-white/20 space-y-3.5 shadow-2xl animate-in zoom-in-95 duration-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-white text-black font-black text-lg flex items-center justify-center shrink-0 shadow">
-                    {savedDevice.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-zinc-300">
-                        Dispositivo Vinculado
-                      </span>
-                    </div>
-                    <h3 className="text-base font-black text-white truncate mt-0.5">{savedDevice.name}</h3>
-                    <p className="text-xs text-zinc-400 truncate">{savedDevice.email}</p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin(savedDevice.email)}
-                  disabled={isLoading}
-                  className="w-full py-4 bg-white hover:bg-zinc-200 text-black font-black text-xs uppercase tracking-widest rounded-xl shadow-xl flex items-center justify-center gap-2 transition active:scale-98 disabled:opacity-50"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>{isLoading ? 'Entrando...' : `Entrar como ${savedDevice.name}`}</span>
-                </button>
-
-                <div className="text-center pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowOtherLogin(true)}
-                    className="text-xs font-bold text-zinc-400 hover:text-white transition underline"
-                  >
-                    Entrar com outra conta ou e-mail
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ATALHOS DE ACESSO RÁPIDO DE 1 TOQUE (VITÓRIA E ARISTEU) QUANDO NÃO SALVO OU AO SOLICITAR */}
-            {(!savedDevice || showOtherLogin) && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase tracking-wider font-black text-zinc-400 block">
-                    Acesso Rápido neste Aparelho
-                  </span>
-                  {showOtherLogin && savedDevice && (
-                    <button
-                      type="button"
-                      onClick={() => setShowOtherLogin(false)}
-                      className="text-[10px] font-bold text-zinc-400 hover:text-white underline transition"
-                    >
-                      Voltar ao perfil salvo
-                    </button>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('aristeu2304@gmail.com')}
-                    disabled={isLoading}
-                    className="p-3.5 rounded-2xl bg-[#141416] hover:bg-[#1a1a1e] border border-[#27272a] hover:border-white text-left transition flex flex-col justify-between group active:scale-98"
-                  >
-                    <div className="w-8 h-8 rounded-xl bg-white text-black font-black text-xs flex items-center justify-center mb-2 shadow group-hover:scale-105 transition">
-                      A
-                    </div>
-                    <div>
-                      <div className="text-xs font-black text-white">Aristeu</div>
-                      <div className="text-[10px] text-zinc-400">iPhone / Admin</div>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleQuickLogin('vitoria@change.app')}
-                    disabled={isLoading}
-                    className="p-3.5 rounded-2xl bg-[#141416] hover:bg-[#1a1a1e] border border-[#27272a] hover:border-white text-left transition flex flex-col justify-between group active:scale-98"
-                  >
-                    <div className="w-8 h-8 rounded-xl bg-white text-black font-black text-xs flex items-center justify-center mb-2 shadow group-hover:scale-105 transition">
-                      V
-                    </div>
-                    <div>
-                      <div className="text-xs font-black text-white">Vitória</div>
-                      <div className="text-[10px] text-zinc-400">Celular / Admin</div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* FORMULÁRIO COMPLETO PARA OUTROS USUÁRIOS OU CONVIDADOS */}
-            {(!savedDevice || showOtherLogin) && (
-              <form onSubmit={handleLoginSubmit} className="space-y-4 pt-1">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] uppercase tracking-wider font-black text-zinc-400 block">
-                    Outro E-mail
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={identifier}
-                      onChange={(e) => setIdentifier(e.target.value)}
-                      placeholder="Insira o seu e-mail"
-                      autoComplete="username"
-                      required
-                      className="w-full bg-[#141416] border border-[#27272a] focus:border-white rounded-xl pl-10 pr-4 py-3.5 text-xs font-bold text-white placeholder-zinc-500 focus:outline-none transition"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[11px] uppercase tracking-wider font-black text-zinc-400 block">
-                      Senha
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        resetMessages();
-                        setMode('forgot_password');
-                      }}
-                      className="text-[11px] font-bold text-zinc-400 hover:text-white underline transition"
-                    >
-                      Esqueci minha senha
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Insira a sua senha"
-                      autoComplete="current-password"
-                      required
-                      className="w-full bg-[#141416] border border-[#27272a] focus:border-white rounded-xl pl-10 pr-10 py-3.5 text-xs font-bold text-white placeholder-zinc-500 focus:outline-none transition"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1"
-                      tabIndex={-1}
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <label className="flex items-center gap-2 cursor-pointer select-none pt-1">
-                  <input
-                    type="checkbox"
-                    checked={rememberDevice}
-                    onChange={(e) => setRememberDevice(e.target.checked)}
-                    className="w-4 h-4 rounded bg-[#141416] border-[#27272a] text-white focus:ring-0 accent-white"
-                  />
-                  <span className="text-xs text-zinc-300 font-medium">
-                    Lembrar e manter conectado neste celular
-                  </span>
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] uppercase tracking-wider font-black text-zinc-400 block">
+                  E-mail
                 </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    placeholder="Insira o seu e-mail"
+                    autoComplete="username"
+                    required
+                    className="w-full bg-[#141416] border border-[#27272a] focus:border-white rounded-xl pl-10 pr-4 py-3.5 text-xs font-bold text-white placeholder-zinc-500 focus:outline-none transition"
+                  />
+                </div>
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full py-4 bg-white hover:bg-zinc-200 text-black font-black text-xs uppercase tracking-widest rounded-xl shadow-xl flex items-center justify-center gap-2 transition active:scale-98 disabled:opacity-50 mt-2"
-                >
-                  <span>{isLoading ? 'Entrando...' : 'Entrar com Senha'}</span>
-                  {!isLoading && <ArrowRight className="w-4 h-4" />}
-                </button>
-              </form>
-            )}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] uppercase tracking-wider font-black text-zinc-400 block">
+                    Senha
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetMessages();
+                      setMode('forgot_password');
+                    }}
+                    className="text-[11px] font-bold text-zinc-400 hover:text-white underline transition"
+                  >
+                    Esqueci minha senha
+                  </button>
+                </div>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Insira a sua senha"
+                    autoComplete="current-password"
+                    required
+                    className="w-full bg-[#141416] border border-[#27272a] focus:border-white rounded-xl pl-10 pr-10 py-3.5 text-xs font-bold text-white placeholder-zinc-500 focus:outline-none transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2 cursor-pointer select-none pt-1">
+                <input
+                  type="checkbox"
+                  checked={rememberDevice}
+                  onChange={(e) => setRememberDevice(e.target.checked)}
+                  className="w-4 h-4 rounded bg-[#141416] border-[#27272a] text-white focus:ring-0 accent-white"
+                />
+                <span className="text-xs text-zinc-300 font-medium">
+                  Lembrar e manter conectado neste aparelho
+                </span>
+              </label>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-4 bg-white hover:bg-zinc-200 text-black font-black text-xs uppercase tracking-widest rounded-xl shadow-xl flex items-center justify-center gap-2 transition active:scale-98 disabled:opacity-50 mt-2"
+              >
+                <span>{isLoading ? 'Entrando...' : 'Entrar'}</span>
+                {!isLoading && <ArrowRight className="w-4 h-4" />}
+              </button>
+            </form>
 
             {/* Opção para novos convidados pedirem aprovação de acesso ao Administrador */}
             <div className="pt-2 border-t border-[#27272a] text-center">

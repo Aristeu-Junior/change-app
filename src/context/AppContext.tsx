@@ -12,7 +12,7 @@ import {
   BodyMeasurement
 } from '../types';
 import { DEFAULT_EXERCISES } from '../data/defaultExercises';
-import { LEGACY_DEFAULT_ROUTINE_IDS } from '../data/defaultRoutines';
+import { LEGACY_DEFAULT_ROUTINE_IDS, RoutinePreset } from '../data/defaultRoutines';
 import {
   playGymTone,
   triggerHaptic,
@@ -134,6 +134,7 @@ interface AppContextType {
   deleteRoutine: (routineId: string) => void;
   createFolder: (title: string) => void;
   deleteFolder: (folderId: number) => void;
+  addFolderWithPreset: (folderTitle: string, routinePresets: RoutinePreset[]) => void;
 
   // Exercícios
   exercises: ExerciseTemplate[];
@@ -1471,6 +1472,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
+  const addFolderWithPreset = (folderTitle: string, routinePresets: RoutinePreset[]) => {
+    const newFolderId = Date.now();
+    const newFolder: RoutineFolder = {
+      id: newFolderId,
+      title: folderTitle,
+      index: folders.length
+    };
+
+    const newRoutines: Routine[] = routinePresets.map((preset, rIdx) => {
+      const mappedExercises: WorkoutExercise[] = preset.exercises.map((pEx, exIdx) => ({
+        id: `re-${Date.now()}-${rIdx}-${exIdx}`,
+        exercise_template_id: pEx.exercise_template_id,
+        title: pEx.title,
+        rest_seconds: 90,
+        sets: Array.from({ length: pEx.setsCount }).map((_, sIdx) => ({
+          id: `rs-${Date.now()}-${rIdx}-${exIdx}-${sIdx}`,
+          index: sIdx,
+          type: 'normal',
+          weight_kg: pEx.weightKg,
+          reps: pEx.reps,
+          completed: false
+        }))
+      }));
+
+      return {
+        id: `routine-${Date.now()}-${rIdx}`,
+        title: preset.title,
+        notes: `${preset.subtitle}. ${preset.description}`,
+        folder_id: newFolderId,
+        exercises: mappedExercises,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+    });
+
+    setFolders((prev) => [...prev, newFolder]);
+    setRoutines((prev) => [...newRoutines, ...prev]);
+  };
+
   const addCustomExercise = (ex: Omit<ExerciseTemplate, 'id' | 'is_custom'>) => {
     const newEx: ExerciseTemplate = {
       ...ex,
@@ -1586,6 +1626,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deleteRoutine,
       createFolder,
       deleteFolder,
+      addFolderWithPreset,
       exercises,
       addCustomExercise,
       deleteCustomExercise,

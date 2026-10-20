@@ -26,7 +26,7 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderTitle, setNewFolderTitle] = useState('');
-  const [showPresets, setShowPresets] = useState(true);
+  const [showPresets, setShowPresets] = useState(false);
   const [preview3DExId, setPreview3DExId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
       );
       setIsCreatingFolder(false);
       setNewFolderTitle('');
-      setShowPresets(!routineToEdit);
+      setShowPresets(false);
     }
   }, [isOpen, routineToEdit]);
 
@@ -169,27 +169,18 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
         {/* Formulário */}
         <form onSubmit={handleSave} className="flex-1 min-h-0 flex flex-col overflow-hidden">
           <div className="flex-1 min-h-0 overflow-y-auto space-y-4 py-3 pr-1">
-            {/* SUGESTÕES DE TREINOS CONHECIDOS (Aparece apenas aqui ao clicar em Montar Novo Treino) */}
-            <div className="bg-[#18181b] border border-[#27272a] rounded-2xl p-3 space-y-2.5">
+            {/* SUGESTÕES DE TREINOS CONHECIDOS (Compacto e Recolhível por padrão) */}
+            <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-2.5 space-y-2">
               <div className="flex items-center justify-between">
                 <button
                   type="button"
                   onClick={() => setShowPresets(!showPresets)}
                   className="flex items-center gap-2 text-left"
                 >
-                  <div className="w-6 h-6 rounded-lg bg-white text-black flex items-center justify-center shrink-0">
-                    <Sparkles className="w-3.5 h-3.5 text-black" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-black text-white block">
-                      Sugestões de Treinos Conhecidos
-                    </span>
-                    <span className="text-[10px] text-zinc-400 block">
-                      {showPresets
-                        ? 'Toque em um modelo para carregar ou preencha do zero abaixo'
-                        : 'Toque para ver as 6 divisões clássicas de academia'}
-                    </span>
-                  </div>
+                  <Sparkles className="w-3.5 h-3.5 text-zinc-300" />
+                  <span className="text-xs font-bold text-zinc-300">
+                    Sugestões de Treinos Prontos
+                  </span>
                 </button>
 
                 <div className="flex items-center gap-1.5">
@@ -197,19 +188,19 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                     <button
                       type="button"
                       onClick={handleResetToEmpty}
-                      className="px-2 py-1 rounded-lg bg-[#27272a] hover:bg-zinc-700 text-[10px] font-bold text-zinc-200 flex items-center gap-1 transition"
+                      className="px-2 py-0.5 rounded bg-[#27272a] hover:bg-zinc-700 text-[10px] font-bold text-zinc-300 flex items-center gap-1 transition"
                       title="Limpar e montar do zero"
                     >
                       <RotateCcw className="w-3 h-3" />
-                      Do Zero
+                      Limpar
                     </button>
                   )}
                   <button
                     type="button"
                     onClick={() => setShowPresets(!showPresets)}
-                    className="text-[11px] font-bold text-zinc-400 hover:text-white px-1.5 py-0.5"
+                    className="text-[10px] font-bold text-zinc-300 hover:text-white px-2 py-0.5 rounded bg-[#27272a] border border-[#3f3f46]"
                   >
-                    {showPresets ? 'Ocultar' : 'Ver'}
+                    {showPresets ? 'Recolher' : 'Ver modelos'}
                   </button>
                 </div>
               </div>
