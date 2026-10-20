@@ -41,6 +41,11 @@ import {
   CloudUserPayload
 } from '../services/cloudSync';
 import { verifyTotpCode } from '../utils/totp';
+import {
+  getSavedDeviceSession,
+  saveDeviceSession,
+  clearDeviceSession
+} from '../utils/deviceSession';
 
 interface RestTimerState {
   isActive: boolean;
@@ -259,9 +264,13 @@ const rebuildPersonalRecords = (workoutsList: Workout[]): Record<string, Persona
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Estado de Autenticação: exige login para impedir que pessoas transitem nos treinos de outras
+  // Estado de Autenticação: lembra permanentemente o dispositivo logado (iPhone do Aristeu, Celular da Vitória)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     try {
+      const savedDevice = getSavedDeviceSession();
+      if (savedDevice && savedDevice.autoLogin) {
+        return true;
+      }
       return localStorage.getItem('change_auth_session_active') === 'true';
     } catch {
       return false;
@@ -313,6 +322,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
     try {
+      const savedDevice = getSavedDeviceSession();
+      if (savedDevice && savedDevice.userId) {
+        if (
+          savedDevice.userId === 'user-aristeu' ||
+          savedDevice.email.toLowerCase() === 'aristeu2304@gmail.com' ||
+          savedDevice.email.toLowerCase() === 'aristeu@change.app'
+        ) {
+          return INITIAL_USERS[0];
+        }
+        if (
+          savedDevice.userId === 'user-vitoria' ||
+          savedDevice.email.toLowerCase() === 'vitoria@change.app'
+        ) {
+          return INITIAL_USERS[1];
+        }
+        const savedCurrent = localStorage.getItem('change_current_user');
+        if (savedCurrent) {
+          const parsed = JSON.parse(savedCurrent);
+          if (parsed.id === savedDevice.userId) {
+            return {
+              ...parsed,
+              is_admin: isAdminProfile(parsed)
+            };
+          }
+        }
+        return {
+          id: savedDevice.userId,
+          name: savedDevice.name,
+          email: savedDevice.email,
+          is_admin: !!savedDevice.isAdmin,
+          avatar_color: savedDevice.avatarColor || '#ffffff',
+          created_at: new Date().toISOString()
+        };
+      }
+
       const saved = localStorage.getItem('change_current_user');
       if (saved) {
         const parsed: UserProfile = JSON.parse(saved);
@@ -963,6 +1007,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     setCurrentUser(restoredUser);
     reloadUserData(restoredUser.id, restoredUser.name);
+    saveDeviceSession(restoredUser, true);
     localStorage.setItem('change_auth_session_active', 'true');
     setIsAuthenticated(true);
     await pullCloudDataForUser(restoredUser);
@@ -1092,6 +1137,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       setCurrentUser(foundLocal);
       reloadUserData(foundLocal.id, foundLocal.name);
+      saveDeviceSession(foundLocal, true);
       localStorage.setItem('change_auth_session_active', 'true');
       setIsAuthenticated(true);
       return { ok: true };
@@ -1107,7 +1153,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const logoutUser = () => {
-    localStorage.removeItem('change_auth_session_active');
+    clearDeviceSession();
     setIsAuthenticated(false);
     setWorkoutModalOpen(false);
   };
