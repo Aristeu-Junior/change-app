@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, UserPlus, LogIn, Users, Check, UserCircle2 } from 'lucide-react';
+import { X, UserPlus, LogIn, Check, UserCircle2, Cloud } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 interface UserAccountModalProps {
@@ -8,21 +8,25 @@ interface UserAccountModalProps {
 }
 
 export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onClose }) => {
-  const { users, currentUser, registerUser, loginUser, switchUser } = useApp();
+  const { users, currentUser, registerUser, loginUser, switchUser, cloudStatus } = useApp();
 
   const [mode, setMode] = useState<'profile' | 'login' | 'register'>('profile');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !email.trim()) return;
 
-    const ok = registerUser(name, email, password);
+    setIsLoading(true);
+    const ok = await registerUser(name, email, password);
+    setIsLoading(false);
+
     if (ok) {
       setErrorMsg(null);
       setName('');
@@ -35,11 +39,14 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
 
-    const ok = loginUser(email, password);
+    setIsLoading(true);
+    const ok = await loginUser(email, password);
+    setIsLoading(false);
+
     if (ok) {
       setErrorMsg(null);
       setEmail('');
@@ -47,7 +54,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
       setMode('profile');
       onClose();
     } else {
-      setErrorMsg('E-mail ou senha incorretos.');
+      setErrorMsg('E-mail ou senha não encontrados.');
     }
   };
 
@@ -83,36 +90,53 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
             {/* Current Active User Card */}
             <div className="p-3.5 rounded-xl bg-[#1c1c1f] border border-[#3f3f46] flex items-center justify-between">
               <div>
-                <span className="text-[10px] uppercase font-bold text-zinc-400 block">Atleta Ativo</span>
+                <span className="text-[10px] uppercase font-bold text-zinc-400 block">
+                  Perfil Exclusivo Ativo
+                </span>
                 <span className="text-sm font-black text-white block">{currentUser.name}</span>
                 <span className="text-xs text-zinc-500">{currentUser.email}</span>
               </div>
-              <span className="px-2.5 py-1 rounded-full bg-white text-black font-extrabold text-[10px]">
-                Ativo
-              </span>
+              <div className="flex flex-col items-end gap-1">
+                <span className="px-2.5 py-1 rounded-full bg-white text-black font-extrabold text-[10px]">
+                  Ativo
+                </span>
+                {cloudStatus === 'synced' && (
+                  <span className="flex items-center gap-1 text-[9px] text-zinc-400 font-bold">
+                    <Cloud className="w-3 h-3" /> Salvo na Nuvem
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* List of Registered Users */}
             <div className="space-y-2">
               <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">
-                Alternar Usuário Neste Aparelho
+                Alternar Perfil (Aristeu, Vitória e Amigos)
               </span>
-              <div className="space-y-1.5 max-h-40 overflow-y-auto">
+              <div className="space-y-1.5 max-h-44 overflow-y-auto pr-0.5">
                 {users.map((u) => {
                   const isCurrent = u.id === currentUser.id;
                   return (
                     <button
                       key={u.id}
-                      onClick={() => switchUser(u.id)}
+                      onClick={() => {
+                        switchUser(u.id);
+                        onClose();
+                      }}
                       className={`w-full p-2.5 rounded-xl border flex items-center justify-between text-left transition ${
                         isCurrent
                           ? 'bg-[#27272a] border-white text-white'
                           : 'bg-[#18181b] border-[#27272a] text-zinc-300 hover:bg-[#222226]'
                       }`}
                     >
-                      <div>
-                        <span className="text-xs font-bold block">{u.name}</span>
-                        <span className="text-[10px] text-zinc-500">{u.email}</span>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-white text-black font-black text-xs flex items-center justify-center shrink-0">
+                          {u.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold block">{u.name}</span>
+                          <span className="text-[10px] text-zinc-500">{u.email}</span>
+                        </div>
                       </div>
                       {isCurrent && <Check className="w-4 h-4 text-white" />}
                     </button>
@@ -131,7 +155,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
                 className="w-full py-3 bg-white text-black font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 shadow-md active:scale-98 transition"
               >
                 <UserPlus className="w-4 h-4" />
-                Cadastrar Nova Pessoa
+                Cadastrar Novo Amigo / Perfil
               </button>
 
               <button
@@ -142,7 +166,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
                 className="w-full py-2.5 bg-[#18181b] hover:bg-[#222226] text-white font-semibold text-xs rounded-xl border border-[#27272a] flex items-center justify-center gap-1.5 transition"
               >
                 <LogIn className="w-4 h-4" />
-                Acessar com Outro E-mail
+                Entrar com E-mail Cadastrado
               </button>
             </div>
           </div>
@@ -152,11 +176,11 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
           <form onSubmit={handleRegister} className="space-y-3">
             <div>
               <label className="text-xs uppercase text-zinc-400 font-bold block mb-1">
-                Nome Completo ou Apelido
+                Nome ou Apelido
               </label>
               <input
                 type="text"
-                placeholder="Ex: Carlos Treinador"
+                placeholder="Ex: Vitória, Lucas..."
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -170,7 +194,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
               </label>
               <input
                 type="email"
-                placeholder="carlos@exemplo.com"
+                placeholder="email@exemplo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -201,9 +225,10 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
               </button>
               <button
                 type="submit"
-                className="flex-1 py-2.5 bg-white text-black text-xs font-black rounded-xl active:scale-98 transition shadow-md"
+                disabled={isLoading}
+                className="flex-1 py-2.5 bg-white text-black text-xs font-black rounded-xl active:scale-98 transition shadow-md disabled:opacity-50"
               >
-                Cadastrar
+                {isLoading ? 'Salvando...' : 'Criar Perfil'}
               </button>
             </div>
           </form>
@@ -227,11 +252,11 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
 
             <div>
               <label className="text-xs uppercase text-zinc-400 font-bold block mb-1">
-                Senha
+                Senha / PIN
               </label>
               <input
                 type="password"
-                placeholder="Digite sua senha"
+                placeholder="Digite sua senha (se houver)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-3 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white"
@@ -248,9 +273,10 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
               </button>
               <button
                 type="submit"
-                className="flex-1 py-2.5 bg-white text-black text-xs font-black rounded-xl active:scale-98 transition shadow-md"
+                disabled={isLoading}
+                className="flex-1 py-2.5 bg-white text-black text-xs font-black rounded-xl active:scale-98 transition shadow-md disabled:opacity-50"
               >
-                Entrar
+                {isLoading ? 'Buscando...' : 'Entrar'}
               </button>
             </div>
           </form>

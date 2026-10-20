@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, FolderPlus } from 'lucide-react';
+import { X, Plus, Trash2, FolderPlus, Sparkles, ChevronRight, RotateCcw } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Routine, WorkoutExercise, ExerciseTemplate } from '../../types';
 import { ExerciseSearchModal } from '../ExerciseSearchModal';
+import { POPULAR_ROUTINE_PRESETS, RoutinePreset } from '../../data/defaultRoutines';
 
 interface RoutineEditorModalProps {
   routineToEdit?: Routine | null;
@@ -24,19 +25,52 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderTitle, setNewFolderTitle] = useState('');
+  const [showPresets, setShowPresets] = useState(true);
 
   useEffect(() => {
     if (isOpen) {
       setTitle(routineToEdit?.title || '');
       setFolderId(routineToEdit?.folder_id ?? null);
       setNotes(routineToEdit?.notes || '');
-      setExercises(routineToEdit?.exercises ? JSON.parse(JSON.stringify(routineToEdit.exercises)) : []);
+      setExercises(
+        routineToEdit?.exercises ? JSON.parse(JSON.stringify(routineToEdit.exercises)) : []
+      );
       setIsCreatingFolder(false);
       setNewFolderTitle('');
+      setShowPresets(!routineToEdit);
     }
   }, [isOpen, routineToEdit]);
 
   if (!isOpen) return null;
+
+  // Preenche o plano com uma sugestão conhecida (podendo editar livremente antes de salvar)
+  const handleApplyPreset = (preset: RoutinePreset) => {
+    setTitle(preset.title);
+    setNotes(`${preset.subtitle}. ${preset.description}`);
+    const mappedExercises: WorkoutExercise[] = preset.exercises.map((pEx, idx) => ({
+      id: `pe-${Date.now()}-${idx}`,
+      exercise_template_id: pEx.exercise_template_id,
+      title: pEx.title,
+      rest_seconds: 90,
+      sets: Array.from({ length: pEx.setsCount }).map((_, sIdx) => ({
+        id: `ps-${Date.now()}-${idx}-${sIdx}`,
+        index: sIdx,
+        type: 'normal',
+        weight_kg: pEx.weightKg,
+        reps: pEx.reps,
+        completed: false
+      }))
+    }));
+    setExercises(mappedExercises);
+    setShowPresets(false);
+  };
+
+  // Limpa para montar do zero
+  const handleResetToEmpty = () => {
+    setTitle('');
+    setNotes('');
+    setExercises([]);
+  };
 
   const handleAddExercise = (template: ExerciseTemplate) => {
     const newEx: WorkoutExercise = {
@@ -111,12 +145,17 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-lg bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl flex flex-col h-[92vh] sm:h-[85vh] text-white">
+      <div className="w-full max-w-lg bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl flex flex-col h-[92vh] sm:h-[86vh] text-white">
         {/* Topo */}
         <div className="flex items-center justify-between pb-3 border-b border-[#27272a] shrink-0">
-          <h2 className="text-base font-bold text-white">
-            {routineToEdit ? 'Editar Plano de Treino' : 'Criar Novo Plano de Treino'}
-          </h2>
+          <div>
+            <h2 className="text-base font-black text-white">
+              {routineToEdit ? 'Editar Plano de Treino' : 'Montar Novo Plano de Treino'}
+            </h2>
+            <p className="text-[11px] text-zinc-400">
+              Escolha uma sugestão conhecida abaixo ou monte seu treino do zero
+            </p>
+          </div>
           <button
             onClick={onClose}
             className="p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800 transition"
@@ -128,6 +167,86 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
         {/* Formulário */}
         <form onSubmit={handleSave} className="flex-1 min-h-0 flex flex-col overflow-hidden">
           <div className="flex-1 min-h-0 overflow-y-auto space-y-4 py-3 pr-1">
+            {/* SUGESTÕES DE TREINOS CONHECIDOS (Aparece apenas aqui ao clicar em Montar Novo Treino) */}
+            <div className="bg-[#18181b] border border-[#27272a] rounded-2xl p-3 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setShowPresets(!showPresets)}
+                  className="flex items-center gap-2 text-left"
+                >
+                  <div className="w-6 h-6 rounded-lg bg-white text-black flex items-center justify-center shrink-0">
+                    <Sparkles className="w-3.5 h-3.5 text-black" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black text-white block">
+                      Sugestões de Treinos Conhecidos
+                    </span>
+                    <span className="text-[10px] text-zinc-400 block">
+                      {showPresets
+                        ? 'Toque em um modelo para carregar ou preencha do zero abaixo'
+                        : 'Toque para ver as 6 divisões clássicas de academia'}
+                    </span>
+                  </div>
+                </button>
+
+                <div className="flex items-center gap-1.5">
+                  {(title || exercises.length > 0) && (
+                    <button
+                      type="button"
+                      onClick={handleResetToEmpty}
+                      className="px-2 py-1 rounded-lg bg-[#27272a] hover:bg-zinc-700 text-[10px] font-bold text-zinc-200 flex items-center gap-1 transition"
+                      title="Limpar e montar do zero"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      Do Zero
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowPresets(!showPresets)}
+                    className="text-[11px] font-bold text-zinc-400 hover:text-white px-1.5 py-0.5"
+                  >
+                    {showPresets ? 'Ocultar' : 'Ver'}
+                  </button>
+                </div>
+              </div>
+
+              {showPresets && (
+                <div className="flex gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar -mx-1 px-1">
+                  {POPULAR_ROUTINE_PRESETS.map((preset) => (
+                    <button
+                      type="button"
+                      key={preset.id}
+                      onClick={() => handleApplyPreset(preset)}
+                      className="min-w-[205px] max-w-[220px] bg-[#121214] border border-[#27272a] hover:border-white rounded-xl p-2.5 text-left flex flex-col justify-between shrink-0 transition active:scale-95 group"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-white text-black">
+                            {preset.tag}
+                          </span>
+                          <span className="text-[10px] text-zinc-400 font-semibold">
+                            {preset.exercises.length} exerc.
+                          </span>
+                        </div>
+                        <h4 className="text-xs font-black text-white line-clamp-1">
+                          {preset.title}
+                        </h4>
+                        <p className="text-[10px] text-zinc-400 line-clamp-2 mt-0.5 leading-snug">
+                          {preset.description}
+                        </p>
+                      </div>
+                      <div className="mt-2 pt-1.5 border-t border-[#27272a] flex items-center justify-between text-[10px] font-black text-white">
+                        <span>Carregar modelo</span>
+                        <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Nome do Plano */}
             <div>
               <label className="text-xs uppercase text-zinc-400 font-bold mb-1 block">
@@ -137,7 +256,7 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ex: Treino A - Peitoral e Deltoides"
+                placeholder="Ex: Treino A - Peitoral e Tríceps"
                 className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-3.5 py-2.5 text-xs text-white font-bold placeholder-zinc-500 focus:outline-none focus:border-white"
                 required
               />
@@ -147,7 +266,7 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs uppercase text-zinc-400 font-bold block">
-                  Pasta / Grupo de Treinos
+                  Pasta / Grupo de Treinos (Opcional)
                 </label>
                 <button
                   type="button"
@@ -165,7 +284,7 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                     type="text"
                     value={newFolderTitle}
                     onChange={(e) => setNewFolderTitle(e.target.value)}
-                    placeholder="Nome da pasta (Ex: Treino ABC)..."
+                    placeholder="Nome da pasta (Ex: Divisão ABC)..."
                     className="flex-1 bg-[#121214] border border-[#27272a] rounded-lg px-3 py-1.5 text-xs text-white"
                   />
                   <button
@@ -183,7 +302,7 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                 onChange={(e) => setFolderId(e.target.value ? Number(e.target.value) : null)}
                 className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-white"
               >
-                <option value="">Sem Pasta (Meus Planos Soltos)</option>
+                <option value="">Sem Pasta (Lista Principal)</option>
                 {folders.map((f) => (
                   <option key={f.id} value={f.id}>
                     {f.title}
@@ -208,9 +327,18 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
 
             {/* Lista dos Exercícios do Plano */}
             <div className="space-y-3 pt-1">
-              <span className="text-xs uppercase text-zinc-400 font-bold block">
-                Exercícios Deste Plano ({exercises.length})
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-xs uppercase text-zinc-400 font-bold block">
+                  Exercícios Deste Plano ({exercises.length})
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsSearchOpen(true)}
+                  className="text-xs font-black text-white hover:underline flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Pesquisar Exercício
+                </button>
+              </div>
 
               {exercises.map((ex, exIdx) => (
                 <div

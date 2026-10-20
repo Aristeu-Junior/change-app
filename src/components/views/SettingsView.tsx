@@ -10,11 +10,17 @@ import {
   Upload,
   Check,
   ShieldCheck,
-  UserCircle2
+  Cloud,
+  RefreshCw
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { playGymTone, triggerHaptic } from '../../utils/calc';
 import { UserAccountModal } from '../UserAccountModal';
+import {
+  getSupabaseConfig,
+  saveSupabaseConfig,
+  testCloudConnection
+} from '../../services/cloudSync';
 
 export const SettingsView: React.FC = () => {
   const {
@@ -24,12 +30,40 @@ export const SettingsView: React.FC = () => {
     importDataJson,
     theme,
     toggleTheme,
-    currentUser
+    currentUser,
+    cloudStatus,
+    syncNowWithCloud
   } = useApp();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+
+  const existingCloud = getSupabaseConfig();
+  const [supabaseUrl, setSupabaseUrl] = useState(existingCloud?.url || '');
+  const [supabaseAnonKey, setSupabaseAnonKey] = useState(existingCloud?.anonKey || '');
+  const [cloudMsg, setCloudMsg] = useState<string | null>(null);
+  const [isTestingCloud, setIsTestingCloud] = useState(false);
+
+  const handleSaveCloudConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabaseUrl.trim() || !supabaseAnonKey.trim()) {
+      saveSupabaseConfig(null);
+      setCloudMsg('Conector removido.');
+      return;
+    }
+
+    setIsTestingCloud(true);
+    const config = { url: supabaseUrl.trim(), anonKey: supabaseAnonKey.trim() };
+    saveSupabaseConfig(config);
+    const result = await testCloudConnection(config);
+    if (result.ok) {
+      await syncNowWithCloud();
+    }
+    setIsTestingCloud(false);
+    setCloudMsg(result.message);
+    setTimeout(() => setCloudMsg(null), 5000);
+  };
 
   const handleExport = () => {
     const jsonStr = exportDataJson();
@@ -37,7 +71,7 @@ export const SettingsView: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `backup-treinos-change-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `backup-treinos-change-${currentUser.name.toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -65,7 +99,97 @@ export const SettingsView: React.FC = () => {
       {/* Topo */}
       <div>
         <h1 className="text-2xl font-black text-white">Ajustes</h1>
-        <p className="text-xs text-zinc-400">Tema, múltiplos usuários & preferências</p>
+        <p className="text-xs text-zinc-400">Perfis, nuvem, tema & preferências</p>
+      </div>
+
+      {/* MÚLTIPLOS USUÁRIOS / PERFIS (ARISTEU, VITÓRIA E AMIGOS) */}
+      <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-3">
+        <span className="text-xs uppercase font-bold text-zinc-400 block">
+          Perfil Exclusivo do Atleta
+        </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-white text-black font-black flex items-center justify-center text-sm shadow-md">
+              {currentUser.name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <span className="text-sm font-black text-white block">{currentUser.name}</span>
+              <span className="text-xs text-zinc-500">{currentUser.email}</span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsAccountModalOpen(true)}
+            className="px-3.5 py-2 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-sm"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Trocar / Criar</span>
+          </button>
+        </div>
+      </div>
+
+      {/* CONECTOR DE BANCO EM NUVEM (SUPABASE) */}
+      <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Cloud className="w-4 h-4 text-white" />
+            <span className="text-xs uppercase font-bold text-zinc-400">
+              Banco em Nuvem (Supabase Multi-Usuário)
+            </span>
+          </div>
+          <span
+            className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+              cloudStatus === 'synced'
+                ? 'bg-white text-black'
+                : cloudStatus === 'syncing'
+                ? 'bg-zinc-700 text-white'
+                : 'bg-[#1c1c1f] text-zinc-400 border border-[#27272a]'
+            }`}
+          >
+            {cloudStatus === 'synced' && 'Sincronizado'}
+            {cloudStatus === 'syncing' && 'Sincronizando...'}
+            {cloudStatus === 'idle' && 'Conectado'}
+            {cloudStatus === 'error' && 'Requer Tabela'}
+            {cloudStatus === 'unconfigured' && 'Modo Local Ativo'}
+          </span>
+        </div>
+
+        <p className="text-xs text-zinc-400 leading-relaxed">
+          Salva automaticamente os treinos de <strong>Aristeu</strong>, <strong>Vitória</strong> e seus amigos na nuvem sem pesar o aplicativo.
+        </p>
+
+        {cloudMsg && (
+          <div className="p-2.5 bg-[#18181b] border border-white/30 rounded-xl text-xs font-bold text-white">
+            {cloudMsg}
+          </div>
+        )}
+
+        <form onSubmit={handleSaveCloudConfig} className="space-y-2.5 pt-1">
+          <input
+            type="url"
+            value={supabaseUrl}
+            onChange={(e) => setSupabaseUrl(e.target.value)}
+            placeholder="URL do Projeto Supabase (https://xxx.supabase.co)"
+            className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white"
+          />
+          <input
+            type="password"
+            value={supabaseAnonKey}
+            onChange={(e) => setSupabaseAnonKey(e.target.value)}
+            placeholder="Anon / Public Key do Supabase"
+            className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white"
+          />
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={isTestingCloud}
+              className="flex-1 py-2.5 bg-white text-black font-black text-xs rounded-xl flex items-center justify-center gap-1.5 transition active:scale-95"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isTestingCloud ? 'animate-spin' : ''}`} />
+              <span>{isTestingCloud ? 'Conectando...' : 'Conectar & Sincronizar'}</span>
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* TEMA PRETO E BRANCO & BRANCO E PRETO */}
@@ -94,30 +218,6 @@ export const SettingsView: React.FC = () => {
                 <span>Modo Escuro</span>
               </>
             )}
-          </button>
-        </div>
-      </div>
-
-      {/* MÚLTIPLOS USUÁRIOS / PERFIS */}
-      <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-3">
-        <span className="text-xs uppercase font-bold text-zinc-400 block">Perfil de Acesso do Atleta</span>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white text-black font-black flex items-center justify-center text-sm shadow-md">
-              {currentUser.name.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <span className="text-sm font-black text-white block">{currentUser.name}</span>
-              <span className="text-xs text-zinc-500">{currentUser.email}</span>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setIsAccountModalOpen(true)}
-            className="px-3.5 py-2 bg-[#1c1c1f] hover:bg-[#27272a] border border-[#3f3f46] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5"
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>Trocar / Criar</span>
           </button>
         </div>
       </div>
@@ -331,7 +431,7 @@ export const SettingsView: React.FC = () => {
         <div className="flex items-center gap-1.5 font-black text-sm tracking-widest text-white">
           <span>CHANGE</span>
         </div>
-        <p className="text-[10px]">Aplicativo pessoal de musculação • 100% Offline e Privado</p>
+        <p className="text-[10px]">Aplicativo multi-usuário de musculação • Rápido, Offline & Nuvem</p>
       </div>
 
       {/* Modal de Gestão de Usuários */}

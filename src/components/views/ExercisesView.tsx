@@ -18,7 +18,6 @@ import { displayWeight } from '../../utils/calc';
 import { ExerciseSearchModal } from '../ExerciseSearchModal';
 import { ExerciseVisualDemo } from '../ExerciseVisualDemo';
 import { RoutineEditorModal } from './RoutineEditorModal';
-import { POPULAR_ROUTINE_PRESETS, RoutinePreset } from '../../data/defaultRoutines';
 
 const MUSCLE_FILTERS: { label: string; value: MuscleGroup | 'all' }[] = [
   { label: 'Todos', value: 'all' },
@@ -142,35 +141,7 @@ export const ExercisesView: React.FC = () => {
     }
   }, [selectedDetailExercise, isRoutineEditorOpen, exerciseToAddToRoutine]);
 
-  // Handler: Usar Palpite Pré-configurado
-  const handleUsePreset = (preset: RoutinePreset) => {
-    const routineFromPreset: Routine = {
-      id: `routine-${Date.now()}`,
-      title: preset.title,
-      notes: `${preset.subtitle}. ${preset.description}`,
-      folder_id: null,
-      exercises: preset.exercises.map((pEx, idx) => ({
-        id: `pe-${Date.now()}-${idx}`,
-        exercise_template_id: pEx.exercise_template_id,
-        title: pEx.title,
-        rest_seconds: 90,
-        sets: Array.from({ length: pEx.setsCount }).map((_, sIdx) => ({
-          id: `ps-${Date.now()}-${idx}-${sIdx}`,
-          index: sIdx,
-          type: 'normal',
-          weight_kg: pEx.weightKg,
-          reps: pEx.reps,
-          completed: false
-        }))
-      })),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    setEditingRoutine(routineFromPreset);
-    setIsRoutineEditorOpen(true);
-  };
-
-  // Handler: Montar Treino do Zero
+  // Handler: Abrir Criador de Treino (com sugestões internas ou do zero)
   const handleCreateRoutineEmpty = () => {
     setEditingRoutine(null);
     setIsRoutineEditorOpen(true);
@@ -255,73 +226,29 @@ export const ExercisesView: React.FC = () => {
         </button>
       </div>
 
-      {/* SEÇÃO: MONTAR PLANO DE TREINO (COM PALPITES PRONTOS E PESQUISA) */}
-      <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-3.5 space-y-3 shadow-md">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center font-black shrink-0 shadow-sm">
-              <Sparkles className="w-4 h-4 text-black" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-sm font-black text-white leading-tight truncate">Montar Plano de Treino</h2>
-              <p className="text-[11px] text-zinc-400 truncate">Use um modelo pronto ou monte do zero com os 112 exercícios</p>
-            </div>
+      {/* BOTÃO DIRETO PARA MONTAR PLANO DE TREINO (Sugestões aparecem apenas ao clicar) */}
+      <button
+        onClick={handleCreateRoutineEmpty}
+        className="w-full bg-[#141416] hover:bg-[#1a1a1e] border border-[#27272a] rounded-2xl p-3.5 flex items-center justify-between gap-2 transition active:scale-98 shadow-sm group"
+      >
+        <div className="flex items-center gap-2.5 min-w-0 text-left">
+          <div className="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center font-black shrink-0 shadow-sm">
+            <Sparkles className="w-4 h-4 text-black" />
           </div>
-          <button
-            onClick={handleCreateRoutineEmpty}
-            className="px-3 py-1.5 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-black transition flex items-center gap-1 active:scale-95 shrink-0 shadow-sm"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Montar do Zero</span>
-          </button>
-        </div>
-
-        {/* Carrossel de Palpites Mais Utilizados na Academia */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
-              Palpites Rápidos Mais Utilizados
-            </span>
-            <span className="text-[10px] text-zinc-500 font-semibold">
-              {POPULAR_ROUTINE_PRESETS.length} divisões
-            </span>
-          </div>
-
-          <div className="flex gap-2.5 overflow-x-auto pb-1.5 no-scrollbar -mx-1 px-1">
-            {POPULAR_ROUTINE_PRESETS.map((preset) => (
-              <div
-                key={preset.id}
-                onClick={() => handleUsePreset(preset)}
-                className="min-w-[220px] max-w-[240px] bg-[#18181b] border border-[#27272a] hover:border-zinc-400 rounded-xl p-3 flex flex-col justify-between shrink-0 transition active:scale-98 cursor-pointer group shadow-sm"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-1 mb-1.5">
-                    <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white text-black">
-                      {preset.tag}
-                    </span>
-                    <span className="text-[10px] text-zinc-400 font-medium">
-                      {preset.exercises.length} exercícios
-                    </span>
-                  </div>
-                  <h3 className="text-xs font-black text-white group-hover:text-zinc-200 line-clamp-1">
-                    {preset.title}
-                  </h3>
-                  <p className="text-[10px] text-zinc-400 line-clamp-2 mt-1 leading-relaxed">
-                    {preset.description}
-                  </p>
-                </div>
-
-                <div className="mt-3 pt-2 border-t border-[#27272a] flex items-center justify-between">
-                  <span className="text-[10px] text-zinc-400">Personalizar</span>
-                  <span className="text-[11px] font-black text-white flex items-center gap-0.5 group-hover:translate-x-0.5 transition">
-                    Usar <ChevronRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </div>
-            ))}
+          <div className="min-w-0">
+            <h2 className="text-xs font-black text-white leading-tight truncate">
+              Montar Novo Plano de Treino
+            </h2>
+            <p className="text-[11px] text-zinc-400 truncate">
+              Toque para ver sugestões de treinos conhecidos ou montar do zero
+            </p>
           </div>
         </div>
-      </div>
+        <span className="px-3 py-1.5 bg-white group-hover:bg-zinc-200 text-black rounded-xl text-xs font-black transition flex items-center gap-1 shrink-0 shadow-sm">
+          <span>Montar</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+        </span>
+      </button>
 
       {/* Busca de Exercícios */}
       <div className="relative">

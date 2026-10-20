@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import {
   Workout,
   WorkoutExercise,
@@ -12,13 +12,18 @@ import {
   BodyMeasurement
 } from '../types';
 import { DEFAULT_EXERCISES } from '../data/defaultExercises';
-import { DEFAULT_ROUTINES, DEFAULT_FOLDERS } from '../data/defaultRoutines';
+import { LEGACY_DEFAULT_ROUTINE_IDS } from '../data/defaultRoutines';
 import {
   playGymTone,
   triggerHaptic,
   requestWakeLock,
   releaseWakeLock
 } from '../utils/calc';
+import {
+  isCloudConfigured,
+  pullUserFromCloudByEmail,
+  pushUserToCloud
+} from '../services/cloudSync';
 
 interface RestTimerState {
   isActive: boolean;
@@ -27,14 +32,20 @@ interface RestTimerState {
   exerciseTitle: string;
 }
 
+export type CloudSyncStatus = 'unconfigured' | 'idle' | 'syncing' | 'synced' | 'error';
+
 interface AppContextType {
   // Usuários e Autenticação
   users: UserProfile[];
   currentUser: UserProfile;
-  registerUser: (name: string, email: string, password?: string) => boolean;
-  loginUser: (email: string, password?: string) => boolean;
+  registerUser: (name: string, email: string, password?: string) => Promise<boolean>;
+  loginUser: (email: string, password?: string) => Promise<boolean>;
   switchUser: (userId: string) => void;
   logoutUser: () => void;
+
+  // Sincronização em Nuvem (Supabase)
+  cloudStatus: CloudSyncStatus;
+  syncNowWithCloud: () => Promise<boolean>;
 
   // Tema Preto & Branco
   theme: 'dark' | 'light';
@@ -103,22 +114,51 @@ const DEFAULT_SETTINGS: UserSettings = {
   haptics_enabled: true,
   wake_lock_enabled: true,
   theme: 'dark',
-  user_name: 'Atleta'
+  user_name: 'Aristeu'
 };
 
-const DEFAULT_USER: UserProfile = {
-  id: 'user-default',
-  name: 'Atleta',
-  email: 'atleta@change.app',
-  avatar_color: '#ffffff',
-  created_at: new Date().toISOString()
-};
+const INITIAL_USERS: UserProfile[] = [
+  {
+    id: 'user-aristeu',
+    name: 'Aristeu',
+    email: 'aristeu@change.app',
+    avatar_color: '#ffffff',
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'user-vitoria',
+    name: 'Vitória',
+    email: 'vitoria@change.app',
+    avatar_color: '#ffffff',
+    created_at: new Date().toISOString()
+  }
+];
 
 // Sincroniza exercícios salvos mantendo customizados e atualizando todos os 112 padrões (incluindo gif_id revisado)
 const syncExercisesWithDefaults = (savedList: ExerciseTemplate[] | null): ExerciseTemplate[] => {
   if (!savedList || !Array.isArray(savedList)) return DEFAULT_EXERCISES;
   const customOnly = savedList.filter((e) => e.is_custom);
   return [...customOnly, ...DEFAULT_EXERCISES];
+};
+
+// Remove apenas os treinos padrão antigos pré-carregados (routine-push-a, routine-pull-a, routine-legs-a)
+// para garantir que a tela inicial venha sempre zerada até o usuário criar seu próprio treino
+const sanitizeUserRoutines = (saved: Routine[] | null): Routine[] => {
+  if (!saved || !Array.isArray(saved)) return [];
+  return saved.filter((r) => !LEGACY_DEFAULT_ROUTINE_IDS.has(r.id));
+};
+
+const sanitizeUserFolders = (saved: RoutineFolder[] | null, validRoutines: Routine[]): RoutineFolder[] => {
+  if (!saved || !Array.isArray(saved)) return [];
+  const legacyTitles = new Set([
+    'Divisão ABC (Push Pull Legs)',
+    'Divisão Superior / Inferior (Upper Lower)'
+  ]);
+  return saved.filter((f) => {
+    const isLegacyFolder = (f.id === 1 || f.id === 2) && legacyTitles.has(f.title);
+    const hasCustomRoutines = validRoutines.some((r) => r.folder_id === f.id);
+    return !isLegacyFolder || hasCustomRoutines;
+  });
 };
 
 // Calcula a carga real utilizada nos exercícios concluídos (sem multiplicar por repetições ou séries)
@@ -147,7 +187,6 @@ const normalizeSavedWorkouts = (list: Workout[]): Workout[] => {
 // Reconstrói os recordes pessoais (PRs) com os valores exatos de carga pegos nos treinos
 const rebuildPersonalRecords = (workoutsList: Workout[]): Record<string, PersonalRecord> => {
   const prs: Record<string, PersonalRecord> = {};
-  // Processa do mais antigo para o mais recente
   const chronological = [...workoutsList].reverse();
   chronological.forEach((w) => {
     w.exercises.forEach((ex) => {
@@ -175,24 +214,50 @@ const rebuildPersonalRecords = (workoutsList: Workout[]): Record<string, Persona
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Gerenciamento de Usuários
+  // Gerenciamento de Usuários (Garantindo perfis de Aristeu, Vitória e novos amigos)
   const [users, setUsers] = useState<UserProfile[]>(() => {
     try {
       const saved = localStorage.getItem('change_all_users');
-      return saved ? JSON.parse(saved) : [DEFAULT_USER];
+      if (saved) {
+        const parsed: UserProfile[] = JSON.parse(saved);
+        // Se só existia o 'user-default' genérico antigo, atualiza o nome para Aristeu e garante Vitória
+        const updated = parsed.map((u) =>
+          u.id === 'user-default' && u.name === 'Atleta'
+            ? { ...u, name: 'Aristeu', email: 'aristeu@change.app' }
+            : u
+        );
+        const hasVitoria = updated.some((u) => u.name.toLowerCase().includes('vit'));
+        if (!hasVitoria) {
+          updated.push(INITIAL_USERS[1]);
+        }
+        return updated;
+      }
+      return INITIAL_USERS;
     } catch {
-      return [DEFAULT_USER];
+      return INITIAL_USERS;
     }
   });
 
   const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
     try {
       const saved = localStorage.getItem('change_current_user');
-      return saved ? JSON.parse(saved) : DEFAULT_USER;
+      if (saved) {
+        const parsed: UserProfile = JSON.parse(saved);
+        if (parsed.id === 'user-default' && parsed.name === 'Atleta') {
+          return { ...parsed, name: 'Aristeu', email: 'aristeu@change.app' };
+        }
+        return parsed;
+      }
+      return INITIAL_USERS[0];
     } catch {
-      return DEFAULT_USER;
+      return INITIAL_USERS[0];
     }
   });
+
+  // Status de sincronização com a nuvem
+  const [cloudStatus, setCloudStatus] = useState<CloudSyncStatus>(() =>
+    isCloudConfigured() ? 'idle' : 'unconfigured'
+  );
 
   // Tema Preto & Branco
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -204,7 +269,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
-  // Aplica classe no elemento HTML para modo escuro / claro
   useEffect(() => {
     localStorage.setItem('change_theme', theme);
     if (theme === 'light') {
@@ -220,10 +284,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  // Chaves prefixadas com o ID do usuário para garantir isolamento de dados
+  // Chaves prefixadas com o ID do usuário para garantir isolamento total de dados por pessoa
   const userKey = (key: string) => `change_${currentUser.id}_${key}`;
 
-  // Estados com carregamento isolado por usuário e normalização automática de valores
+  // Estados com carregamento isolado por usuário
   const [workouts, setWorkouts] = useState<Workout[]>(() => {
     try {
       const saved = localStorage.getItem(`change_${currentUser.id}_workouts`);
@@ -246,21 +310,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return !!localStorage.getItem(`change_${currentUser.id}_active_workout`);
   });
 
+  // Rotinas começam sempre vazias ([]) para cada usuário
   const [routines, setRoutines] = useState<Routine[]>(() => {
     try {
       const saved = localStorage.getItem(`change_${currentUser.id}_routines`);
-      return saved ? JSON.parse(saved) : DEFAULT_ROUTINES;
+      const cleaned = sanitizeUserRoutines(saved ? JSON.parse(saved) : null);
+      localStorage.setItem(`change_${currentUser.id}_routines`, JSON.stringify(cleaned));
+      return cleaned;
     } catch {
-      return DEFAULT_ROUTINES;
+      return [];
     }
   });
 
   const [folders, setFolders] = useState<RoutineFolder[]>(() => {
     try {
-      const saved = localStorage.getItem(`change_${currentUser.id}_folders`);
-      return saved ? JSON.parse(saved) : DEFAULT_FOLDERS;
+      const savedRoutines = localStorage.getItem(`change_${currentUser.id}_routines`);
+      const validRoutines = sanitizeUserRoutines(savedRoutines ? JSON.parse(savedRoutines) : null);
+      const savedFolders = localStorage.getItem(`change_${currentUser.id}_folders`);
+      const cleanedFolders = sanitizeUserFolders(savedFolders ? JSON.parse(savedFolders) : null, validRoutines);
+      localStorage.setItem(`change_${currentUser.id}_folders`, JSON.stringify(cleanedFolders));
+      return cleanedFolders;
     } catch {
-      return DEFAULT_FOLDERS;
+      return [];
     }
   });
 
@@ -299,9 +370,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [settings, setSettings] = useState<UserSettings>(() => {
     try {
       const saved = localStorage.getItem(`change_${currentUser.id}_settings`);
-      return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
+      return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : { ...DEFAULT_SETTINGS, user_name: currentUser.name };
     } catch {
-      return DEFAULT_SETTINGS;
+      return { ...DEFAULT_SETTINGS, user_name: currentUser.name };
     }
   });
 
@@ -364,8 +435,99 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(userKey('settings'), JSON.stringify(settings));
   }, [settings, currentUser.id]);
 
-  // Recarrega os dados ao trocar de usuário
-  const reloadUserData = (userId: string) => {
+  // Sincronização automática em segundo plano com o Supabase (Debounced para zero travamento)
+  const syncTimeoutRef = useRef<number | null>(null);
+  const isPullingCloudRef = useRef<boolean>(false);
+
+  const syncNowWithCloud = async (): Promise<boolean> => {
+    if (!isCloudConfigured()) {
+      setCloudStatus('unconfigured');
+      return false;
+    }
+    setCloudStatus('syncing');
+    const ok = await pushUserToCloud(currentUser, {
+      workouts,
+      routines,
+      folders,
+      exercises,
+      personalRecords,
+      measurements,
+      settings
+    });
+    setCloudStatus(ok ? 'synced' : 'error');
+    return ok;
+  };
+
+  useEffect(() => {
+    if (!isCloudConfigured() || isPullingCloudRef.current) return;
+
+    if (syncTimeoutRef.current) {
+      window.clearTimeout(syncTimeoutRef.current);
+    }
+
+    syncTimeoutRef.current = window.setTimeout(() => {
+      syncNowWithCloud();
+    }, 800);
+
+    return () => {
+      if (syncTimeoutRef.current) {
+        window.clearTimeout(syncTimeoutRef.current);
+      }
+    };
+  }, [workouts, routines, folders, exercises, measurements, settings, currentUser.id]);
+
+  // Busca dados da nuvem ao iniciar ou trocar de usuário (se o conector Supabase estiver ativo)
+  const pullCloudDataForUser = async (user: UserProfile) => {
+    if (!isCloudConfigured() || !user.email) return;
+    setCloudStatus('syncing');
+    isPullingCloudRef.current = true;
+    try {
+      const cloudData = await pullUserFromCloudByEmail(user.email);
+      if (cloudData) {
+        const cloudWorkouts = normalizeSavedWorkouts(cloudData.workouts || []);
+        const cloudRoutines = sanitizeUserRoutines(cloudData.routines || []);
+        const cloudFolders = sanitizeUserFolders(cloudData.folders || [], cloudRoutines);
+        const cloudExercises = syncExercisesWithDefaults(cloudData.custom_exercises || []);
+        const cloudPrs = rebuildPersonalRecords(cloudWorkouts);
+        const cloudMeas = cloudData.measurements || [];
+        const cloudSettings = { ...DEFAULT_SETTINGS, ...(cloudData.settings || {}) };
+
+        setWorkouts(cloudWorkouts);
+        setRoutines(cloudRoutines);
+        setFolders(cloudFolders);
+        setExercises(cloudExercises);
+        setPersonalRecords(cloudPrs);
+        setMeasurements(cloudMeas);
+        setSettings(cloudSettings);
+
+        localStorage.setItem(`change_${user.id}_workouts`, JSON.stringify(cloudWorkouts));
+        localStorage.setItem(`change_${user.id}_routines`, JSON.stringify(cloudRoutines));
+        localStorage.setItem(`change_${user.id}_folders`, JSON.stringify(cloudFolders));
+        localStorage.setItem(`change_${user.id}_exercises`, JSON.stringify(cloudExercises));
+        localStorage.setItem(`change_${user.id}_prs`, JSON.stringify(cloudPrs));
+        localStorage.setItem(`change_${user.id}_measurements`, JSON.stringify(cloudMeas));
+        localStorage.setItem(`change_${user.id}_settings`, JSON.stringify(cloudSettings));
+        setCloudStatus('synced');
+      } else {
+        setCloudStatus('idle');
+      }
+    } catch {
+      setCloudStatus('error');
+    } finally {
+      setTimeout(() => {
+        isPullingCloudRef.current = false;
+      }, 200);
+    }
+  };
+
+  useEffect(() => {
+    if (isCloudConfigured()) {
+      pullCloudDataForUser(currentUser);
+    }
+  }, [currentUser.id]);
+
+  // Recarrega os dados locais ao trocar de usuário
+  const reloadUserData = (userId: string, userName?: string) => {
     try {
       const savedWorkouts = localStorage.getItem(`change_${userId}_workouts`);
       const parsedWorkouts = savedWorkouts ? normalizeSavedWorkouts(JSON.parse(savedWorkouts)) : [];
@@ -376,10 +538,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setWorkoutModalOpen(!!savedActive);
 
       const savedRoutines = localStorage.getItem(`change_${userId}_routines`);
-      setRoutines(savedRoutines ? JSON.parse(savedRoutines) : DEFAULT_ROUTINES);
+      const validRoutines = sanitizeUserRoutines(savedRoutines ? JSON.parse(savedRoutines) : null);
+      setRoutines(validRoutines);
 
       const savedFolders = localStorage.getItem(`change_${userId}_folders`);
-      setFolders(savedFolders ? JSON.parse(savedFolders) : DEFAULT_FOLDERS);
+      setFolders(sanitizeUserFolders(savedFolders ? JSON.parse(savedFolders) : null, validRoutines));
 
       const savedExercises = localStorage.getItem(`change_${userId}_exercises`);
       setExercises(syncExercisesWithDefaults(savedExercises ? JSON.parse(savedExercises) : null));
@@ -390,21 +553,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setMeasurements(savedMeas ? JSON.parse(savedMeas) : []);
 
       const savedSettings = localStorage.getItem(`change_${userId}_settings`);
-      setSettings(savedSettings ? { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) } : DEFAULT_SETTINGS);
+      setSettings(
+        savedSettings
+          ? { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) }
+          : { ...DEFAULT_SETTINGS, user_name: userName || 'Atleta' }
+      );
     } catch {
       // Fallback
     }
   };
 
-  // Funções de Autenticação & Usuários
-  const registerUser = (name: string, email: string, password?: string): boolean => {
-    const existing = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+  // Funções de Autenticação & Usuários (Local + Nuvem)
+  const registerUser = async (name: string, email: string, password?: string): Promise<boolean> => {
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = users.find((u) => u.email.toLowerCase() === cleanEmail);
     if (existing) return false;
 
     const newUser: UserProfile = {
       id: `user-${Date.now()}`,
       name: name.trim(),
-      email: email.trim().toLowerCase(),
+      email: cleanEmail,
       password,
       avatar_color: '#ffffff',
       created_at: new Date().toISOString()
@@ -412,39 +580,85 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setUsers((prev) => [...prev, newUser]);
     setCurrentUser(newUser);
-    reloadUserData(newUser.id);
+    reloadUserData(newUser.id, newUser.name);
+
+    if (isCloudConfigured()) {
+      await pushUserToCloud(newUser, {
+        workouts: [],
+        routines: [],
+        folders: [],
+        exercises: DEFAULT_EXERCISES,
+        personalRecords: {},
+        measurements: [],
+        settings: { ...DEFAULT_SETTINGS, user_name: newUser.name }
+      });
+    }
+
     return true;
   };
 
-  const loginUser = (email: string, password?: string): boolean => {
-    const found = users.find(
+  const loginUser = async (email: string, password?: string): Promise<boolean> => {
+    const cleanEmail = email.trim().toLowerCase();
+    const foundLocal = users.find(
       (u) =>
-        u.email.toLowerCase() === email.toLowerCase() &&
+        u.email.toLowerCase() === cleanEmail &&
         (!u.password || u.password === password)
     );
-    if (!found) return false;
 
-    setCurrentUser(found);
-    reloadUserData(found.id);
-    return true;
+    if (foundLocal) {
+      setCurrentUser(foundLocal);
+      reloadUserData(foundLocal.id, foundLocal.name);
+      if (isCloudConfigured()) {
+        await pullCloudDataForUser(foundLocal);
+      }
+      return true;
+    }
+
+    // Se não achou localmente, verifica se o usuário existe no banco em nuvem (ex.: acessando de outro celular)
+    if (isCloudConfigured()) {
+      const cloudAccount = await pullUserFromCloudByEmail(cleanEmail);
+      if (
+        cloudAccount &&
+        (!cloudAccount.password_hash || cloudAccount.password_hash === (password || ''))
+      ) {
+        const restoredUser: UserProfile = {
+          id: cloudAccount.user_id || `user-${Date.now()}`,
+          name: cloudAccount.name,
+          email: cloudAccount.email,
+          password: cloudAccount.password_hash,
+          avatar_color: cloudAccount.avatar_color || '#ffffff',
+          created_at: cloudAccount.updated_at || new Date().toISOString()
+        };
+
+        setUsers((prev) => {
+          if (prev.some((u) => u.email.toLowerCase() === cleanEmail)) return prev;
+          return [...prev, restoredUser];
+        });
+        setCurrentUser(restoredUser);
+        await pullCloudDataForUser(restoredUser);
+        return true;
+      }
+    }
+
+    return false;
   };
 
   const switchUser = (userId: string) => {
     const target = users.find((u) => u.id === userId);
     if (target) {
       setCurrentUser(target);
-      reloadUserData(target.id);
+      reloadUserData(target.id, target.name);
     }
   };
 
   const logoutUser = () => {
     if (users.length > 0) {
       setCurrentUser(users[0]);
-      reloadUserData(users[0].id);
+      reloadUserData(users[0].id, users[0].name);
     }
   };
 
-  // Contagem regressiva do descanso otimizada (não recria o timer a cada segundo)
+  // Contagem regressiva do descanso otimizada
   useEffect(() => {
     if (!restTimer.isActive) return;
 
@@ -790,7 +1004,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const exportDataJson = (): string => {
     const data = {
       app: 'Change',
-      version: '2.0.0',
+      version: '2.1.0',
       exportedAt: new Date().toISOString(),
       user: currentUser,
       workouts,
@@ -834,6 +1048,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     loginUser,
     switchUser,
     logoutUser,
+    cloudStatus,
+    syncNowWithCloud,
     theme,
     toggleTheme,
     workouts,
@@ -877,6 +1093,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }), [
     users,
     currentUser,
+    cloudStatus,
     theme,
     workouts,
     activeWorkout,
