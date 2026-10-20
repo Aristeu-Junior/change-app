@@ -38,6 +38,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
     isCurrentUserAdmin,
     adminCreateUser,
     adminDeleteUser,
+    refreshCloudUsers,
     updateMyProfile,
     configureMyTotp,
     logoutUser,
@@ -61,6 +62,10 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
   const [totpVerifyCode, setTotpVerifyCode] = useState<string>('');
   const [copiedSecret, setCopiedSecret] = useState(false);
 
+  // Estado para confirmação de exclusão de conta pelo Admin
+  const [confirmDeleteEmail, setConfirmDeleteEmail] = useState<string | null>(null);
+  const [deletingEmail, setDeletingEmail] = useState<string | null>(null);
+
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -70,10 +75,14 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
       setEditName(currentUser.name);
       setEditEmail(currentUser.email);
       setEditNewPassword('');
+      setConfirmDeleteEmail(null);
       setErrorMsg(null);
       setSuccessMsg(null);
+      if (isCurrentUserAdmin) {
+        refreshCloudUsers();
+      }
     }
-  }, [isOpen, currentUser.name, currentUser.email]);
+  }, [isOpen, currentUser.name, currentUser.email, isCurrentUserAdmin]);
 
   if (!isOpen) return null;
 
@@ -364,19 +373,22 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
                   </span>
                 </div>
 
-                <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1">
+                <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1">
                   {users.map((u) => {
                     const isAdmin = isAdminProfile(u);
+                    const isConfirming = confirmDeleteEmail === u.email;
+                    const isDeleting = deletingEmail === u.email;
+
                     return (
                       <div
                         key={u.id}
-                        className="p-2.5 rounded-xl bg-[#18181b] border border-[#27272a] flex items-center justify-between text-xs"
+                        className="p-2.5 rounded-xl bg-[#18181b] border border-[#27272a] flex items-center justify-between gap-2 text-xs"
                       >
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="font-bold text-white truncate">{u.name}</span>
                             {isAdmin && (
-                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-zinc-800 text-zinc-300 font-bold">
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold shrink-0">
                                 Admin
                               </span>
                             )}
@@ -385,13 +397,53 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
                         </div>
 
                         {!isAdmin && (
-                          <button
-                            onClick={() => adminDeleteUser(u.email)}
-                            className="p-1.5 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-zinc-800 transition"
-                            title="Revogar acesso desta pessoa"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {isConfirming ? (
+                              <>
+                                <button
+                                  type="button"
+                                  disabled={isDeleting}
+                                  onClick={async () => {
+                                    resetMessages();
+                                    setDeletingEmail(u.email);
+                                    const ok = await adminDeleteUser(u.email, u.id);
+                                    setDeletingEmail(null);
+                                    setConfirmDeleteEmail(null);
+                                    if (ok) {
+                                      setSuccessMsg(
+                                        `A conta de "${u.name}" foi removida do sistema e excluída do banco de dados!`
+                                      );
+                                    } else {
+                                      setErrorMsg(
+                                        'Não foi possível excluir esta conta do banco de dados.'
+                                      );
+                                    }
+                                  }}
+                                  className="px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[10px] font-black transition"
+                                >
+                                  {isDeleting ? 'Excluindo...' : 'Confirmar'}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={isDeleting}
+                                  onClick={() => setConfirmDeleteEmail(null)}
+                                  className="px-2 py-1.5 rounded-lg bg-[#27272a] text-zinc-300 text-[10px] font-bold hover:text-white transition"
+                                >
+                                  Cancelar
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteEmail(u.email)}
+                                className="px-2.5 py-1.5 text-zinc-300 hover:text-red-300 bg-[#222226] hover:bg-red-950/50 border border-[#27272a] hover:border-red-500/30 rounded-lg transition flex items-center gap-1 text-[10px] font-bold"
+                                title="Remover conta do sistema e do banco de dados"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                <span>Remover</span>
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
                     );

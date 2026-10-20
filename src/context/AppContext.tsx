@@ -66,7 +66,8 @@ interface AppContextType {
     emailOrUsername: string,
     password: string
   ) => Promise<{ ok: boolean; error?: string }>;
-  adminDeleteUser: (email: string) => Promise<boolean>;
+  adminDeleteUser: (email: string, userId?: string) => Promise<boolean>;
+  refreshCloudUsers: () => Promise<void>;
   changeMyPassword: (newPassword: string) => Promise<boolean>;
   updateMyProfile: (
     newName: string,
@@ -626,22 +627,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const refreshCloudUsers = async () => {
+    if (!isCloudConfigured()) return;
+    const cloudUsers = await pullAllUserProfilesFromCloud();
+    if (cloudUsers.length > 0) {
+      setUsers((prev) => {
+        const byId = new Map<string, UserProfile>();
+        cloudUsers.forEach((cu) => {
+          const existing = prev.find(
+            (p) => p.id === cu.id || p.email.toLowerCase() === cu.email.toLowerCase()
+          );
+          byId.set(cu.id, existing ? { ...existing, ...cu } : cu);
+        });
+        // Garante presença dos dois administradores principais
+        INITIAL_USERS.forEach((admin) => {
+          if (!byId.has(admin.id)) {
+            const localAdmin = prev.find((p) => p.id === admin.id) || admin;
+            byId.set(admin.id, localAdmin);
+          }
+        });
+        return Array.from(byId.values());
+      });
+    }
+  };
+
   useEffect(() => {
     if (isCloudConfigured() && isAuthenticated) {
       if (isAdminProfile(currentUser)) {
-        pullAllUserProfilesFromCloud().then((cloudUsers) => {
-          if (cloudUsers.length > 0) {
-            setUsers((prev) => {
-              const byEmail = new Map<string, UserProfile>();
-              prev.forEach((u) => byEmail.set(u.email.toLowerCase(), u));
-              cloudUsers.forEach((cu) => {
-                const existing = byEmail.get(cu.email.toLowerCase());
-                byEmail.set(cu.email.toLowerCase(), existing ? { ...existing, ...cu } : cu);
-              });
-              return Array.from(byEmail.values());
-            });
-          }
-        });
+        refreshCloudUsers();
       }
       pullCloudDataForUser(currentUser);
     }
@@ -722,17 +735,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { ok: true };
   };
 
-  // Exclusivo para Aristeu e Vitória: Revoga o acesso de um convidado
-  const adminDeleteUser = async (email: string): Promise<boolean> => {
+  // Exclusivo para Aristeu e Vitória: Remove definitivamente uma conta do sistema e do banco de dados
+  const adminDeleteUser = async (email: string, userId?: string): Promise<boolean> => {
     if (!isAdminProfile(currentUser)) return false;
     const cleanEmail = email.trim().toLowerCase();
-    if (cleanEmail === 'aristeu@change.app' || cleanEmail === 'vitoria@change.app') return false;
-
-    if (isCloudConfigured()) {
-      await deleteCloudUserByAdmin(cleanEmail);
+    if (
+      cleanEmail === 'aristeu2304@gmail.com' ||
+      cleanEmail === 'aristeu@change.app' ||
+      cleanEmail === 'vitoria@change.app' ||
+      userId === 'user-aristeu' ||
+      userId === 'user-vitoria'
+    ) {
+      return false;
     }
 
-    setUsers((prev) => prev.filter((u) => u.email.toLowerCase() !== cleanEmail));
+    const targetUser = users.find(
+      (u) => u.email.toLowerCase() === cleanEmail || (userId && u.id === userId)
+    );
+    const resolvedUserId = userId || targetUser?.id;
+
+    if (isCloudConfigured()) {
+      const deletedInCloud = await deleteCloudUserByAdmin(cleanEmail, resolvedUserId);
+      if (!deletedInCloud) return false;
+    }
+
+    if (resolvedUserId) {
+      try {
+        localStorage.removeItem(`change_${resolvedUserId}_workouts`);
+        localStorage.removeItem(`change_${resolvedUserId}_active_workout`);
+        localStorage.removeItem(`change_${resolvedUserId}_routines`);
+        localStorage.removeItem(`change_${resolvedUserId}_folders`);
+        localStorage.removeItem(`change_${resolvedUserId}_exercises`);
+        localStorage.removeItem(`change_${resolvedUserId}_prs`);
+        localStorage.removeItem(`change_${resolvedUserId}_measurements`);
+        localStorage.removeItem(`change_${resolvedUserId}_settings`);
+      } catch {
+        // Ignore
+      }
+    }
+
+    setUsers((prev) =>
+      prev.filter(
+        (u) => u.email.toLowerCase() !== cleanEmail && (!resolvedUserId || u.id !== resolvedUserId)
+      )
+    );
     return true;
   };
 
@@ -1347,6 +1393,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       logoutUser,
       adminCreateUser,
       adminDeleteUser,
+      refreshCloudUsers,
       changeMyPassword,
       updateMyProfile,
       configureMyTotp,

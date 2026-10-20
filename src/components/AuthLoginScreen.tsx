@@ -325,12 +325,12 @@ export const AuthLoginScreen: React.FC = () => {
               <span>Continuar com o Google</span>
             </button>
 
-            <div className="relative flex items-center justify-center">
-              <div className="border-t border-[#27272a] w-full" />
-              <span className="bg-[#09090b] px-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+            <div className="flex items-center gap-3 py-0.5">
+              <div className="flex-1 border-t border-[#27272a]" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 whitespace-nowrap shrink-0">
                 ou com e-mail
               </span>
-              <div className="border-t border-[#27272a] w-full" />
+              <div className="flex-1 border-t border-[#27272a]" />
             </div>
 
             <form onSubmit={handleLoginSubmit} className="space-y-4">

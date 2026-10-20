@@ -704,14 +704,34 @@ export const authenticateWithGoogleAccessToken = async (
 };
 
 /**
- * Remove um usuário convidado da nuvem (protegendo Aristeu e Vitória)
+ * Remove uma conta convidada do banco de dados na nuvem (change_user_data + auth.users), protegendo Aristeu e Vitória
  */
-export const deleteCloudUserByAdmin = async (email: string): Promise<boolean> => {
+export const deleteCloudUserByAdmin = async (
+  email: string,
+  userId?: string
+): Promise<boolean> => {
   const config = getSupabaseConfig();
   const cleanEmail = email.trim().toLowerCase();
-  if (!config || ADMIN_EMAILS.has(cleanEmail)) return false;
+  if (!config || ADMIN_EMAILS.has(cleanEmail) || (userId && ADMIN_USER_IDS.has(userId))) {
+    return false;
+  }
 
   try {
+    const rpcRes = await fetch(`${config.url}/rest/v1/rpc/admin_delete_change_user`, {
+      method: 'POST',
+      headers: buildHeaders(config),
+      body: JSON.stringify({
+        p_target_email: cleanEmail,
+        p_target_user_id: userId || null
+      })
+    });
+
+    if (rpcRes.ok) {
+      const data = await rpcRes.json();
+      if (data?.ok) return true;
+    }
+
+    // Fallback direto caso necessário
     const res = await fetch(
       `${config.url}/rest/v1/change_user_data?email=eq.${encodeURIComponent(cleanEmail)}`,
       {
