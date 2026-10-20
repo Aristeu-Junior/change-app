@@ -50,7 +50,7 @@ export const AnalyticsView: React.FC = () => {
             cat = 'Braços';
           } else if (muscle.includes('agachamento') || muscle.includes('leg') || muscle.includes('extensora') || muscle.includes('stiff') || muscle.includes('panturrilha')) {
             cat = 'Pernas';
-          } else if (muscle.includes('prancha') || muscle.includes('abdominal') || muscle.includes('pernas na barra')) {
+          } else if (muscle.includes('prancha') || muscle.includes('abdominal') || muscle.includes('pernas')) {
             cat = 'Abdômen';
           }
 
@@ -93,7 +93,7 @@ export const AnalyticsView: React.FC = () => {
       {/* Topo */}
       <div>
         <h1 className="text-2xl font-black text-white">Estatísticas</h1>
-        <p className="text-xs text-zinc-400">Evolução de carga, volume & medidas</p>
+        <p className="text-xs text-zinc-400">Evolução de carga, séries & medidas</p>
       </div>
 
       {/* Cards de Resumo */}
@@ -106,9 +106,9 @@ export const AnalyticsView: React.FC = () => {
 
         <div className="bg-[#141416] border border-[#27272a] p-3.5 rounded-2xl flex flex-col items-center text-center">
           <Dumbbell className="w-5 h-5 text-white mb-1" />
-          <span className="text-[10px] uppercase font-bold text-zinc-400">Volume</span>
+          <span className="text-[10px] uppercase font-bold text-zinc-400">Carga</span>
           <span className="text-base font-black text-white">
-            {totalVolume > 1000 ? `${(totalVolume / 1000).toFixed(1)}t` : `${totalVolume}kg`}
+            {displayWeight(totalVolume, settings.weight_unit)}
           </span>
         </div>
 
@@ -180,7 +180,7 @@ export const AnalyticsView: React.FC = () => {
                     {displayWeight(pr.max_weight_kg, settings.weight_unit)}
                   </span>
                   <span className="text-[10px] text-zinc-400 font-bold">
-                    1RM: {displayWeight(pr.best_1rm_kg, settings.weight_unit)}
+                    {pr.max_reps} reps
                   </span>
                 </div>
               </div>

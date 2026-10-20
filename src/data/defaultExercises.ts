@@ -35,7 +35,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0050",
+    "gif_id": "0447",
     "muscles_pt": "Bíceps Braquial, Braquial, Flexores do Punho",
     "instructions": "A pegada semi-supinada na barra W alivia a tensão articular nos punhos e cotovelos, permitindo sobrecarga segura com foco nas duas cabeças do bíceps.",
     "steps": [
@@ -59,7 +59,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0285",
+    "gif_id": "0294",
     "muscles_pt": "Bíceps Braquial, Braquial",
     "instructions": "Execução simultânea com os dois braços mantendo pegada supinada fixa durante todo o percurso para tensão contínua.",
     "steps": [
@@ -83,7 +83,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0241",
+    "gif_id": "0868",
     "muscles_pt": "Bíceps Braquial, Tensão Contínua em Toda a Amplitude",
     "instructions": "A polia baixa mantém a tensão constante desde o ponto mais baixo até a contração máxima, eliminando pontos mortos.",
     "steps": [
@@ -131,7 +131,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0313",
+    "gif_id": "1677",
     "muscles_pt": "Bíceps Braquial, Braquial",
     "instructions": "A posição sentada elimina o uso de impulso do quadril e das pernas, tornando o trabalho do bíceps estritamente isolado.",
     "steps": [
@@ -155,7 +155,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0314",
+    "gif_id": "0315",
     "muscles_pt": "Cabeça Longa do Bíceps (Pico do Bíceps), Foco em Alongamento Máximo",
     "instructions": "O banco inclinado posiciona os braços atrás da linha do tronco, colocando a cabeça longa do bíceps sob alongamento passivo extremo.",
     "steps": [
@@ -179,7 +179,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0165",
+    "gif_id": "0313",
     "muscles_pt": "Braquial, Braquiorradial, Cabeça Longa do Bíceps",
     "instructions": "Pegada neutra mantida durante todo o movimento. Fortalece o músculo braquial, que empurra o bíceps para cima aumentando a espessura do braço.",
     "steps": [
@@ -203,7 +203,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0613",
+    "gif_id": "0298",
     "muscles_pt": "Braquiorradial, Braquial Anterior",
     "instructions": "Ao invés de subir para frente, o halter sobe em direção ao ombro/peito oposto, isolando com extrema potência o braquiorradial.",
     "steps": [
@@ -227,7 +227,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0209",
+    "gif_id": "0165",
     "muscles_pt": "Braquial, Braquiorradial, Bíceps Braquial",
     "instructions": "A corda na polia baixa permite separar as mãos no topo do movimento, aumentando a contração isométrica do braquial.",
     "steps": [
@@ -251,7 +251,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0086",
+    "gif_id": "0080",
     "muscles_pt": "Braquiorradial, Extensores do Punho, Braquial",
     "instructions": "Pegada pronada (palmas para baixo). Desativa parcialmente o bíceps e transfere quase toda a carga para o braquiorradial e extensores do antebraço.",
     "steps": [
@@ -275,7 +275,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0387",
+    "gif_id": "1654",
     "muscles_pt": "Braquiorradial, Extensores do Punho",
     "instructions": "Permite rotação livre e natural dos punhos com foco em pegada pronada para construção de antebraços densos.",
     "steps": [
@@ -317,7 +317,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0034",
+    "gif_id": "0418",
     "muscles_pt": "Bíceps Braquial (Pico de Contração e Formato)",
     "instructions": "Técnica favorita de Arnold Schwarzenegger: tronco inclinado à frente sem apoio, deixando o braço pender perpendicular ao solo.",
     "steps": [
@@ -360,7 +360,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0308",
+    "gif_id": "0372",
     "muscles_pt": "Bíceps Braquial (Correção de Assimetrias)",
     "instructions": "Executada um braço de cada vez no banco Scott para equilibrar força e volume muscular entre os lados.",
     "steps": [
@@ -381,7 +381,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0599",
+    "gif_id": "0592",
     "muscles_pt": "Bíceps Braquial com Tensão Guiada Constante",
     "instructions": "A máquina elimina pontos de alívio e garante curva de torque estável em toda a amplitude de movimento.",
     "steps": [
@@ -402,7 +402,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0087",
+    "gif_id": "0072",
     "muscles_pt": "Cabeça Curta do Bíceps, Braquial, Pico de Contração Isométrica",
     "instructions": "Deite-se de bruços em um banco inclinado a 45° com o peito apoiado. Os braços ficam suspensos na vertical, impedindo qualquer assistência das costas.",
     "steps": [
@@ -423,7 +423,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0398",
+    "gif_id": "0374",
     "muscles_pt": "Bíceps Braquial, Supinação Livre",
     "instructions": "Variação da rosca spider com halteres que permite girar os punhos e alcançar contração ainda mais densa.",
     "steps": [
@@ -470,7 +470,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0447",
+    "gif_id": "0439",
     "muscles_pt": "Bíceps na Subida (Supinada), Braquiorradial na Descida (Pronada)",
     "instructions": "Combina a força do bíceps na subida (palmas para cima) com a sobrecarga excêntrica no antebraço e braquiorradial na descida (palmas para baixo).",
     "steps": [
@@ -491,7 +491,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0150",
+    "gif_id": "0038",
     "muscles_pt": "Cabeça Longa do Bíceps, Isolamento Sem Deltoide Anterior",
     "instructions": "Ao invés de descrever um arco, a barra sobe raspando o tronco enquanto os cotovelos são empurrados ativamente para trás.",
     "steps": [
@@ -512,7 +512,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0215",
+    "gif_id": "1636",
     "muscles_pt": "Pico de Contração do Bíceps (Pose de Duplo Bíceps)",
     "instructions": "Posicione-se no centro do crossover com as polias ajustadas na altura dos ombros ou ligeiramente acima.",
     "steps": [
@@ -533,7 +533,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0432",
+    "gif_id": "5201",
     "muscles_pt": "Bíceps Braquial (Cabeça Curta), Tensão Isométrica nos Punhos",
     "instructions": "Segura-se a anilha superior de um halter verticalmente com ambas as mãos sob o topo, como um garçom segurando uma bandeja.",
     "steps": [
@@ -554,7 +554,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0095",
+    "gif_id": "1412",
     "muscles_pt": "Flexores Profundos e Superficiais do Punho",
     "instructions": "Antebraços apoiados sobre o banco com as mãos para fora. Realize a flexão total dos punhos com barra ou halteres.",
     "steps": [
@@ -575,7 +575,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "bicep_curl",
-    "gif_id": "0104",
+    "gif_id": "1411",
     "muscles_pt": "Extensores Radiais e Ulnar do Carpo, Braquiorradial",
     "instructions": "Com os antebraços apoiados e palmas para baixo, erga o dorso das mãos estendendo a articulação do punho.",
     "steps": [
@@ -598,7 +598,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "outro",
     "type": "duration",
     "animation_type": "bicep_curl",
-    "gif_id": "0857",
+    "gif_id": "0859",
     "muscles_pt": "Toda a Musculatura do Antebraço e Força de Preensão",
     "instructions": "Segure um bastão com corda e peso acoplado e enrole a corda para cima alternando os movimentos de flexão e extensão das mãos.",
     "steps": [
@@ -619,7 +619,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "outro",
     "type": "duration",
     "animation_type": "deadlift",
-    "gif_id": "0858",
+    "gif_id": "1437",
     "muscles_pt": "Força de Pinça, Músculos Intrínsecos da Mão e Dedos",
     "instructions": "Junte duas anilhas lisas face a face e segure-as apenas com a ponta dos dedos e o polegar em suspensão estática.",
     "steps": [
@@ -662,7 +662,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0344",
+    "gif_id": "0337",
     "muscles_pt": "Tríceps Braquial (Equilíbrio Unilateral)",
     "instructions": "Com halteres e pegada neutra (palmas se encarando), você tem amplitude livre sem estresse nos punhos e cotovelos.",
     "steps": [
@@ -682,7 +682,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0347",
+    "gif_id": "2188",
     "muscles_pt": "Cabeça Longa do Tríceps (Maior Alongamento)",
     "instructions": "Sentado ou em pé, segure um halter pesado por dentro da anilha superior acima da cabeça e desça por trás da nuca.",
     "steps": [
@@ -703,7 +703,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0187",
+    "gif_id": "0194",
     "muscles_pt": "Cabeça Longa do Tríceps com Tensão Contínua dos Cabos",
     "instructions": "De costas para a polia baixa ou média, puxe a corda por trás da cabeça e estenda para a frente.",
     "steps": [
@@ -724,7 +724,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0418",
+    "gif_id": "0436",
     "muscles_pt": "Cabeça Lateral e Medial do Tríceps",
     "instructions": "Criado pelo lendário Dave Tate: deitado no banco, os cotovelos apontam para fora e os halteres descem tocando o centro do peito.",
     "steps": [
@@ -745,7 +745,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0218",
+    "gif_id": "1722",
     "muscles_pt": "Cabeça Longa do Tríceps, Alinhamento Perfeito das Fibras Musculares",
     "instructions": "Extensão de tríceps com cabos cruzados na altura do peito, estendendo os braços diagonalmente como se desembainhasse duas espadas katana.",
     "steps": [
@@ -766,7 +766,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0200",
+    "gif_id": "0201",
     "muscles_pt": "Cabeça Lateral e Medial do Tríceps",
     "instructions": "Em pé na polia alta, empurre a barra reta para baixo estendendo os cotovelos até o bloqueio completo.",
     "steps": [
@@ -787,7 +787,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0201",
+    "gif_id": "0200",
     "muscles_pt": "Cabeça Lateral do Tríceps (Ferradura do Tríceps)",
     "instructions": "A corda permite abrir as mãos no final do movimento, aumentando o pico de contração da cabeça lateral.",
     "steps": [
@@ -808,7 +808,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0202",
+    "gif_id": "0207",
     "muscles_pt": "Cabeça Medial do Tríceps",
     "instructions": "Segure a barra com palmas para cima (pegada supinada) para direcionar o foco para a cabeça medial do tríceps.",
     "steps": [
@@ -832,7 +832,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "peso_corporal",
     "type": "bodyweight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0139",
+    "gif_id": "0129",
     "muscles_pt": "Tríceps Braquial, Deltoide Anterior",
     "instructions": "Com as mãos apoiadas na borda do banco e pés no chão ou em outro banco, flexione os cotovelos descendo o quadril.",
     "steps": [
@@ -857,7 +857,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "peso_corporal",
     "type": "bodyweight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0251",
+    "gif_id": "0814",
     "muscles_pt": "Tríceps Braquial Completo, Peitoral Inferior",
     "instructions": "Nas barras paralelas, mantenha o tronco ereto e cotovelos fechados para transferir o estímulo máximo ao tríceps.",
     "steps": [
@@ -881,7 +881,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "peso_corporal",
     "type": "bodyweight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0302",
+    "gif_id": "0283",
     "muscles_pt": "Tríceps Braquial, Miolo do Peitoral",
     "instructions": "Em posição de flexão no solo, junte os polegares e indicadores formando um losango/diamante sob o peito.",
     "steps": [
@@ -926,7 +926,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0346",
+    "gif_id": "0333",
     "muscles_pt": "Cabeça Lateral e Longa do Tríceps (Pico de Contração)",
     "instructions": "Apoiado no banco com o tronco paralelo ao chão, estenda o antebraço para trás até o alinhamento total.",
     "steps": [
@@ -999,7 +999,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0099",
+    "gif_id": "0748",
     "muscles_pt": "Peitoral Maior com Trajetória Fixa e Estabilidade Máxima",
     "instructions": "Ideal para treinar até a falha com total segurança, permitindo focar 100% no recrutamento do peitoral.",
     "steps": [
@@ -1115,7 +1115,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0081",
+    "gif_id": "1258",
     "muscles_pt": "Peitoral Superior (Porção Clavicular), Tríceps",
     "instructions": "Pegada supinada na barra em banco plano. Estudos eletromiográficos mostram ativação de peitoral superior até 30% maior que no supino inclinado normal.",
     "steps": [
@@ -1136,7 +1136,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "outro",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0412",
+    "gif_id": "0856",
     "muscles_pt": "Miolo do Peitoral (Isometria e Adução Horizontal)",
     "instructions": "Pressione duas anilhas uma contra a outra entre as palmas das mãos na altura do peito e empurre para frente.",
     "steps": [
@@ -1159,7 +1159,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0309",
+    "gif_id": "0065",
     "muscles_pt": "Peitoral Maior, Tríceps, Travamento Seguro",
     "instructions": "Deitado diretamente no chão com joelhos dobrados. O contato dos cotovelos com o solo elimina a hiperextensão do ombro.",
     "steps": [
@@ -1180,7 +1180,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0286",
+    "gif_id": "0308",
     "muscles_pt": "Peitoral Maior (Fibras Médias em Alongamento Máximo)",
     "instructions": "Deite-se no banco plano e abra os braços em arco com uma leve flexão nos cotovelos, esticando o peitoral.",
     "steps": [
@@ -1201,7 +1201,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0312",
+    "gif_id": "0319",
     "muscles_pt": "Peitoral Superior em Alongamento Profundo",
     "instructions": "Banco inclinado a 30°-45°. Isola a porção superior do peitoral com foco na expansão da caixa torácica.",
     "steps": [
@@ -1242,7 +1242,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0307",
+    "gif_id": "0596",
     "muscles_pt": "Peitoral Maior (Isolamento Estrito sem Estabilizadores)",
     "instructions": "Sente-se com as costas apoiadas e feche as hastes da máquina à frente do peito espremendo o músculo.",
     "steps": [
@@ -1265,7 +1265,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0316",
+    "gif_id": "1623",
     "muscles_pt": "Miolo do Peitoral, Supino com Adução Isométrica Ativa",
     "instructions": "Pressione dois halteres sextavados um contra o outro no centro do peito durante toda a subida e descida do supino.",
     "steps": [
@@ -1312,7 +1312,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0198",
+    "gif_id": "0150",
     "muscles_pt": "Latíssimo do Dorso (Grande Dorsal), Redondo Maior, Bíceps",
     "instructions": "O principal exercício para construir a largura das costas (formato em V). Puxe a barra em direção à parte superior do peito.",
     "steps": [
@@ -1337,7 +1337,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0199",
+    "gif_id": "0245",
     "muscles_pt": "Porção Inferior do Grande Dorsal, Bíceps Braquial",
     "instructions": "Pegada supinada na largura dos ombros que permite amplitude completa e ativação intensa do dorsal inferior e bíceps.",
     "steps": [
@@ -1360,7 +1360,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0204",
+    "gif_id": "0818",
     "muscles_pt": "Latíssimo do Dorso, Romboides, Braquial",
     "instructions": "O pegador triângulo proporciona pegada neutra confortável, permitindo maior uso de sobrecarga com segurança articular.",
     "steps": [
@@ -1406,7 +1406,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "peso_corporal",
     "type": "bodyweight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0253",
+    "gif_id": "1326",
     "muscles_pt": "Dorsal, Bíceps Braquial com Alta Sobrecarga",
     "instructions": "Palmas voltadas para o corpo na barra fixa, permitindo recrutar bíceps e dorsal com grande eficiência mecânica.",
     "steps": [
@@ -1429,7 +1429,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0197",
+    "gif_id": "1325",
     "muscles_pt": "Grande Dorsal, Romboides, Trapézio Médio",
     "instructions": "Variação tradicional da Era de Ouro puxando a barra rente à nuca com controle estrito de amplitude.",
     "steps": [
@@ -1477,7 +1477,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0292",
+    "gif_id": "0293",
     "muscles_pt": "Costas Médias, Romboides, Grande Dorsal",
     "instructions": "Com halteres, os punhos têm liberdade de rotação para puxar com pegada neutra ou pronada profunda.",
     "steps": [
@@ -1500,7 +1500,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0049",
+    "gif_id": "0606",
     "muscles_pt": "Espessura das Costas, Trapézio Médio, Romboides",
     "instructions": "Com a barra ancorada em uma ponta (Landmine) ou no aparelho cavalo com pegada fechada neutra.",
     "steps": [
@@ -1524,7 +1524,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0239",
+    "gif_id": "0180",
     "muscles_pt": "Romboides, Grande Dorsal Médio, Trapézio Inferior",
     "instructions": "Sentado no aparelho de remada baixa, puxe o triângulo em direção ao abdômen com as costas eretas.",
     "steps": [
@@ -1571,7 +1571,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0027",
+    "gif_id": "3017",
     "muscles_pt": "Potência e Força Pura das Costas e Eretor da Espinha",
     "instructions": "Remada estrita com tronco rigorosamente paralelo ao chão (90°), onde a barra toca e descansa no chão a cada repetição.",
     "steps": [
@@ -1594,7 +1594,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0049",
+    "gif_id": "0589",
     "muscles_pt": "Dorsal Inferior e Médio, Desenvolvido por John Meadows",
     "instructions": "Posicione-se de lado para uma barra ancorada no chão (landmine) e puxe pela ponta grossa da barra.",
     "steps": [
@@ -1617,7 +1617,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0292",
+    "gif_id": "0049",
     "muscles_pt": "Isolamento Absoluto das Costas sem Pressão Lombar",
     "instructions": "Deitado de bruços sobre um banco reto elevado do chão. Elimina 100% da fadiga da coluna lombar.",
     "steps": [
@@ -1663,7 +1663,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0072",
+    "gif_id": "0074",
     "muscles_pt": "Trapézio Superior e Médio, Eretor da Espinha, Densidade das Costas",
     "instructions": "Levantamento terra partindo das travas do rack na altura dos joelhos, focando na extensão de quadril e espessura das costas com alta carga.",
     "steps": [
@@ -1709,7 +1709,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0011",
+    "gif_id": "2137",
     "muscles_pt": "Deltoide Anterior e Lateral com Rotação Completa",
     "instructions": "Inicia com as palmas voltadas para você na altura do queixo e gira os punhos durante a subida até palmas para a frente.",
     "steps": [
@@ -1732,7 +1732,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0329",
+    "gif_id": "0405",
     "muscles_pt": "Deltoide Anterior e Lateral",
     "instructions": "No banco com encosto reto a 85°-90°, empurre os halteres para cima mantendo estabilidade completa.",
     "steps": [
@@ -1754,7 +1754,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0102",
+    "gif_id": "0765",
     "muscles_pt": "Deltoides com Máxima Estabilidade e Isolamento",
     "instructions": "A barra guiada do Smith permite focar na sobrecarga pura do ombro sem desvio lateral.",
     "steps": [
@@ -1796,7 +1796,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0225",
+    "gif_id": "0178",
     "muscles_pt": "Deltoide Lateral com Tensão Inicial Contínua",
     "instructions": "No cabo, a resistência é imediata logo a partir do início do movimento, superando o ponto morto do halter.",
     "steps": [
@@ -1863,7 +1863,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0380",
+    "gif_id": "0602",
     "muscles_pt": "Deltoide Posterior com Isolamento Estrito",
     "instructions": "Sente-se de frente para o encosto do Peck Deck e empurre as hastes para trás com pegada neutra ou pronada.",
     "steps": [
@@ -1886,7 +1886,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0190",
+    "gif_id": "0203",
     "muscles_pt": "Deltoide Posterior, Manguito Rotador, Trapézio, Saúde Postural",
     "instructions": "Puxe a corda da polia alta em direção ao rosto, abrindo as mãos e rodando os ombros externamente.",
     "steps": [
@@ -1909,7 +1909,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0094",
+    "gif_id": "0095",
     "muscles_pt": "Trapézio Superior",
     "instructions": "Em pé segurando a barra pesada, eleve os ombros em direção às orelhas sem dobrar os cotovelos.",
     "steps": [
@@ -1932,7 +1932,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0403",
+    "gif_id": "0406",
     "muscles_pt": "Trapézio Superior com Pegada Neutra",
     "instructions": "Com halteres nas laterais das coxas, a linha de ação fica perfeitamente alinhada com as fibras do trapézio.",
     "steps": [
@@ -2002,7 +2002,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0044",
+    "gif_id": "0743",
     "muscles_pt": "Quadríceps (Vasto Lateral, Medial e Intermédio)",
     "instructions": "Máquina guiada com as costas apoiadas em ângulo de 45°. Permite atingir falha muscular total no quadríceps com segurança.",
     "steps": [
@@ -2025,7 +2025,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0084",
+    "gif_id": "0410",
     "muscles_pt": "Quadríceps, Glúteo Máximo, Estabilidade Unilateral",
     "instructions": "Com o pé traseiro apoiado em um banco atrás de você, agache na perna da frente até a coxa ficar paralela ao chão.",
     "steps": [
@@ -2048,7 +2048,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0311",
+    "gif_id": "1760",
     "muscles_pt": "Quadríceps, Core, Mobilidade de Quadril",
     "instructions": "Segure o halter na vertical junto ao peito como uma taça e agache profundamente mantendo o tronco ereto.",
     "steps": [
@@ -2138,7 +2138,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0096",
+    "gif_id": "0116",
     "muscles_pt": "Isquiotibiais (Bíceps Femoral, Semitendíneo, Semimembranáceo), Glúteo",
     "instructions": "Com joelhos quase retos e pés paralelos, empurre o quadril para trás descendo a barra pelas canelas com alongamento profundo.",
     "steps": [
@@ -2161,7 +2161,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "halteres",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0408",
+    "gif_id": "0434",
     "muscles_pt": "Isquiotibiais, Glúteos",
     "instructions": "Permite descer os halteres rente às laterais das pernas respeitando a anatomia individual de quadril.",
     "steps": [
@@ -2234,7 +2234,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0097",
+    "gif_id": "0117",
     "muscles_pt": "Glúteos, Adutores, Quadríceps, Eretor da Espinha",
     "instructions": "Base aberta com pés apontados para fora e pegada por dentro dos joelhos. Reduz a distância da barra ao solo.",
     "steps": [
@@ -2276,7 +2276,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0587",
+    "gif_id": "0599",
     "muscles_pt": "Isquiotibiais em Posição de Alongamento Pélvico",
     "instructions": "Na posição sentada, o quadril fica flexionado a 90°, colocando os posteriores sob maior tensão de alongamento.",
     "steps": [
@@ -2299,7 +2299,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "barra",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0046",
+    "gif_id": "1409",
     "muscles_pt": "Glúteo Máximo (Maior Ativação de Toda a Musculação)",
     "instructions": "Com as costas apoiadas no banco e barra acolchoada sobre o quadril, empurre o quadril para cima até o alinhamento com o tronco.",
     "steps": [
@@ -2321,7 +2321,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0224",
+    "gif_id": "0228",
     "muscles_pt": "Glúteo Máximo, Formato e Pico de Contração",
     "instructions": "Com caneleira acoplada à polia baixa, empurre a perna para trás e para cima contraindo o glúteo.",
     "steps": [
@@ -2342,7 +2342,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0584",
+    "gif_id": "0597",
     "muscles_pt": "Glúteo Médio e Glúteo Mínimo (Desenho Lateral do Quadril)",
     "instructions": "Sentada na máquina abdutora, empurre as almofadas para fora abrindo as pernas contra a resistência.",
     "steps": [
@@ -2383,7 +2383,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "1373",
+    "gif_id": "0594",
     "muscles_pt": "Músculo Sóleo (Espessura e Volume Lateral da Panturrilha)",
     "instructions": "Com os joelhos dobrados a 90°, o gastrocnêmio é encurtado e o músculo sóleo assume quase todo o trabalho mecânico.",
     "steps": [
@@ -2404,7 +2404,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "1374",
+    "gif_id": "1391",
     "muscles_pt": "Gastrocnêmio, Sóleo com Alta Carga Guiada",
     "instructions": "Apoie apenas as pontas dos pés na borda inferior da plataforma do Leg Press e faça a flexão plantar completa.",
     "steps": [
@@ -2425,7 +2425,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0221",
+    "gif_id": "0175",
     "muscles_pt": "Reto Abdominal com Sobrecarga Progressiva",
     "instructions": "Ajoelhado de frente para a polia alta, segure a corda junto à cabeça e flexione a coluna enrolando o tronco em direção ao chão.",
     "steps": [
@@ -2470,7 +2470,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "outro",
     "type": "bodyweight_reps",
     "animation_type": "deadlift",
-    "gif_id": "0001",
+    "gif_id": "0857",
     "muscles_pt": "Reto Abdominal, Transverso do Abdômen, Grande Dorsal",
     "instructions": "Ajoelhado no chão, role a roda abdominal para a frente mantendo o abdômen travado e retorne com força do core.",
     "steps": [
@@ -2493,7 +2493,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "peso_corporal",
     "type": "duration",
     "animation_type": "bench_press",
-    "gif_id": "0648",
+    "gif_id": "2135",
     "muscles_pt": "Transverso do Abdômen, Reto Abdominal, Estabilidade da Coluna",
     "instructions": "Apoie os antebraços e pontas dos pés no solo mantendo o corpo perfeitamente reto e rígido como uma tábua.",
     "steps": [
@@ -2516,7 +2516,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "distance_duration",
     "animation_type": "squat",
-    "gif_id": "3656",
+    "gif_id": "0684",
     "muscles_pt": "Sistema Cardiorrespiratório, Membros Inferiores",
     "instructions": "Exercício aeróbico para condicionamento cardiovascular, queima calórica e aquecimento muscular.",
     "steps": [

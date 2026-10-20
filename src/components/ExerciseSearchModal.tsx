@@ -97,13 +97,10 @@ export const ExerciseSearchModal: React.FC<ExerciseSearchModalProps> = ({
         {/* Cabeçalho */}
         <div className="flex items-center justify-between pb-3 border-b border-[#27272a]">
           <h2 className="text-base font-bold text-white">
-            {isCreatingCustom ? 'Novo Exercício Personalizado' : 'Adicionar Exercício'}
+            {isCreatingCustom ? 'Novo Exercício Personalizado' : 'Selecionar Exercício'}
           </h2>
           <button
-            onClick={() => {
-              if (isCreatingCustom) setIsCreatingCustom(false);
-              else onClose();
-            }}
+            onClick={onClose}
             className="p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800 transition"
           >
             <X className="w-5 h-5" />
@@ -112,7 +109,7 @@ export const ExerciseSearchModal: React.FC<ExerciseSearchModalProps> = ({
 
         {isCreatingCustom ? (
           /* Formulário de Criação */
-          <form onSubmit={handleCreateCustom} className="flex-1 flex flex-col gap-3 py-3 overflow-y-auto">
+          <form onSubmit={handleCreateCustom} className="flex-1 flex flex-col gap-4 py-4 overflow-y-auto">
             <div>
               <label className="text-xs uppercase text-zinc-400 font-bold mb-1 block">
                 Nome do Exercício
@@ -121,27 +118,34 @@ export const ExerciseSearchModal: React.FC<ExerciseSearchModalProps> = ({
                 type="text"
                 value={customTitle}
                 onChange={(e) => setCustomTitle(e.target.value)}
-                placeholder="Ex: Supino no Smith com Pegada Fechada"
+                placeholder="Ex: Supino Articulado Unilateral"
                 className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white"
-                autoFocus
                 required
               />
             </div>
 
             <div>
               <label className="text-xs uppercase text-zinc-400 font-bold mb-1 block">
-                Grupo Muscular Principal
+                Músculo Principal
               </label>
               <select
                 value={customMuscle}
                 onChange={(e) => setCustomMuscle(e.target.value as MuscleGroup)}
                 className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-white"
               >
-                {MUSCLE_FILTERS.filter((m) => m.value !== 'all').map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
+                <option value="peito">Peito</option>
+                <option value="costas">Costas</option>
+                <option value="lats">Dorsal (Asas)</option>
+                <option value="ombros">Ombros</option>
+                <option value="biceps">Bíceps</option>
+                <option value="triceps">Tríceps</option>
+                <option value="antebraco">Antebraço</option>
+                <option value="quadriceps">Quadríceps</option>
+                <option value="isquiotibiais">Posterior de Coxa</option>
+                <option value="gluteos">Glúteos</option>
+                <option value="panturrilha">Panturrilha</option>
+                <option value="abdomen">Abdômen</option>
+                <option value="cardio">Cárdio</option>
               </select>
             </div>
 
@@ -254,44 +258,61 @@ export const ExerciseSearchModal: React.FC<ExerciseSearchModalProps> = ({
                   </button>
                 </div>
               ) : (
-                filteredExercises.map((ex) => (
-                  <button
-                    key={ex.id}
-                    onClick={() => {
-                      onSelectExercise(ex);
-                      onClose();
-                    }}
-                    className="w-full text-left p-2.5 rounded-xl bg-[#18181b] hover:bg-[#222226] border border-[#27272a] transition flex items-center justify-between group active:scale-98 gap-3"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-[#141416] border border-[#27272a] group-hover:border-zinc-500 flex flex-col items-center justify-center shrink-0 relative shadow-inner transition">
-                        <Dumbbell className="w-3.5 h-3.5 text-white" />
-                        <span className="text-[7px] font-black text-zinc-400 tracking-tighter mt-0.5 uppercase">
-                          {getMuscleBadge(ex.primary_muscle_group)}
-                        </span>
-                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 shadow-sm" />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="text-xs font-bold text-white group-hover:text-zinc-200 transition truncate">
-                          {ex.title}
-                        </h4>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] font-semibold text-zinc-400 capitalize">
-                            {ex.primary_muscle_group}
-                          </span>
-                          <span className="text-zinc-600">•</span>
-                          <span className="text-[10px] text-zinc-500 capitalize">{ex.equipment}</span>
-                          {ex.is_custom && (
-                            <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-zinc-700 text-white">
-                              Custom
-                            </span>
+                filteredExercises.map((ex) => {
+                  const thumbUrl = ex.gif_id
+                    ? `https://cdn.jsdelivr.net/gh/omercotkd/exercises-gifs@main/assets/${ex.gif_id}.gif`
+                    : ex.gif_url || null;
+
+                  return (
+                    <button
+                      key={ex.id}
+                      onClick={() => {
+                        onSelectExercise(ex);
+                        onClose();
+                      }}
+                      className="w-full text-left p-2 rounded-xl bg-[#18181b] hover:bg-[#222226] border border-[#27272a] transition flex items-center justify-between group active:scale-98 gap-3"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-11 h-11 rounded-xl bg-white border border-[#27272a] group-hover:border-zinc-400 flex flex-col items-center justify-center shrink-0 relative overflow-hidden shadow-inner transition">
+                          {thumbUrl ? (
+                            <img
+                              src={thumbUrl}
+                              alt={ex.title}
+                              loading="lazy"
+                              decoding="async"
+                              className="w-full h-full object-cover pointer-events-none select-none"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-[#141416] flex flex-col items-center justify-center">
+                              <Dumbbell className="w-3.5 h-3.5 text-white" />
+                              <span className="text-[7px] font-black text-zinc-400 tracking-tighter mt-0.5 uppercase">
+                                {getMuscleBadge(ex.primary_muscle_group)}
+                              </span>
+                            </div>
                           )}
                         </div>
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-bold text-white group-hover:text-zinc-200 transition truncate">
+                            {ex.title}
+                          </h4>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] font-semibold text-zinc-400 capitalize">
+                              {ex.primary_muscle_group}
+                            </span>
+                            <span className="text-zinc-600">•</span>
+                            <span className="text-[10px] text-zinc-500 capitalize">{ex.equipment}</span>
+                            {ex.is_custom && (
+                              <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-zinc-700 text-white">
+                                Custom
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <Plus className="w-4 h-4 text-zinc-400 group-hover:text-white transition shrink-0" />
-                  </button>
-                ))
+                      <Plus className="w-4 h-4 text-zinc-400 group-hover:text-white transition shrink-0" />
+                    </button>
+                  );
+                })
               )}
             </div>
 

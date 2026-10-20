@@ -14,7 +14,6 @@ import {
 import { DEFAULT_EXERCISES } from '../data/defaultExercises';
 import { DEFAULT_ROUTINES, DEFAULT_FOLDERS } from '../data/defaultRoutines';
 import {
-  calculate1RM,
   playGymTone,
   triggerHaptic,
   requestWakeLock,
@@ -49,6 +48,8 @@ interface AppContextType {
   startWorkout: (routineId?: string, customTitle?: string) => void;
   finishWorkout: (notes?: string) => Workout | null;
   discardWorkout: () => void;
+  deleteWorkout: (workoutId: string) => void;
+  clearWorkouts: () => void;
   updateWorkoutTitle: (title: string) => void;
   addExerciseToWorkout: (template: ExerciseTemplate) => void;
   removeExerciseFromWorkout: (exerciseIndex: number) => void;
@@ -113,6 +114,64 @@ const DEFAULT_USER: UserProfile = {
   created_at: new Date().toISOString()
 };
 
+// Sincroniza exercícios salvos mantendo customizados e atualizando todos os 112 padrões (incluindo gif_id revisado)
+const syncExercisesWithDefaults = (savedList: ExerciseTemplate[] | null): ExerciseTemplate[] => {
+  if (!savedList || !Array.isArray(savedList)) return DEFAULT_EXERCISES;
+  const customOnly = savedList.filter((e) => e.is_custom);
+  return [...customOnly, ...DEFAULT_EXERCISES];
+};
+
+// Calcula a carga real utilizada nos exercícios concluídos (sem multiplicar por repetições ou séries)
+export const calculateRealWorkoutLoadKg = (exercises: WorkoutExercise[]): number => {
+  if (!exercises || !Array.isArray(exercises)) return 0;
+  let totalLoad = 0;
+  exercises.forEach((ex) => {
+    const completedWithWeight = ex.sets.filter((s) => s.completed && s.weight_kg !== null && s.weight_kg > 0);
+    if (completedWithWeight.length > 0) {
+      const exerciseWeight = Math.max(...completedWithWeight.map((s) => Number(s.weight_kg) || 0));
+      totalLoad += exerciseWeight;
+    }
+  });
+  return Math.round(totalLoad * 10) / 10;
+};
+
+// Normaliza treinos salvos para corrigir volumes antigos multiplicados (ex: 600kg -> 20kg)
+const normalizeSavedWorkouts = (list: Workout[]): Workout[] => {
+  if (!Array.isArray(list)) return [];
+  return list.map((w) => ({
+    ...w,
+    total_volume_kg: calculateRealWorkoutLoadKg(w.exercises)
+  }));
+};
+
+// Reconstrói os recordes pessoais (PRs) com os valores exatos de carga pegos nos treinos
+const rebuildPersonalRecords = (workoutsList: Workout[]): Record<string, PersonalRecord> => {
+  const prs: Record<string, PersonalRecord> = {};
+  // Processa do mais antigo para o mais recente
+  const chronological = [...workoutsList].reverse();
+  chronological.forEach((w) => {
+    w.exercises.forEach((ex) => {
+      ex.sets.forEach((s) => {
+        if (s.completed && s.weight_kg !== null && s.weight_kg > 0 && s.reps) {
+          const wKg = Number(s.weight_kg);
+          const current = prs[ex.exercise_template_id];
+          if (!current || wKg > current.max_weight_kg || (wKg === current.max_weight_kg && s.reps > current.max_reps)) {
+            prs[ex.exercise_template_id] = {
+              exercise_template_id: ex.exercise_template_id,
+              exercise_title: ex.title,
+              max_weight_kg: wKg,
+              max_reps: s.reps,
+              best_1rm_kg: wKg,
+              date: w.end_time || w.start_time
+            };
+          }
+        }
+      });
+    });
+  });
+  return prs;
+};
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -164,11 +223,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Chaves prefixadas com o ID do usuário para garantir isolamento de dados
   const userKey = (key: string) => `change_${currentUser.id}_${key}`;
 
-  // Estados com carregamento isolado por usuário
+  // Estados com carregamento isolado por usuário e normalização automática de valores
   const [workouts, setWorkouts] = useState<Workout[]>(() => {
     try {
       const saved = localStorage.getItem(`change_${currentUser.id}_workouts`);
-      return saved ? JSON.parse(saved) : [];
+      return saved ? normalizeSavedWorkouts(JSON.parse(saved)) : [];
     } catch {
       return [];
     }
@@ -208,18 +267,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [exercises, setExercises] = useState<ExerciseTemplate[]>(() => {
     try {
       const saved = localStorage.getItem(`change_${currentUser.id}_exercises`);
-      if (saved) {
-        const parsed: ExerciseTemplate[] = JSON.parse(saved);
-        const existingIds = new Set(parsed.map((e) => e.id));
-        const missing = DEFAULT_EXERCISES.filter((d) => !existingIds.has(d.id));
-        if (missing.length > 0) {
-          const merged = [...parsed, ...missing];
-          localStorage.setItem(`change_${currentUser.id}_exercises`, JSON.stringify(merged));
-          return merged;
-        }
-        return parsed;
-      }
-      return DEFAULT_EXERCISES;
+      const synced = syncExercisesWithDefaults(saved ? JSON.parse(saved) : null);
+      localStorage.setItem(`change_${currentUser.id}_exercises`, JSON.stringify(synced));
+      return synced;
     } catch {
       return DEFAULT_EXERCISES;
     }
@@ -227,8 +277,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [personalRecords, setPersonalRecords] = useState<Record<string, PersonalRecord>>(() => {
     try {
-      const saved = localStorage.getItem(`change_${currentUser.id}_prs`);
-      return saved ? JSON.parse(saved) : {};
+      const savedWorkouts = localStorage.getItem(`change_${currentUser.id}_workouts`);
+      if (savedWorkouts) {
+        return rebuildPersonalRecords(JSON.parse(savedWorkouts));
+      }
+      return {};
     } catch {
       return {};
     }
@@ -315,7 +368,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const reloadUserData = (userId: string) => {
     try {
       const savedWorkouts = localStorage.getItem(`change_${userId}_workouts`);
-      setWorkouts(savedWorkouts ? JSON.parse(savedWorkouts) : []);
+      const parsedWorkouts = savedWorkouts ? normalizeSavedWorkouts(JSON.parse(savedWorkouts)) : [];
+      setWorkouts(parsedWorkouts);
 
       const savedActive = localStorage.getItem(`change_${userId}_active_workout`);
       setActiveWorkout(savedActive ? JSON.parse(savedActive) : null);
@@ -328,17 +382,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setFolders(savedFolders ? JSON.parse(savedFolders) : DEFAULT_FOLDERS);
 
       const savedExercises = localStorage.getItem(`change_${userId}_exercises`);
-      if (savedExercises) {
-        const parsed: ExerciseTemplate[] = JSON.parse(savedExercises);
-        const existingIds = new Set(parsed.map((e) => e.id));
-        const missing = DEFAULT_EXERCISES.filter((d) => !existingIds.has(d.id));
-        setExercises(missing.length > 0 ? [...parsed, ...missing] : parsed);
-      } else {
-        setExercises(DEFAULT_EXERCISES);
-      }
+      setExercises(syncExercisesWithDefaults(savedExercises ? JSON.parse(savedExercises) : null));
 
-      const savedPrs = localStorage.getItem(`change_${userId}_prs`);
-      setPersonalRecords(savedPrs ? JSON.parse(savedPrs) : {});
+      setPersonalRecords(rebuildPersonalRecords(parsedWorkouts));
 
       const savedMeas = localStorage.getItem(`change_${userId}_measurements`);
       setMeasurements(savedMeas ? JSON.parse(savedMeas) : []);
@@ -464,40 +510,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!activeWorkout) return null;
 
     const endTime = new Date().toISOString();
-    let totalVol = 0;
     let completedSetsCount = 0;
     let prsHit = 0;
     const updatedPrs = { ...personalRecords };
 
     activeWorkout.exercises.forEach((ex) => {
       ex.sets.forEach((s) => {
-        if (s.completed && s.weight_kg && s.reps) {
+        if (s.completed && s.reps) {
           completedSetsCount++;
-          totalVol += s.weight_kg * s.reps;
-
-          const est1RM = calculate1RM(s.weight_kg, s.reps);
-          const currentPr = updatedPrs[ex.exercise_template_id];
-
-          if (!currentPr || est1RM > currentPr.best_1rm_kg || s.weight_kg > currentPr.max_weight_kg) {
-            prsHit++;
-            updatedPrs[ex.exercise_template_id] = {
-              exercise_template_id: ex.exercise_template_id,
-              exercise_title: ex.title,
-              max_weight_kg: Math.max(s.weight_kg, currentPr ? currentPr.max_weight_kg : 0),
-              max_reps: s.reps,
-              best_1rm_kg: Math.max(est1RM, currentPr ? currentPr.best_1rm_kg : 0),
-              date: endTime
-            };
+          const wKg = Number(s.weight_kg) || 0;
+          if (wKg > 0) {
+            const currentPr = updatedPrs[ex.exercise_template_id];
+            if (!currentPr || wKg > currentPr.max_weight_kg) {
+              prsHit++;
+              updatedPrs[ex.exercise_template_id] = {
+                exercise_template_id: ex.exercise_template_id,
+                exercise_title: ex.title,
+                max_weight_kg: wKg,
+                max_reps: s.reps,
+                best_1rm_kg: wKg,
+                date: endTime
+              };
+            }
           }
         }
       });
     });
 
+    const realLoadKg = calculateRealWorkoutLoadKg(activeWorkout.exercises);
+
     const finished: Workout = {
       ...activeWorkout,
       end_time: endTime,
       description: notes || activeWorkout.description,
-      total_volume_kg: totalVol,
+      total_volume_kg: realLoadKg,
       total_sets: completedSetsCount,
       prs_hit: prsHit
     };
@@ -530,6 +576,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setRestTimer({ isActive: false, remainingSeconds: 0, totalSeconds: 0, exerciseTitle: '' });
   };
 
+  const deleteWorkout = (workoutId: string) => {
+    setWorkouts((prev) => {
+      const next = prev.filter((w) => w.id !== workoutId);
+      setPersonalRecords(rebuildPersonalRecords(next));
+      return next;
+    });
+  };
+
+  const clearWorkouts = () => {
+    setWorkouts([]);
+    setPersonalRecords({});
+  };
+
   const updateWorkoutTitle = (title: string) => {
     if (!activeWorkout) return;
     setActiveWorkout({ ...activeWorkout, title });
@@ -542,6 +601,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       w.exercises.some((e) => e.exercise_template_id === template.id)
     );
     const prevExercise = prevWorkout?.exercises.find((e) => e.exercise_template_id === template.id);
+    const completedPrevSet = prevExercise?.sets.find((s) => s.completed);
 
     const newExercise: WorkoutExercise = {
       id: `we-${Date.now()}`,
@@ -553,11 +613,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           id: `ws-${Date.now()}-0`,
           index: 0,
           type: 'normal',
-          weight_kg: prevExercise?.sets[0]?.weight_kg || (template.type === 'bodyweight_reps' ? 0 : 20),
-          reps: prevExercise?.sets[0]?.reps || 10,
+          weight_kg: completedPrevSet?.weight_kg ?? (template.type === 'bodyweight_reps' ? 0 : 20),
+          reps: completedPrevSet?.reps ?? 10,
           completed: false,
-          previousGhost: prevExercise?.sets[0]?.weight_kg
-            ? `${prevExercise.sets[0].weight_kg} kg × ${prevExercise.sets[0].reps}`
+          previousGhost: completedPrevSet?.weight_kg
+            ? `${completedPrevSet.weight_kg} kg × ${completedPrevSet.reps}`
             : undefined
         }
       ]
@@ -747,11 +807,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const importDataJson = (jsonStr: string): boolean => {
     try {
       const data = JSON.parse(jsonStr);
-      if (data.workouts) setWorkouts(data.workouts);
+      if (data.workouts) {
+        const normalized = normalizeSavedWorkouts(data.workouts);
+        setWorkouts(normalized);
+        setPersonalRecords(rebuildPersonalRecords(normalized));
+      }
       if (data.routines) setRoutines(data.routines);
       if (data.folders) setFolders(data.folders);
-      if (data.exercises) setExercises(data.exercises);
-      if (data.personalRecords) setPersonalRecords(data.personalRecords);
+      if (data.exercises) setExercises(syncExercisesWithDefaults(data.exercises));
       if (data.measurements) setMeasurements(data.measurements);
       if (data.settings) setSettings(data.settings);
       return true;
@@ -780,6 +843,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     startWorkout,
     finishWorkout,
     discardWorkout,
+    deleteWorkout,
+    clearWorkouts,
     updateWorkoutTitle,
     addExerciseToWorkout,
     removeExerciseFromWorkout,

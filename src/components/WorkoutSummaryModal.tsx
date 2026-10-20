@@ -55,7 +55,7 @@ export const WorkoutSummaryModal: React.FC = () => {
 
           <div className="bg-[#18181b] p-3 rounded-2xl border border-[#27272a]">
             <Dumbbell className="w-4 h-4 text-white mx-auto mb-1" />
-            <span className="text-[10px] text-zinc-400 uppercase font-bold block">Volume</span>
+            <span className="text-[10px] text-zinc-400 uppercase font-bold block">Carga</span>
             <span className="text-sm font-black text-white">
               {displayWeight(completedWorkoutSummary.total_volume_kg, settings.weight_unit)}
             </span>
@@ -68,15 +68,18 @@ export const WorkoutSummaryModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Lista resumida de exercícios */}
-        <div className="w-full mt-4 max-h-36 overflow-y-auto space-y-1.5 text-left border-t border-[#27272a] pt-3">
+        {/* Lista resumida de exercícios com a carga exata */}
+        <div className="w-full mt-4 max-h-40 overflow-y-auto space-y-1.5 text-left border-t border-[#27272a] pt-3">
           {completedWorkoutSummary.exercises.map((ex, idx) => {
             const completedSets = ex.sets.filter((s) => s.completed);
             if (completedSets.length === 0) return null;
+            const maxW = Math.max(...completedSets.map((s) => Number(s.weight_kg) || 0));
             return (
               <div key={idx} className="flex justify-between text-xs py-1">
                 <span className="font-semibold text-zinc-300 truncate pr-2">{ex.title}</span>
-                <span className="text-zinc-500 shrink-0 font-bold">{completedSets.length} séries</span>
+                <span className="text-white shrink-0 font-black">
+                  {displayWeight(maxW, settings.weight_unit)} • {completedSets.length} séries
+                </span>
               </div>
             );
           })}

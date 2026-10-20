@@ -4,15 +4,13 @@ import {
   Plus,
   Dumbbell,
   Trophy,
-  Info,
   History,
   X,
   Trash2,
   Sparkles,
   ChevronRight,
   Check,
-  BookmarkPlus,
-  FolderPlus
+  BookmarkPlus
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ExerciseTemplate, MuscleGroup, Routine, WorkoutExercise } from '../../types';
@@ -246,7 +244,7 @@ export const ExercisesView: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-white">Exercícios</h1>
-          <p className="text-xs text-zinc-400">Guia de execução, animações & PRs</p>
+          <p className="text-xs text-zinc-400">Guia de execução, animações 3D & PRs</p>
         </div>
         <button
           onClick={() => setIsSearchModalOpen(true)}
@@ -362,23 +360,39 @@ export const ExercisesView: React.FC = () => {
         ))}
       </div>
 
-      {/* Lista de Exercícios */}
+      {/* Lista de Exercícios com Miniatura 3D ao lado esquerdo */}
       <div className="space-y-2">
         {filteredExercises.map((ex) => {
           const pr = personalRecords[ex.id];
+          const thumbUrl = ex.gif_id
+            ? `https://cdn.jsdelivr.net/gh/omercotkd/exercises-gifs@main/assets/${ex.gif_id}.gif`
+            : ex.gif_url || null;
+
           return (
             <div
               key={ex.id}
               onClick={() => setSelectedDetailExercise(ex)}
-              className="bg-[#141416] border border-[#27272a] hover:border-zinc-500 rounded-2xl p-3 shadow-sm flex items-center justify-between cursor-pointer transition active:scale-98 gap-3 group"
+              className="bg-[#141416] border border-[#27272a] hover:border-zinc-500 rounded-2xl p-2.5 shadow-sm flex items-center justify-between cursor-pointer transition active:scale-98 gap-3 group"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-12 h-12 rounded-xl bg-[#18181b] border border-[#27272a] group-hover:border-zinc-600 flex flex-col items-center justify-center shrink-0 relative overflow-hidden shadow-inner transition">
-                  <Dumbbell className="w-4 h-4 text-white" />
-                  <span className="text-[8px] font-black text-zinc-400 tracking-tighter mt-0.5 uppercase">
-                    {getMuscleBadge(ex.primary_muscle_group)}
-                  </span>
-                  <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500 shadow-sm" />
+                {/* Miniatura 3D em GIF animada à esquerda */}
+                <div className="w-13 h-13 rounded-xl bg-white border border-[#27272a] group-hover:border-zinc-400 flex flex-col items-center justify-center shrink-0 relative overflow-hidden shadow-inner transition">
+                  {thumbUrl ? (
+                    <img
+                      src={thumbUrl}
+                      alt={ex.title}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover pointer-events-none select-none"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-[#18181b] flex flex-col items-center justify-center">
+                      <Dumbbell className="w-4 h-4 text-white" />
+                      <span className="text-[8px] font-black text-zinc-400 tracking-tighter mt-0.5 uppercase">
+                        {getMuscleBadge(ex.primary_muscle_group)}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="min-w-0">
@@ -400,15 +414,15 @@ export const ExercisesView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Botões de Ação: Adicionar ao Treino e Ver 3D */}
+              {/* Recorde Exato e Botão Adicionar ao Treino (sem botão Ver 3D) */}
               <div className="flex items-center gap-2 shrink-0">
                 {pr && (
-                  <div className="hidden sm:flex flex-col items-end mr-1">
+                  <div className="flex flex-col items-end mr-1">
                     <div className="flex items-center gap-1 text-xs font-black text-white">
                       <Trophy className="w-3.5 h-3.5 text-zinc-300" />
                       <span>{displayWeight(pr.max_weight_kg, settings.weight_unit)}</span>
                     </div>
-                    <span className="text-[10px] text-zinc-400">1RM: {displayWeight(pr.best_1rm_kg, settings.weight_unit)}</span>
+                    <span className="text-[10px] text-zinc-400">{pr.max_reps} reps</span>
                   </div>
                 )}
 
@@ -417,16 +431,12 @@ export const ExercisesView: React.FC = () => {
                     e.stopPropagation();
                     setExerciseToAddToRoutine(ex);
                   }}
-                  className="p-1.5 sm:px-2 sm:py-1 rounded-lg bg-[#18181b] hover:bg-zinc-800 border border-[#27272a] text-zinc-300 hover:text-white text-[10px] font-bold flex items-center gap-1 transition active:scale-95"
+                  className="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-[#18181b] hover:bg-zinc-800 border border-[#27272a] text-zinc-300 hover:text-white text-[10px] font-bold flex items-center gap-1 transition active:scale-95"
                   title="Adicionar a um treino"
                 >
                   <BookmarkPlus className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">+ Treino</span>
                 </button>
-
-                <span className="text-[10px] text-zinc-400 font-bold uppercase px-2 py-1 rounded bg-[#1c1c1f] border border-[#27272a] group-hover:text-white group-hover:border-zinc-600 transition">
-                  Ver 3D
-                </span>
               </div>
             </div>
           );
@@ -488,7 +498,7 @@ export const ExercisesView: React.FC = () => {
               {/* PLAYER DE ANIMAÇÃO / DEMONSTRAÇÃO VISUAL */}
               <ExerciseVisualDemo exercise={selectedDetailExercise} />
 
-              {/* Caixa de Recorde Pessoal */}
+              {/* Caixa de Recorde Pessoal (Valores Reais) */}
               <div className="bg-[#18181b] p-3.5 rounded-xl border border-[#27272a]">
                 <span className="text-xs uppercase text-zinc-400 font-bold block mb-2 flex items-center gap-1.5">
                   <Trophy className="w-4 h-4 text-white" />
@@ -498,7 +508,7 @@ export const ExercisesView: React.FC = () => {
                   <div className="grid grid-cols-2 gap-2 text-center">
                     <div className="bg-[#121214] p-2 rounded-lg border border-[#27272a]">
                       <span className="text-[10px] uppercase text-zinc-500 font-semibold block">
-                        Carga Máxima
+                        Carga Registrada
                       </span>
                       <span className="text-sm font-black text-white">
                         {displayWeight(
@@ -509,13 +519,10 @@ export const ExercisesView: React.FC = () => {
                     </div>
                     <div className="bg-[#121214] p-2 rounded-lg border border-[#27272a]">
                       <span className="text-[10px] uppercase text-zinc-500 font-semibold block">
-                        1RM Estimado
+                        Repetições
                       </span>
                       <span className="text-sm font-black text-white">
-                        {displayWeight(
-                          personalRecords[selectedDetailExercise.id].best_1rm_kg,
-                          settings.weight_unit
-                        )}
+                        {personalRecords[selectedDetailExercise.id].max_reps} reps
                       </span>
                     </div>
                   </div>
