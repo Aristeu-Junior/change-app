@@ -1,5 +1,5 @@
 import React, { useState, lazy, Suspense } from 'react';
-import { KeyRound, Copy, Check, X } from 'lucide-react';
+import { KeyRound, Copy, Check, X, BellRing, UserCheck, UserX } from 'lucide-react';
 import { AppProvider, useApp } from './context/AppContext';
 import { MobileTabBar, DesktopSidebar, TabType } from './components/MobileTabBar';
 import { AuthLoginScreen } from './components/AuthLoginScreen';
@@ -24,6 +24,9 @@ const AppContent: React.FC = () => {
   const {
     theme,
     isAuthenticated,
+    isCurrentUserAdmin,
+    accessRequests,
+    adminDecideAccessRequest,
     recoveryPasswordNotice,
     clearRecoveryPasswordNotice,
     changeMyPassword
@@ -32,6 +35,7 @@ const AppContent: React.FC = () => {
   const [copiedNewPass, setCopiedNewPass] = useState(false);
   const [customNewPass, setCustomNewPass] = useState('');
   const [savedCustomPass, setSavedCustomPass] = useState(false);
+  const [processingRequestEmail, setProcessingRequestEmail] = useState<string | null>(null);
 
   // Exige autenticação na tela de login estilo Hevy antes de exibir os treinos
   if (!isAuthenticated) {
@@ -39,6 +43,9 @@ const AppContent: React.FC = () => {
   }
 
   const isLight = theme === 'light';
+  const pendingAccessRequests = isCurrentUserAdmin
+    ? accessRequests.filter((r) => r.account_status === 'pending')
+    : [];
 
   const handleCopyGeneratedPass = async () => {
     if (!recoveryPasswordNotice) return;
@@ -79,6 +86,70 @@ const AppContent: React.FC = () => {
 
       {/* Área Principal (Full-width responsiva no Celular e Container amplo e limpo no Computador) */}
       <div className="flex-1 min-w-0 flex flex-col">
+        {/* Alerta em Tempo Real para o Administrador: Solicitações de Acesso Google Pendentes */}
+        {isCurrentUserAdmin && pendingAccessRequests.length > 0 && (
+          <div
+            className="w-full max-w-4xl mx-auto px-4 pt-3 md:pt-5 space-y-2 z-30"
+            style={{ marginTop: 'var(--safe-top, 0px)' }}
+          >
+            {pendingAccessRequests.map((req) => {
+              const isBusy = processingRequestEmail === req.email;
+              return (
+                <div
+                  key={req.user_id || req.email}
+                  className="p-3.5 rounded-2xl bg-[#121214] border border-white/40 shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-white animate-in fade-in duration-200"
+                >
+                  <div className="flex items-start sm:items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-white text-black flex items-center justify-center shrink-0 shadow">
+                      <BellRing className="w-4 h-4 stroke-[2.5]" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-white/15 text-white">
+                          Pedido de Acesso Google
+                        </span>
+                        <span className="text-xs font-black text-white truncate">{req.name}</span>
+                      </div>
+                      <p className="text-[11px] text-zinc-300 truncate mt-0.5">
+                        <strong>{req.email}</strong> quer entrar no Change. Deseja autorizar?
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      disabled={isBusy}
+                      onClick={async () => {
+                        setProcessingRequestEmail(req.email);
+                        await adminDecideAccessRequest(req.email, 'approved');
+                        setProcessingRequestEmail(null);
+                      }}
+                      className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-white hover:bg-zinc-200 text-black font-black text-xs flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-50"
+                    >
+                      <UserCheck className="w-3.5 h-3.5" />
+                      <span>Aceitar</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isBusy}
+                      onClick={async () => {
+                        setProcessingRequestEmail(req.email);
+                        await adminDecideAccessRequest(req.email, 'rejected');
+                        setProcessingRequestEmail(null);
+                      }}
+                      className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-red-950/70 hover:bg-red-900 border border-red-500/40 text-red-200 font-black text-xs flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-50"
+                    >
+                      <UserX className="w-3.5 h-3.5" />
+                      <span>Negar</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <main className="flex-1 w-full max-w-4xl mx-auto overflow-x-hidden">
           <Suspense fallback={<ViewLoadingFallback />}>
             {currentTab === 'routines' && <RoutinesView />}

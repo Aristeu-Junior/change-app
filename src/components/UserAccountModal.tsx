@@ -36,6 +36,9 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
     users,
     currentUser,
     isCurrentUserAdmin,
+    accessRequests,
+    refreshAccessRequests,
+    adminDecideAccessRequest,
     adminCreateUser,
     adminDeleteUser,
     refreshCloudUsers,
@@ -65,6 +68,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
   // Estado para confirmação de exclusão de conta pelo Admin
   const [confirmDeleteEmail, setConfirmDeleteEmail] = useState<string | null>(null);
   const [deletingEmail, setDeletingEmail] = useState<string | null>(null);
+  const [decidingEmail, setDecidingEmail] = useState<string | null>(null);
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -80,6 +84,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
       setSuccessMsg(null);
       if (isCurrentUserAdmin) {
         refreshCloudUsers();
+        refreshAccessRequests();
       }
     }
   }, [isOpen, currentUser.name, currentUser.email, isCurrentUserAdmin]);
@@ -360,6 +365,118 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
                 </button>
               )}
             </div>
+
+            {/* Solicitações de Acesso Google (Pendentes e Negadas) — Exclusivo Admin */}
+            {isCurrentUserAdmin && accessRequests.length > 0 && (
+              <div className="pt-2 border-t border-[#27272a] space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-wider font-black text-white">
+                    Solicitações Google ({accessRequests.length})
+                  </span>
+                  <span className="text-[10px] text-zinc-400">Aceitar ou Negar</span>
+                </div>
+
+                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                  {accessRequests.map((req) => {
+                    const isPending = req.account_status === 'pending';
+                    const isBusy = decidingEmail === req.email;
+
+                    return (
+                      <div
+                        key={req.user_id || req.email}
+                        className={`p-2.5 rounded-xl border flex flex-col gap-2 text-xs ${
+                          isPending
+                            ? 'bg-[#18181b] border-white/40'
+                            : 'bg-[#141416] border-red-500/30'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-black text-white truncate">{req.name}</span>
+                              <span
+                                className={`text-[9px] px-1.5 py-0.5 rounded font-black uppercase shrink-0 ${
+                                  isPending
+                                    ? 'bg-white text-black'
+                                    : 'bg-red-950/70 text-red-300 border border-red-500/30'
+                                }`}
+                              >
+                                {isPending ? 'Aguardando' : 'Negado'}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-zinc-400 truncate block">
+                              {req.email}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              disabled={isBusy}
+                              onClick={async () => {
+                                resetMessages();
+                                setDecidingEmail(req.email);
+                                const ok = await adminDecideAccessRequest(req.email, 'approved');
+                                setDecidingEmail(null);
+                                if (ok) {
+                                  setSuccessMsg(`Acesso de "${req.name}" (${req.email}) ACEITO!`);
+                                } else {
+                                  setErrorMsg('Não foi possível aprovar esta solicitação.');
+                                }
+                              }}
+                              className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-zinc-200 text-black text-[10px] font-black transition"
+                            >
+                              Aceitar
+                            </button>
+
+                            {isPending ? (
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={async () => {
+                                  resetMessages();
+                                  setDecidingEmail(req.email);
+                                  const ok = await adminDecideAccessRequest(req.email, 'rejected');
+                                  setDecidingEmail(null);
+                                  if (ok) {
+                                    setSuccessMsg(
+                                      `Acesso de "${req.name}" (${req.email}) foi NEGADO.`
+                                    );
+                                  } else {
+                                    setErrorMsg('Não foi possível negar esta solicitação.');
+                                  }
+                                }}
+                                className="px-2.5 py-1.5 rounded-lg bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-500/30 text-[10px] font-black transition"
+                              >
+                                Negar
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={isBusy}
+                                onClick={async () => {
+                                  resetMessages();
+                                  setDecidingEmail(req.email);
+                                  await adminDeleteUser(req.email, req.user_id);
+                                  setDecidingEmail(null);
+                                  setSuccessMsg(
+                                    `Solicitação de "${req.name}" excluída definitivamente.`
+                                  );
+                                }}
+                                className="p-1.5 rounded-lg bg-[#222226] hover:bg-red-950/60 text-zinc-400 hover:text-red-300 transition"
+                                title="Excluir definitivamente do banco de dados"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Lista de Convidados Cadastrados (Visível apenas para Aristeu e Vitória) */}
             {isCurrentUserAdmin && (

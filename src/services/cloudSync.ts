@@ -674,32 +674,150 @@ export const authenticateWithGoogleAccessToken = async (
 
     const googleProfile = await googleRes.json();
     const verifiedEmail = (googleProfile?.email || '').trim().toLowerCase();
+    const googleName = (googleProfile?.name || verifiedEmail.split('@')[0] || 'Atleta').trim();
     if (!verifiedEmail) {
       return { ok: false, error: 'A conta Google não retornou um endereço de e-mail válido.' };
     }
 
-    // 2. Busca o usuário correspondente cadastrado no Change
-    const rpcRes = await fetch(`${config.url}/rest/v1/rpc/authenticate_change_google_email`, {
-      method: 'POST',
-      headers: buildHeaders(config),
-      body: JSON.stringify({
-        p_email: verifiedEmail
-      })
-    });
-
-    if (rpcRes.ok) {
-      const rows = await rpcRes.json();
-      if (Array.isArray(rows) && rows.length > 0) {
-        return { ok: true, account: rows[0] as CloudUserPayload };
-      }
+    // 2. Verifica ou cria solicitação de aprovação para a conta Google
+    const checkRes = await requestOrCheckGoogleAccess(verifiedEmail, googleName);
+    if (checkRes.status === 'approved' && checkRes.account) {
+      return { ok: true, account: checkRes.account };
+    }
+    if (checkRes.status === 'rejected') {
+      return {
+        ok: false,
+        status: 'rejected',
+        error:
+          checkRes.message ||
+          'Acesso Negado. Sua solicitação de acesso não foi autorizada pelo administrador.'
+      };
+    }
+    if (checkRes.status === 'pending') {
+      return {
+        ok: false,
+        status: 'pending',
+        email: verifiedEmail,
+        name: googleName,
+        error:
+          checkRes.message ||
+          'Solicitação enviada! Aguardando aprovação do administrador para liberar seu acesso.'
+      };
     }
 
     return {
       ok: false,
-      error: `O e-mail Google (${verifiedEmail}) ainda não está vinculado a uma conta do Change. Entre com sua senha e atualize seu e-mail em Minha Conta.`
+      error: checkRes.message || 'Não foi possível verificar esta conta Google.'
     };
   } catch {
     return { ok: false, error: 'Erro ao autenticar com o Google.' };
+  }
+};
+
+export interface AccessRequestEntry {
+  user_id: string;
+  email: string;
+  name: string;
+  account_status: 'pending' | 'rejected' | 'approved';
+  updated_at: string;
+}
+
+/**
+ * Solicita ou verifica o status de aprovação de uma conta Google no banco
+ */
+export const requestOrCheckGoogleAccess = async (
+  email: string,
+  name?: string,
+  rawPassword?: string
+): Promise<{
+  status: 'approved' | 'pending' | 'rejected' | 'needs_registration' | 'error';
+  email?: string;
+  name?: string;
+  message?: string;
+  account?: CloudUserPayload;
+}> => {
+  const config = getSupabaseConfig();
+  if (!config) return { status: 'error', message: 'Sem conexão com a nuvem.' };
+
+  try {
+    const cleanEmail = sanitizeInput(email, 100).toLowerCase();
+    const cleanName = name ? sanitizeInput(name, 80) : null;
+    const passwordHash =
+      rawPassword && rawPassword.trim() ? await hashPasswordSha256(rawPassword.trim()) : null;
+
+    const res = await fetch(`${config.url}/rest/v1/rpc/request_or_check_google_access`, {
+      method: 'POST',
+      headers: buildHeaders(config),
+      body: JSON.stringify({
+        p_email: cleanEmail,
+        p_name: cleanName,
+        p_password_hash: passwordHash
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return data;
+    }
+    return { status: 'error', message: 'Erro ao consultar status de aprovação.' };
+  } catch {
+    return { status: 'error', message: 'Erro de conexão com o servidor.' };
+  }
+};
+
+/**
+ * Busca todas as solicitações de acesso pendentes ou negadas (para os Administradores Aristeu e Vitória)
+ */
+export const fetchAccessRequestsFromCloud = async (): Promise<AccessRequestEntry[]> => {
+  const config = getSupabaseConfig();
+  if (!config) return [];
+
+  try {
+    const res = await fetch(`${config.url}/rest/v1/rpc/get_change_access_requests`, {
+      method: 'POST',
+      headers: buildHeaders(config),
+      body: JSON.stringify({})
+    });
+
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows)) {
+        return rows as AccessRequestEntry[];
+      }
+    }
+    return [];
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Aprova ('approved') ou Nega ('rejected') uma solicitação de acesso via Google
+ */
+export const decideAccessRequestInCloud = async (
+  targetEmail: string,
+  decision: 'approved' | 'rejected'
+): Promise<boolean> => {
+  const config = getSupabaseConfig();
+  if (!config) return false;
+
+  try {
+    const res = await fetch(`${config.url}/rest/v1/rpc/admin_decide_access_request`, {
+      method: 'POST',
+      headers: buildHeaders(config),
+      body: JSON.stringify({
+        p_target_email: targetEmail.trim().toLowerCase(),
+        p_decision: decision
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return !!data?.ok;
+    }
+    return false;
+  } catch {
+    return false;
   }
 };
 

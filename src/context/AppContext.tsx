@@ -34,6 +34,10 @@ import {
   configureCloudUserTotp,
   completeEmailRecoveryOrMagicLogin,
   deleteCloudUserByAdmin,
+  fetchAccessRequestsFromCloud,
+  decideAccessRequestInCloud,
+  requestOrCheckGoogleAccess,
+  AccessRequestEntry,
   CloudUserPayload
 } from '../services/cloudSync';
 import { verifyTotpCode } from '../utils/totp';
@@ -53,12 +57,20 @@ interface AppContextType {
   currentUser: UserProfile;
   isAuthenticated: boolean;
   isCurrentUserAdmin: boolean;
+  accessRequests: AccessRequestEntry[];
+  refreshAccessRequests: () => Promise<void>;
+  adminDecideAccessRequest: (email: string, decision: 'approved' | 'rejected') => Promise<boolean>;
   loginUser: (identifier: string, password?: string) => Promise<boolean>;
   loginUserWith2FA: (
     identifier: string,
     password: string,
     totpCode?: string
-  ) => Promise<{ ok: boolean; requires2FA?: boolean; error?: string }>;
+  ) => Promise<{
+    ok: boolean;
+    requires2FA?: boolean;
+    accountStatus?: 'pending' | 'rejected';
+    error?: string;
+  }>;
   loginWithCloudPayload: (cloudAccount: CloudUserPayload) => Promise<void>;
   logoutUser: () => void;
   adminCreateUser: (
@@ -627,6 +639,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const [accessRequests, setAccessRequests] = useState<AccessRequestEntry[]>([]);
+
+  const refreshAccessRequests = async () => {
+    if (!isCloudConfigured() || !isAdminProfile(currentUser)) return;
+    const reqs = await fetchAccessRequestsFromCloud();
+    setAccessRequests(reqs);
+  };
+
+  const adminDecideAccessRequest = async (
+    email: string,
+    decision: 'approved' | 'rejected'
+  ): Promise<boolean> => {
+    if (!isCloudConfigured() || !isAdminProfile(currentUser)) return false;
+    const ok = await decideAccessRequestInCloud(email, decision);
+    if (ok) {
+      await refreshAccessRequests();
+      await refreshCloudUsers();
+    }
+    return ok;
+  };
+
   const refreshCloudUsers = async () => {
     if (!isCloudConfigured()) return;
     const cloudUsers = await pullAllUserProfilesFromCloud();
@@ -655,6 +688,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (isCloudConfigured() && isAuthenticated) {
       if (isAdminProfile(currentUser)) {
         refreshCloudUsers();
+        refreshAccessRequests();
+        const interval = window.setInterval(() => {
+          refreshAccessRequests();
+        }, 8000);
+        pullCloudDataForUser(currentUser);
+        return () => window.clearInterval(interval);
       }
       pullCloudDataForUser(currentUser);
     }
@@ -779,6 +818,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         (u) => u.email.toLowerCase() !== cleanEmail && (!resolvedUserId || u.id !== resolvedUserId)
       )
     );
+    setAccessRequests((prev) => prev.filter((r) => r.email.toLowerCase() !== cleanEmail));
     return true;
   };
 
@@ -913,12 +953,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   }, []);
 
-  // Login com suporte a Autenticação de Dois Fatores (2FA)
+  // Login com suporte a Autenticação de Dois Fatores (2FA) e verificação de aprovação
   const loginUserWith2FA = async (
     identifier: string,
     password: string,
     totpCode?: string
-  ): Promise<{ ok: boolean; requires2FA?: boolean; error?: string }> => {
+  ): Promise<{
+    ok: boolean;
+    requires2FA?: boolean;
+    accountStatus?: 'pending' | 'rejected';
+    error?: string;
+  }> => {
     const normalized = normalizeLoginIdentifier(identifier);
     const inputPass = (password || '').trim();
     const hashedInputPass = await hashPasswordSha256(inputPass);
@@ -941,6 +986,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
         await loginWithCloudPayload(cloudAccount);
         return { ok: true };
+      }
+
+      // Verifica se o e-mail está aguardando aprovação ou teve o acesso negado
+      if (normalized.includes('@')) {
+        const statusCheck = await requestOrCheckGoogleAccess(normalized);
+        if (statusCheck.status === 'rejected') {
+          return {
+            ok: false,
+            accountStatus: 'rejected',
+            error: 'Acesso Negado. Sua solicitação não foi autorizada pelo administrador.'
+          };
+        }
+        if (statusCheck.status === 'pending') {
+          return {
+            ok: false,
+            accountStatus: 'pending',
+            error: 'Sua conta aguarda aprovação do administrador.'
+          };
+        }
       }
     }
 
@@ -1387,6 +1451,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       currentUser,
       isAuthenticated,
       isCurrentUserAdmin,
+      accessRequests,
+      refreshAccessRequests,
+      adminDecideAccessRequest,
       loginUser,
       loginUserWith2FA,
       loginWithCloudPayload,
@@ -1447,6 +1514,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       currentUser,
       isAuthenticated,
       isCurrentUserAdmin,
+      accessRequests,
       cloudStatus,
       theme,
       workouts,
