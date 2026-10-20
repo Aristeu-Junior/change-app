@@ -1,4 +1,4 @@
-const CACHE_NAME = 'change-workout-v5';
+const CACHE_NAME = 'change-workout-v6';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
