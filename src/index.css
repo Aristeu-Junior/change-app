@@ -182,38 +182,38 @@ select {
   color-scheme: light;
 }
 
-/* Superfícies principais */
+/* Superfícies principais (telas, layouts e páginas) */
 .theme-light,
 .theme-light body,
+.theme-light #root,
 .theme-light .min-h-screen,
 .theme-light .min-h-dvh,
 .theme-light [class*="bg-[#0b0e14]"],
 .theme-light [class*="bg-[#0b0b0d]"],
-.theme-light [class*="bg-black"],
-.theme-light .bg-black {
+.theme-light [class*="bg-[#09090b]"] {
   background-color: #ffffff !important;
-  color: #000000 !important;
+  color: #09090b !important;
 }
 
-/* Superfícies secundárias e cartões */
+/* Superfícies secundárias (cartões de rotinas, histórico, exercícios e listas) */
 .theme-light [class*="bg-[#121214]"],
 .theme-light [class*="bg-[#141416]"],
+.theme-light [class*="bg-[#16181d]"],
 .theme-light [class*="bg-[#18181b]"],
 .theme-light [class*="bg-[#0d0d0f]"],
-.theme-light [class*="bg-[#16181d]"],
-.theme-light [class*="bg-zinc-900"],
-.theme-light [class*="bg-zinc-950"] {
+.theme-light div[class*="bg-zinc-900"],
+.theme-light div[class*="bg-zinc-950"] {
   background-color: #f4f4f5 !important;
-  color: #000000 !important;
+  color: #09090b !important;
 }
 
-/* Cartões destacados e elementos interativos secundários */
+/* Superfícies terciárias (inputs, chips, sub-cartões e itens destacados) */
 .theme-light [class*="bg-[#1c1c1f]"],
 .theme-light [class*="bg-[#1f1f23]"],
 .theme-light [class*="bg-[#27272a]"],
-.theme-light [class*="bg-zinc-800"] {
+.theme-light div[class*="bg-zinc-800"] {
   background-color: #e4e4e7 !important;
-  color: #000000 !important;
+  color: #09090b !important;
 }
 
 /* Bordas em modo claro */
@@ -221,20 +221,37 @@ select {
 .theme-light [class*="border-[#27272a]"],
 .theme-light [class*="border-[#3f3f46]"],
 .theme-light [class*="border-zinc-800"],
-.theme-light [class*="border-zinc-700"] {
+.theme-light [class*="border-zinc-700"],
+.theme-light [class*="border-white/10"],
+.theme-light [class*="border-white/15"],
+.theme-light [class*="border-white/20"],
+.theme-light [class*="border-white/30"],
+.theme-light [class*="border-white/40"] {
   border-color: #e4e4e7 !important;
 }
 
-/* Tipografia de alto contraste */
+/* Tipografia de alto contraste para o tema claro */
 .theme-light .text-white,
 .theme-light [class*="text-white"] {
-  color: #000000 !important;
+  color: #09090b !important;
+}
+
+.theme-light .text-zinc-50,
+.theme-light [class*="text-zinc-50"],
+.theme-light .text-zinc-100,
+.theme-light [class*="text-zinc-100"],
+.theme-light .text-zinc-200,
+.theme-light [class*="text-zinc-200"] {
+  color: #18181b !important;
+}
+
+.theme-light .text-zinc-300,
+.theme-light [class*="text-zinc-300"] {
+  color: #3f3f46 !important;
 }
 
 .theme-light .text-zinc-400,
-.theme-light [class*="text-zinc-400"],
-.theme-light .text-zinc-300,
-.theme-light [class*="text-zinc-300"] {
+.theme-light [class*="text-zinc-400"] {
   color: #52525b !important;
 }
 
@@ -243,49 +260,101 @@ select {
   color: #71717a !important;
 }
 
-/* Botões primários no Modo Claro: Fundo Preto com Texto Branco */
+/* =========================================================
+   BOTÕES E COMPONENTES ESCUROS NO MODO CLARO (GARANTIR CONTRASTE PERFEITO)
+   ========================================================= */
+
+/* Botões de Ação Primária no Modo Claro (Fundo Preto com Texto e Ícones 100% Brancos) */
 .theme-light button.bg-white,
 .theme-light button[class*="bg-white"],
-.theme-light [class*="bg-white"][class*="text-black"] {
+.theme-light [class*="bg-white"][class*="text-black"],
+.theme-light button.bg-black,
+.theme-light button[class*="bg-black"],
+.theme-light button[class*="bg-zinc-900"],
+.theme-light .btn-primary {
   background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
+}
+
+/* Forçar todos os textos e elementos dentro do botão primário para BRANCO */
+.theme-light button.bg-white *,
+.theme-light button[class*="bg-white"] *,
+.theme-light [class*="bg-white"][class*="text-black"] *,
+.theme-light button.bg-black *,
+.theme-light button[class*="bg-black"] *,
+.theme-light button[class*="bg-zinc-900"] *,
+.theme-light .btn-primary * {
   color: #ffffff !important;
 }
 
+/* Ícones dentro dos botões escuros */
 .theme-light button.bg-white svg,
 .theme-light button[class*="bg-white"] svg,
-.theme-light [class*="bg-white"][class*="text-black"] svg {
+.theme-light [class*="bg-white"][class*="text-black"] svg,
+.theme-light button.bg-black svg,
+.theme-light button[class*="bg-black"] svg,
+.theme-light button[class*="bg-zinc-900"] svg,
+.theme-light .btn-primary svg {
   color: #ffffff !important;
   stroke: #ffffff !important;
 }
 
-.theme-light button.bg-white svg.fill-black,
-.theme-light [class*="bg-white"][class*="text-black"] svg.fill-black {
+.theme-light button.bg-white svg[class*="fill-black"],
+.theme-light button.bg-white svg[class*="fill-white"],
+.theme-light [class*="bg-white"][class*="text-black"] svg[class*="fill-black"],
+.theme-light [class*="bg-white"][class*="text-black"] svg[class*="fill-white"],
+.theme-light button[class*="bg-black"] svg[class*="fill-white"],
+.theme-light button[class*="bg-black"] svg[class*="fill-black"] {
   fill: #ffffff !important;
 }
 
-/* Botões secundários no Modo Claro */
+/* Botões Secundários no Modo Claro (Fundo Cinza Suave com Texto Preto) */
 .theme-light button[class*="bg-[#1c1c1f]"],
 .theme-light button[class*="bg-[#27272a]"],
 .theme-light button[class*="bg-zinc-800"] {
   background-color: #e4e4e7 !important;
-  color: #000000 !important;
+  color: #09090b !important;
+  border-color: #d4d4d8 !important;
 }
 
-/* Formulários, Inputs e Selects */
+.theme-light button[class*="bg-[#1c1c1f]"] *,
+.theme-light button[class*="bg-[#27272a]"] *,
+.theme-light button[class*="bg-zinc-800"] * {
+  color: #09090b !important;
+}
+
+/* Badges e Pílulas Escuras no Modo Claro */
+.theme-light span[class*="bg-black"],
+.theme-light span[class*="bg-zinc-900"],
+.theme-light div[class*="bg-black"][class*="rounded-full"],
+.theme-light div[class*="bg-black"][class*="rounded-xl"] {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.theme-light span[class*="bg-black"] *,
+.theme-light span[class*="bg-zinc-900"] *,
+.theme-light div[class*="bg-black"][class*="rounded-full"] *,
+.theme-light div[class*="bg-black"][class*="rounded-xl"] * {
+  color: #ffffff !important;
+}
+
+/* Inputs, Textareas e Selects */
 .theme-light input,
 .theme-light textarea,
 .theme-light select {
   background-color: #ffffff !important;
-  color: #000000 !important;
+  color: #09090b !important;
   border-color: #d4d4d8 !important;
 }
 
 .theme-light input::placeholder,
 .theme-light textarea::placeholder {
-  color: #a1a1aa !important;
+  color: #71717a !important;
 }
 
-/* Overlays de modais com opacidade elegante */
+/* Overlays de modais */
 .theme-light .bg-black\/90,
 .theme-light .bg-black\/85,
 .theme-light .bg-black\/80,
@@ -297,11 +366,15 @@ select {
 /* Barra inferior no Modo Claro */
 .theme-light nav[class*="bg-[#0b0b0d]"],
 .theme-light nav[class*="bg-[#000000]"] {
-  background-color: rgba(255, 255, 255, 0.95) !important;
+  background-color: rgba(255, 255, 255, 0.96) !important;
   border-top-color: #e4e4e7 !important;
 }
 
-/* Linhas de séries concluídas */
+/* Linhas de séries concluídas e listagens */
 .theme-light .bg-white\/10 {
   background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.theme-light .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.03) !important;
 }

@@ -68,22 +68,30 @@ export const DesktopSidebar: React.FC<NavigationProps> = ({ currentTab, onSelect
         <div className="space-y-6">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-white text-black font-black flex items-center justify-center shadow-md border border-zinc-300 shrink-0">
-                <Dumbbell className="w-5 h-5 stroke-[2.5] text-black" />
+              <div
+                className={`w-9 h-9 rounded-xl font-black flex items-center justify-center shadow-md border shrink-0 ${
+                  isLight ? 'bg-black text-white border-black' : 'bg-white text-black border-zinc-300'
+                }`}
+              >
+                <Dumbbell className={`w-5 h-5 stroke-[2.5] ${isLight ? 'text-white' : 'text-black'}`} />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-base font-black tracking-widest text-white">CHANGE</span>
+                  <span className={`text-base font-black tracking-widest ${isLight ? 'text-black' : 'text-white'}`}>
+                    CHANGE
+                  </span>
                   {cloudStatus === 'synced' && (
                     <span
                       title="Sincronizado na nuvem"
-                      className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300"
+                      className={`inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                        isLight ? 'bg-zinc-200 text-zinc-800' : 'bg-zinc-800 text-zinc-300'
+                      }`}
                     >
                       <Cloud className="w-2.5 h-2.5" /> Nuvem
                     </span>
                   )}
                 </div>
-                <span className="text-[10px] text-zinc-500 font-semibold block">
+                <span className={`text-[10px] font-semibold block ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
                   Performance & Ranking
                 </span>
               </div>
@@ -101,7 +109,11 @@ export const DesktopSidebar: React.FC<NavigationProps> = ({ currentTab, onSelect
                   onClick={() => onSelectTab(item.id)}
                   className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition ${
                     isActive
-                      ? 'bg-white text-black font-black shadow-md'
+                      ? isLight
+                        ? 'bg-black text-white font-black shadow-md'
+                        : 'bg-white text-black font-black shadow-md'
+                      : isLight
+                      ? 'text-zinc-600 hover:text-black hover:bg-zinc-100'
                       : 'text-zinc-400 hover:text-white hover:bg-[#141416]'
                   }`}
                 >
@@ -120,11 +132,19 @@ export const DesktopSidebar: React.FC<NavigationProps> = ({ currentTab, onSelect
             <div className="pt-2">
               <button
                 onClick={() => setWorkoutModalOpen(true)}
-                className="w-full p-3.5 bg-white text-black rounded-2xl shadow-xl flex flex-col gap-2 text-left transition hover:opacity-95 border border-zinc-200"
+                className={`w-full p-3.5 rounded-2xl shadow-xl flex flex-col gap-2 text-left transition hover:opacity-95 border ${
+                  isLight
+                    ? 'bg-zinc-900 text-white border-zinc-700'
+                    : 'bg-white text-black border-zinc-200'
+                }`}
               >
                 <div className="flex items-center justify-between w-full">
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-black text-white flex items-center gap-1">
-                    <Play className="w-2.5 h-2.5 fill-white" /> Ao Vivo
+                  <span
+                    className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded flex items-center gap-1 ${
+                      isLight ? 'bg-white text-black' : 'bg-black text-white'
+                    }`}
+                  >
+                    <Play className={`w-2.5 h-2.5 ${isLight ? 'fill-black' : 'fill-white'}`} /> Ao Vivo
                   </span>
                   <span className="text-xs font-black flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" />
@@ -133,7 +153,7 @@ export const DesktopSidebar: React.FC<NavigationProps> = ({ currentTab, onSelect
                 </div>
                 <div>
                   <span className="text-xs font-black block truncate">{activeWorkout.title}</span>
-                  <span className="text-[10px] text-zinc-600 font-bold">
+                  <span className={`text-[10px] font-bold ${isLight ? 'text-zinc-400' : 'text-zinc-600'}`}>
                     Clique para retomar o treino →
                   </span>
                 </div>
@@ -143,43 +163,63 @@ export const DesktopSidebar: React.FC<NavigationProps> = ({ currentTab, onSelect
         </div>
 
         {/* Rodapé da Sidebar: Conta Ativa + Alternador de Tema */}
-        <div className="space-y-2.5 pt-4 border-t border-[#27272a]">
+        <div className={`space-y-2.5 pt-4 border-t ${isLight ? 'border-zinc-200' : 'border-[#27272a]'}`}>
           <button
             onClick={() => setIsAccountModalOpen(true)}
-            className="w-full p-2.5 rounded-xl bg-[#141416] hover:bg-[#1c1c1f] border border-[#27272a] flex items-center justify-between gap-2 transition text-left"
+            className={`w-full p-2.5 rounded-xl border flex items-center justify-between gap-2 transition text-left ${
+              isLight
+                ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-black'
+                : 'bg-[#141416] hover:bg-[#1c1c1f] border-[#27272a] text-white'
+            }`}
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-full bg-white text-black font-black flex items-center justify-center text-xs shrink-0">
+              <div
+                className={`w-8 h-8 rounded-full font-black flex items-center justify-center text-xs shrink-0 ${
+                  isLight ? 'bg-black text-white' : 'bg-white text-black'
+                }`}
+              >
                 {currentUser.name.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-white truncate">{currentUser.name}</span>
+                  <span className={`text-xs font-black truncate ${isLight ? 'text-black' : 'text-white'}`}>
+                    {currentUser.name}
+                  </span>
                   {isCurrentUserAdmin && (
-                    <span className="px-1.5 py-0.5 rounded bg-white text-black text-[8px] font-black uppercase shrink-0">
+                    <span
+                      className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase shrink-0 ${
+                        isLight ? 'bg-black text-white' : 'bg-white text-black'
+                      }`}
+                    >
                       Admin
                     </span>
                   )}
                 </div>
-                <span className="text-[10px] text-zinc-400 truncate block">{currentUser.email}</span>
+                <span className={`text-[10px] truncate block ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                  {currentUser.email}
+                </span>
               </div>
             </div>
-            <Users className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+            <Users className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-zinc-600' : 'text-zinc-400'}`} />
           </button>
 
           <button
             onClick={toggleTheme}
-            className="w-full py-2.5 px-3 bg-[#141416] hover:bg-[#1c1c1f] border border-[#27272a] rounded-xl text-white transition flex items-center justify-between text-xs font-bold"
+            className={`w-full py-2.5 px-3 border rounded-xl transition flex items-center justify-between text-xs font-bold ${
+              isLight
+                ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-black'
+                : 'bg-[#141416] hover:bg-[#1c1c1f] border-[#27272a] text-white'
+            }`}
           >
-            <span className="text-zinc-400">Aparência</span>
-            <span className="flex items-center gap-1.5 font-black text-white">
+            <span className={isLight ? 'text-zinc-600' : 'text-zinc-400'}>Aparência</span>
+            <span className={`flex items-center gap-1.5 font-black ${isLight ? 'text-black' : 'text-white'}`}>
               {isLight ? (
                 <>
-                  <Moon className="w-3.5 h-3.5" /> Modo Escuro
+                  <Moon className="w-3.5 h-3.5 text-black" /> Modo Escuro
                 </>
               ) : (
                 <>
-                  <Sun className="w-3.5 h-3.5" /> Modo Claro
+                  <Sun className="w-3.5 h-3.5 text-white" /> Modo Claro
                 </>
               )}
             </span>
@@ -210,9 +250,9 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
   const tabClass = (tab: TabType) => {
     const isActive = currentTab === tab;
     if (isActive) {
-      return isLight ? 'text-black font-extrabold scale-105' : 'text-white font-extrabold scale-105';
+      return isLight ? 'text-black font-black scale-105' : 'text-white font-black scale-105';
     }
-    return isLight ? 'text-zinc-400 hover:text-zinc-600' : 'text-zinc-500 hover:text-zinc-300';
+    return isLight ? 'text-zinc-500 hover:text-black' : 'text-zinc-500 hover:text-zinc-300';
   };
 
   return (
