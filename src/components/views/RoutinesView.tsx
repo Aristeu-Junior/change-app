@@ -26,6 +26,7 @@ import { Routine, ExerciseTemplate } from '../../types';
 import { RoutineEditorModal } from './RoutineEditorModal';
 import { UserAccountModal } from '../UserAccountModal';
 import { ExerciseVisualDemo } from '../ExerciseVisualDemo';
+import { SymmetryBodyMap } from '../SymmetryBodyMap';
 import { POPULAR_FOLDER_PRESETS, FolderPreset } from '../../data/defaultRoutines';
 
 interface RoutineQueueMeta {
@@ -370,6 +371,11 @@ export const RoutinesView: React.FC = () => {
 
   const renderRoutineCard = (meta: RoutineQueueMeta, groupQueue: RoutineQueueMeta[]) => {
     const r = meta.routine;
+    const targetMuscles = Array.from(extractTargetMuscles(r.title, r.exercises));
+    const totalSets = r.exercises.reduce((acc, ex) => acc + (ex.sets?.length || 0), 0);
+    const isBackRoutine = targetMuscles.some((m) =>
+      ['costas', 'trapezio', 'lombar', 'dorsal', 'isquiotibiais', 'gluteos'].includes(m)
+    );
 
     return (
       <div
@@ -408,27 +414,55 @@ export const RoutinesView: React.FC = () => {
           </div>
         )}
 
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="text-sm font-black text-white hover:text-zinc-300 transition">
+        {/* Cabeçalho do Card estilo Symmetry com Boneco Anatômico na Direita */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-sky-400 mb-1">
+              <span>{r.exercises.length} {r.exercises.length === 1 ? 'exercício' : 'exercícios'}</span>
+              <span>•</span>
+              <span>{totalSets} séries</span>
+            </div>
+            <h3 className="text-base font-black text-white hover:text-zinc-300 transition truncate">
               {r.title}
             </h3>
-            {r.notes && (
-              <p className="text-[11px] text-zinc-400 mt-0.5 line-clamp-1">{r.notes}</p>
+            {r.notes ? (
+              <p className="text-[11px] text-zinc-400 mt-1 line-clamp-1">{r.notes}</p>
+            ) : (
+              <div className="text-[11px] text-zinc-400 mt-1.5 space-y-0.5">
+                {r.exercises.slice(0, 3).map((ex, i) => (
+                  <span key={i} className="block truncate text-zinc-300">• {ex.title}</span>
+                ))}
+                {r.exercises.length > 3 && (
+                  <span className="text-[10px] text-zinc-500 font-bold block">+ {r.exercises.length - 3} outros</span>
+                )}
+              </div>
             )}
           </div>
 
-          {/* Menu de Opções (Editar, Duplicar, Excluir) */}
-          <div className="relative">
-            <button
-              onClick={() =>
-                setActiveMenuRoutineId(activeMenuRoutineId === r.id ? null : r.id)
-              }
-              className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition"
-              title="Mais opções do plano"
+          <div className="flex items-start gap-1.5 shrink-0">
+            {/* Boneco do Symmetry no Card */}
+            <div
+              className="p-1 rounded-xl bg-black/60 border border-zinc-800/80 shadow-inner flex items-center justify-center cursor-pointer hover:border-sky-500/50 transition"
+              title="Músculos trabalhados neste treino (Symmetry)"
             >
-              <MoreVertical className="w-4 h-4" />
-            </button>
+              <SymmetryBodyMap
+                primaryMuscles={targetMuscles.length > 0 ? targetMuscles : ['peito']}
+                view={isBackRoutine ? 'posterior' : 'anterior'}
+                size="mini"
+              />
+            </div>
+
+            {/* Menu de Opções (Editar, Duplicar, Excluir) */}
+            <div className="relative">
+              <button
+                onClick={() =>
+                  setActiveMenuRoutineId(activeMenuRoutineId === r.id ? null : r.id)
+                }
+                className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition"
+                title="Mais opções do plano"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
 
             {activeMenuRoutineId === r.id && (
               <div className="absolute right-0 top-8 z-30 w-44 bg-[#1c1c1f] border border-[#3f3f46] rounded-xl shadow-2xl py-1 text-xs text-zinc-200 animate-in fade-in duration-100">
@@ -460,6 +494,7 @@ export const RoutinesView: React.FC = () => {
                 </button>
               </div>
             )}
+            </div>
           </div>
         </div>
 

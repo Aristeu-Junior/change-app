@@ -52,6 +52,7 @@ import {
 } from '../../services/cloudSync';
 import { ShareRankModal } from '../ShareRankModal';
 import { RanksGuideModal } from '../RanksGuideModal';
+import { SymmetryBodyMap, MuscleGroupKey } from '../SymmetryBodyMap';
 
 // Emblema Hexagonal Geométrico no estilo Hevy Rank
 const HevyRankEmblem: React.FC<{ rank: RankInfo; size?: 'sm' | 'md' | 'lg' }> = ({
@@ -230,6 +231,51 @@ export const AnalyticsView: React.FC = () => {
     () => calculateMuscleGroupRanks(workouts, personalRecords, exercises),
     [workouts, personalRecords, exercises]
   );
+
+  // Mapeia os ranks dos grupos musculares para o Boneco Symmetry HD
+  const symmetryMuscleTiers = useMemo(() => {
+    const tiers: Partial<Record<MuscleGroupKey, { tier: string; color: string; label: string }>> = {};
+
+    const tierColorMap: Record<string, string> = {
+      unranked: '#64748B',
+      iron: '#94A3B8',
+      bronze: '#D97706',
+      silver: '#CBD5E1',
+      gold: '#FACC15',
+      platinum: '#2DD4BF',
+      diamond: '#38BDF8',
+      titan: '#C084FC'
+    };
+
+    muscleRanks.forEach((m) => {
+      const color = tierColorMap[m.rank.tierId] || '#38BDF8';
+      const info = { tier: m.rank.tierId, color, label: m.rank.fullLabel };
+
+      if (m.id === 'peito') tiers.peito = info;
+      if (m.id === 'costas') {
+        tiers.costas = info;
+        tiers.trapezio = info;
+        tiers.lombar = info;
+      }
+      if (m.id === 'ombros') tiers.ombros = info;
+      if (m.id === 'biceps') {
+        tiers.biceps = info;
+        tiers.antebracos = info;
+      }
+      if (m.id === 'triceps') tiers.triceps = info;
+      if (m.id === 'quadriceps') {
+        tiers.quadriceps = info;
+        tiers.panturrilhas = info;
+      }
+      if (m.id === 'gluteos') {
+        tiers.gluteos = info;
+        tiers.isquiotibiais = info;
+      }
+      if (m.id === 'abdomen') tiers.abdomen = info;
+    });
+
+    return tiers;
+  }, [muscleRanks]);
 
   const exerciseRanksList = useMemo(() => {
     return Object.values(personalRecords)
@@ -729,6 +775,71 @@ export const AnalyticsView: React.FC = () => {
                 <Share2 className="w-3.5 h-3.5" />
                 <span>Gerar Card para WhatsApp</span>
               </button>
+            </div>
+          </div>
+
+          {/* DISPLAY CENTRAL SYMMETRY: CONQUISTE SEU RANK */}
+          <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-xl space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-sky-400 block">
+                  Symmetry Physique Analysis
+                </span>
+                <h3 className="text-base font-black text-white mt-0.5">Conquiste seu Rank</h3>
+              </div>
+              <span className="text-[10px] font-bold text-zinc-500 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded-full">
+                Bio-Android 3D
+              </span>
+            </div>
+
+            {/* Régua de Percentis de Rank (80% a Top 1%) */}
+            <div className="flex items-center justify-between gap-1 overflow-x-auto no-scrollbar py-1">
+              {[
+                { pct: '80%', tier: 'Ferro', color: '#94A3B8' },
+                { pct: '60%', tier: 'Bronze', color: '#D97706' },
+                { pct: '40%', tier: 'Prata', color: '#CBD5E1' },
+                { pct: '30%', tier: 'Ouro', color: '#FACC15' },
+                { pct: '20%', tier: 'Platina', color: '#2DD4BF' },
+                { pct: '10%', tier: 'Diamante', color: '#38BDF8' },
+                { pct: '5%', tier: 'Mestre', color: '#818CF8' },
+                { pct: 'TOP 1%', tier: 'Symmetry', color: '#C084FC' }
+              ].map((r) => {
+                const isCurrentTier =
+                  overallRank.tierId === r.tier.toLowerCase() ||
+                  (r.tier === 'Symmetry' && overallRank.tierId === 'titan');
+                return (
+                  <div
+                    key={r.tier}
+                    className={`flex flex-col items-center px-2 py-1 rounded-lg shrink-0 border transition ${
+                      isCurrentTier
+                        ? 'bg-white/10 border-white shadow-sm scale-105'
+                        : 'border-transparent opacity-65'
+                    }`}
+                  >
+                    <div
+                      className="w-2.5 h-2.5 rounded-full mb-1 shadow-sm"
+                      style={{ backgroundColor: r.color }}
+                    />
+                    <span className="text-[9px] font-black tracking-tight" style={{ color: r.color }}>
+                      {r.pct}
+                    </span>
+                    <span className="text-[8px] font-bold text-zinc-400">{r.tier}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Boneco Symmetry no Centro com Cores Reais de Cada Músculo */}
+            <div className="py-3 flex flex-col items-center justify-center bg-black/60 rounded-xl border border-zinc-800/80 shadow-inner">
+              <SymmetryBodyMap
+                muscleTiers={symmetryMuscleTiers}
+                size="md"
+                view="toggle"
+                interactive
+              />
+              <span className="text-[10px] text-zinc-500 font-semibold mt-2">
+                Toque em Frente / Costas para inspecionar seus grupos musculares
+              </span>
             </div>
           </div>
 

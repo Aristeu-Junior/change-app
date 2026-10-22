@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { ExerciseTemplate } from '../types';
 import { useApp } from '../context/AppContext';
+import { SymmetryBodyMap } from './SymmetryBodyMap';
 
 interface ExerciseVisualDemoProps {
   exercise: ExerciseTemplate;
@@ -185,260 +186,19 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
     );
   };
 
-  // 2. MAPA ANATÔMICO CORPORAL ALTA DEFINIÇÃO (SYMMETRIA SYSTEM)
+  // 2. MAPA ANATÔMICO CORPORAL SYMMETRY (ANDRÓIDE BIO-VETORIAL)
   const renderAnatomyMap = () => {
     return (
-      <div className={`w-full flex flex-col sm:flex-row items-center justify-around gap-4 py-5 px-3 rounded-2xl border transition-colors ${
+      <div className={`w-full flex flex-col items-center justify-center py-4 px-3 rounded-2xl border transition-colors ${
         isLight ? 'bg-white border-zinc-200' : 'bg-black border-zinc-800'
       }`}>
-        {/* Visão Anterior (Frente) */}
-        <div className="flex flex-col items-center">
-          <span className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400 mb-2 flex items-center gap-1">
-            <User className="w-3 h-3" /> Visão Anterior (Frente)
-          </span>
-
-          <svg viewBox="0 0 160 260" className="w-36 h-60 select-none drop-shadow-md pointer-events-none">
-            {/* Cabeça e Pescoço */}
-            <path
-              d="M 80 16 C 72 16, 68 26, 68 36 C 68 46, 73 52, 80 52 C 87 52, 92 46, 92 36 C 92 26, 88 16, 80 16 Z"
-              fill={neutralBodyColor}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-            <path d="M 74 52 L 72 63 L 88 63 L 86 52 Z" fill={neutralBodyColor} stroke={strokeColor} strokeWidth="1" />
-
-            {/* Deltóides / Ombros (Esquerdo e Direito) */}
-            <path
-              d="M 57 66 C 47 67, 43 75, 43 85 C 43 93, 47 98, 53 97 C 56 93, 57 81, 58 69 Z"
-              fill={getMuscleFill('ombros')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-            <path
-              d="M 103 66 C 113 67, 117 75, 117 85 C 117 93, 113 98, 107 97 C 104 93, 103 81, 102 69 Z"
-              fill={getMuscleFill('ombros')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-
-            {/* Peitoral Maior (Clavicular e Esternal) */}
-            <path
-              d="M 79 66 L 58 68 C 54 74, 55 86, 62 93 C 70 98, 77 96, 79 92 Z"
-              fill={getMuscleFill('peito')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-            <path
-              d="M 81 66 L 102 68 C 106 74, 105 86, 98 93 C 90 98, 83 96, 81 92 Z"
-              fill={getMuscleFill('peito')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-
-            {/* Bíceps Braquial */}
-            <path
-              d="M 43 90 C 39 96, 38 109, 42 121 C 46 123, 50 121, 52 113 C 54 103, 51 93, 47 89 Z"
-              fill={getMuscleFill('biceps')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-            <path
-              d="M 117 90 C 121 96, 122 109, 118 121 C 114 123, 110 121, 108 113 C 106 103, 109 93, 113 89 Z"
-              fill={getMuscleFill('biceps')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-
-            {/* Antebraços */}
-            <path
-              d="M 41 124 C 37 132, 35 147, 39 159 C 42 161, 45 160, 47 153 C 50 143, 49 131, 46 123 Z"
-              fill={getMuscleFill('antebracos')}
-              stroke={strokeColor}
-              strokeWidth="1"
-            />
-            <path
-              d="M 119 124 C 123 132, 125 147, 121 159 C 118 161, 115 160, 113 153 C 110 143, 111 131, 114 123 Z"
-              fill={getMuscleFill('antebracos')}
-              stroke={strokeColor}
-              strokeWidth="1"
-            />
-
-            {/* Abdômen (Reto Abdominal 6-Pack e Oblíquos) */}
-            {/* Superior */}
-            <rect x="71" y="96" width="8" height="10" rx="2" fill={getMuscleFill('abdomen')} stroke={strokeColor} strokeWidth="0.8" />
-            <rect x="81" y="96" width="8" height="10" rx="2" fill={getMuscleFill('abdomen')} stroke={strokeColor} strokeWidth="0.8" />
-            {/* Médio */}
-            <rect x="71" y="108" width="8" height="10" rx="2" fill={getMuscleFill('abdomen')} stroke={strokeColor} strokeWidth="0.8" />
-            <rect x="81" y="108" width="8" height="10" rx="2" fill={getMuscleFill('abdomen')} stroke={strokeColor} strokeWidth="0.8" />
-            {/* Inferior */}
-            <rect x="72" y="120" width="7" height="11" rx="2" fill={getMuscleFill('abdomen')} stroke={strokeColor} strokeWidth="0.8" />
-            <rect x="81" y="120" width="7" height="11" rx="2" fill={getMuscleFill('abdomen')} stroke={strokeColor} strokeWidth="0.8" />
-
-            {/* Oblíquos Externos */}
-            <path d="M 63 98 C 61 108, 62 120, 69 128 L 70 122 C 67 115, 67 105, 69 98 Z" fill={getMuscleFill('abdomen')} stroke={strokeColor} strokeWidth="0.8" />
-            <path d="M 97 98 C 99 108, 98 120, 91 128 L 90 122 C 93 115, 93 105, 91 98 Z" fill={getMuscleFill('abdomen')} stroke={strokeColor} strokeWidth="0.8" />
-
-            {/* Pelve e Quadril */}
-            <path d="M 70 133 L 90 133 L 86 142 L 74 142 Z" fill={neutralBodyColor} stroke={strokeColor} strokeWidth="0.8" />
-
-            {/* Quadríceps (Coxas Frente) */}
-            <path
-              d="M 64 136 C 58 147, 56 166, 60 183 C 64 185, 68 185, 69 177 C 71 161, 71 147, 70 136 Z"
-              fill={getMuscleFill('quadriceps') !== '#E4E4E7' && getMuscleFill('quadriceps') !== '#27272A' ? getMuscleFill('quadriceps') : getMuscleFill('pernas')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-            <path
-              d="M 96 136 C 102 147, 104 166, 100 183 C 96 185, 92 185, 91 177 C 89 161, 89 147, 90 136 Z"
-              fill={getMuscleFill('quadriceps') !== '#E4E4E7' && getMuscleFill('quadriceps') !== '#27272A' ? getMuscleFill('quadriceps') : getMuscleFill('pernas')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-
-            {/* Joelhos */}
-            <circle cx="65" cy="188" r="3.5" fill={neutralBodyColor} stroke={strokeColor} strokeWidth="1" />
-            <circle cx="95" cy="188" r="3.5" fill={neutralBodyColor} stroke={strokeColor} strokeWidth="1" />
-
-            {/* Panturrilhas / Canelas */}
-            <path
-              d="M 60 194 C 56 203, 57 220, 62 234 C 65 234, 68 233, 69 224 C 70 213, 69 201, 68 194 Z"
-              fill={getMuscleFill('panturrilhas')}
-              stroke={strokeColor}
-              strokeWidth="1.1"
-            />
-            <path
-              d="M 100 194 C 104 203, 103 220, 98 234 C 95 234, 92 233, 91 224 C 90 213, 91 201, 92 194 Z"
-              fill={getMuscleFill('panturrilhas')}
-              stroke={strokeColor}
-              strokeWidth="1.1"
-            />
-
-            {/* Pés */}
-            <path d="M 59 236 C 56 242, 58 246, 65 246 C 68 246, 68 241, 66 236 Z" fill={neutralBodyColor} stroke={strokeColor} strokeWidth="0.8" />
-            <path d="M 101 236 C 104 242, 102 246, 95 246 C 92 246, 92 241, 94 236 Z" fill={neutralBodyColor} stroke={strokeColor} strokeWidth="0.8" />
-          </svg>
-        </div>
-
-        {/* Visão Posterior (Costas) */}
-        <div className="flex flex-col items-center">
-          <span className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400 mb-2 flex items-center gap-1">
-            <User className="w-3 h-3" /> Visão Posterior (Costas)
-          </span>
-
-          <svg viewBox="0 0 160 260" className="w-36 h-60 select-none drop-shadow-md pointer-events-none">
-            {/* Cabeça e Nuca */}
-            <path
-              d="M 80 16 C 72 16, 68 26, 68 36 C 68 46, 73 52, 80 52 C 87 52, 92 46, 92 36 C 92 26, 88 16, 80 16 Z"
-              fill={neutralBodyColor}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-
-            {/* Trapézio (Formato Diamante / Pipa) */}
-            <polygon
-              points="80,53 66,66 74,89 80,97 86,89 94,66"
-              fill={getMuscleFill('trapezio')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-
-            {/* Deltóides Posteriores */}
-            <path
-              d="M 57 66 C 49 69, 45 77, 45 86 C 49 88, 55 86, 58 79 C 59 74, 59 69, 57 66 Z"
-              fill={getMuscleFill('ombros')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-            <path
-              d="M 103 66 C 111 69, 115 77, 115 86 C 111 88, 105 86, 102 79 C 101 74, 101 69, 103 66 Z"
-              fill={getMuscleFill('ombros')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-
-            {/* Tríceps Braquial */}
-            <path
-              d="M 44 88 C 40 95, 39 107, 43 119 C 47 121, 51 119, 52 111 C 52 101, 50 92, 47 88 Z"
-              fill={getMuscleFill('triceps')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-            <path
-              d="M 116 88 C 120 95, 121 107, 117 119 C 113 121, 109 119, 108 111 C 108 101, 110 92, 113 88 Z"
-              fill={getMuscleFill('triceps')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-
-            {/* Grande Dorsal (Costas / Asa em V) */}
-            <path
-              d="M 68 76 C 60 84, 58 101, 66 116 L 76 113 C 74 101, 72 88, 72 76 Z"
-              fill={getMuscleFill('costas')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-            <path
-              d="M 92 76 C 100 84, 102 101, 94 116 L 84 113 C 86 101, 88 88, 88 76 Z"
-              fill={getMuscleFill('costas')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-
-            {/* Lombar / Eretor da Espinha */}
-            <polygon
-              points="76,104 74,127 80,129 86,127 84,104"
-              fill={getMuscleFill('lombar')}
-              stroke={strokeColor}
-              strokeWidth="1"
-            />
-
-            {/* Glúteos (Glúteo Máximo e Médio) */}
-            <path
-              d="M 63 128 C 57 135, 58 153, 66 159 C 74 163, 79 157, 80 147 L 80 130 Z"
-              fill={getMuscleFill('gluteos')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-            <path
-              d="M 97 128 C 103 135, 102 153, 94 159 C 86 163, 81 157, 80 147 L 80 130 Z"
-              fill={getMuscleFill('gluteos')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-
-            {/* Isquiotibiais (Posterior de Coxa) */}
-            <path
-              d="M 62 161 C 59 171, 59 183, 63 189 C 68 190, 72 187, 73 179 C 75 171, 74 163, 72 160 Z"
-              fill={getMuscleFill('isquiotibiais')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-            <path
-              d="M 98 161 C 101 171, 101 183, 97 189 C 92 190, 88 187, 87 179 C 85 171, 86 163, 88 160 Z"
-              fill={getMuscleFill('isquiotibiais')}
-              stroke={strokeColor}
-              strokeWidth="1.2"
-            />
-
-            {/* Panturrilhas Posteriores (Gastrocnêmio) */}
-            <path
-              d="M 60 195 C 55 205, 56 219, 63 234 C 66 235, 69 233, 70 224 C 71 212, 69 201, 68 195 Z"
-              fill={getMuscleFill('panturrilhas')}
-              stroke={strokeColor}
-              strokeWidth="1.1"
-            />
-            <path
-              d="M 100 195 C 105 205, 104 219, 97 234 C 94 235, 91 233, 90 224 C 89 212, 91 201, 92 195 Z"
-              fill={getMuscleFill('panturrilhas')}
-              stroke={strokeColor}
-              strokeWidth="1.1"
-            />
-
-            {/* Pés */}
-            <path d="M 59 236 C 56 242, 58 246, 65 246 C 68 246, 68 241, 66 236 Z" fill={neutralBodyColor} stroke={strokeColor} strokeWidth="0.8" />
-            <path d="M 101 236 C 104 242, 102 246, 95 246 C 92 246, 92 241, 94 236 Z" fill={neutralBodyColor} stroke={strokeColor} strokeWidth="0.8" />
-          </svg>
-        </div>
+        <SymmetryBodyMap
+          primaryMuscles={[pMuscle]}
+          secondaryMuscles={sMuscles}
+          view="both"
+          size="md"
+          showLabels
+        />
       </div>
     );
   };
@@ -654,10 +414,10 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
           </button>
         </div>
 
-        {/* Badge Symmetria */}
+        {/* Badge Symmetry */}
         <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-zinc-400 px-2">
-          <Sparkles className="w-3 h-3 text-red-500" />
-          <span className="hidden sm:inline">Symmetria Biomechanics</span>
+          <Sparkles className="w-3 h-3 text-sky-400" />
+          <span className="hidden sm:inline">Symmetry Biomechanics</span>
         </div>
       </div>
 
@@ -669,19 +429,19 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
         {viewMode === 'anatomy' && renderAnatomyMap()}
         {viewMode === 'cadence' && renderCadenceEngine()}
 
-        {/* Legenda Anatômica dos Músculos */}
+        {/* Legenda Anatômica dos Músculos (Symmetry Style) */}
         <div className="flex items-center justify-center gap-4 mt-3 text-[10px] font-bold text-zinc-400">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block shadow-sm" />
-            <span className={isLight ? 'text-zinc-800' : 'text-zinc-200'}>Músculo Alvo (Primário)</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block shadow-sm shadow-sky-400/50" />
+            <span className={isLight ? 'text-zinc-800' : 'text-zinc-200'}>Músculo Alvo (Symmetry)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block shadow-sm" />
-            <span className="text-zinc-500">Músculo Sinergista</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block shadow-sm shadow-amber-500/50" />
+            <span className="text-zinc-400">Músculo Sinergista</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className={`w-2.5 h-2.5 rounded-full inline-block shadow-sm ${isLight ? 'bg-zinc-300' : 'bg-zinc-700'}`} />
-            <span className="text-zinc-500">Manequim</span>
+            <span className={`w-2.5 h-2.5 rounded-full inline-block shadow-sm ${isLight ? 'bg-slate-300' : 'bg-slate-800'}`} />
+            <span className="text-zinc-500">Manequim Android</span>
           </div>
         </div>
       </div>
