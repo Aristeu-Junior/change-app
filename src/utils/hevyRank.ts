@@ -36,6 +36,28 @@ export interface MuscleRankItem {
   rank: RankInfo;
 }
 
+export interface RankTierShowcase {
+  id: RankTierId;
+  name: string;
+  subTiers: string;
+  minXp: number;
+  maxXp: number | null;
+  approxWorkouts: string;
+  description: string;
+  badgeStyle: {
+    bg: string;
+    border: string;
+    text: string;
+    accent: string;
+  };
+  examples: {
+    supino: string;
+    agachamento: string;
+    legPress: string;
+    rosca: string;
+  };
+}
+
 const TIER_STYLES: Record<
   RankTierId,
   { bg: string; border: string; text: string; accent: string }
@@ -140,6 +162,137 @@ const TIER_DEFINITIONS: { id: RankTierId; name: string }[] = [
   { id: 'platinum', name: 'Platina' },
   { id: 'diamond', name: 'Diamante' },
   { id: 'titan', name: 'Titã' }
+];
+
+export const ALL_RANKS_SHOWCASE: RankTierShowcase[] = [
+  {
+    id: 'unranked',
+    name: 'Sem Rank',
+    subTiers: 'Iniciante',
+    minXp: 0,
+    maxXp: 199,
+    approxWorkouts: 'Primeiro treino',
+    description: 'Início da jornada de treinos. Primeiros passos para construir disciplina física e hábito.',
+    badgeStyle: TIER_STYLES.unranked,
+    examples: {
+      supino: '< 15 kg',
+      agachamento: '< 25 kg',
+      legPress: '< 40 kg',
+      rosca: '< 6 kg'
+    }
+  },
+  {
+    id: 'iron',
+    name: 'Ferro',
+    subTiers: 'I • II • III',
+    minXp: 200,
+    maxXp: 999,
+    approxWorkouts: '1 a 5 treinos',
+    description: 'Fase de adaptação neural e aprendizado motor. Regularidade inicial e postura sendo consolidadas.',
+    badgeStyle: TIER_STYLES.iron,
+    examples: {
+      supino: '15 - 34 kg',
+      agachamento: '25 - 49 kg',
+      legPress: '40 - 79 kg',
+      rosca: '6 - 11 kg'
+    }
+  },
+  {
+    id: 'bronze',
+    name: 'Bronze',
+    subTiers: 'I • II • III',
+    minXp: 1000,
+    maxXp: 2999,
+    approxWorkouts: '5 a 15 treinos (~1 mês)',
+    description: 'Primeiro grande marco de consistência. As cargas aumentam e o corpo responde ao esforço regular.',
+    badgeStyle: TIER_STYLES.bronze,
+    examples: {
+      supino: '35 - 54 kg',
+      agachamento: '50 - 79 kg',
+      legPress: '80 - 139 kg',
+      rosca: '12 - 17 kg'
+    }
+  },
+  {
+    id: 'silver',
+    name: 'Prata',
+    subTiers: 'I • II • III',
+    minXp: 3000,
+    maxXp: 6999,
+    approxWorkouts: '15 a 35 treinos (~2 a 3 meses)',
+    description: 'Nível intermediário sólido. Mudanças visíveis na composição corporal e boa técnica nos exercícios.',
+    badgeStyle: TIER_STYLES.silver,
+    examples: {
+      supino: '55 - 74 kg',
+      agachamento: '80 - 109 kg',
+      legPress: '140 - 199 kg',
+      rosca: '18 - 25 kg'
+    }
+  },
+  {
+    id: 'gold',
+    name: 'Ouro',
+    subTiers: 'I • II • III',
+    minXp: 7000,
+    maxXp: 14999,
+    approxWorkouts: '35 a 75 treinos (~6 meses)',
+    description: 'Intermediário avançado. Domínio técnico expressivo, recuperação eficiente e disciplina inabalável.',
+    badgeStyle: TIER_STYLES.gold,
+    examples: {
+      supino: '75 - 94 kg',
+      agachamento: '110 - 144 kg',
+      legPress: '200 - 279 kg',
+      rosca: '26 - 33 kg'
+    }
+  },
+  {
+    id: 'platinum',
+    name: 'Platina',
+    subTiers: 'I • II • III',
+    minXp: 15000,
+    maxXp: 29999,
+    approxWorkouts: '75 a 150 treinos (~1 ano)',
+    description: 'Atleta dedicado de elite da academia. Cargas de respeito e físico atlético lapidado.',
+    badgeStyle: TIER_STYLES.platinum,
+    examples: {
+      supino: '95 - 114 kg',
+      agachamento: '145 - 179 kg',
+      legPress: '280 - 359 kg',
+      rosca: '34 - 41 kg'
+    }
+  },
+  {
+    id: 'diamond',
+    name: 'Diamante',
+    subTiers: 'I • II • III',
+    minXp: 30000,
+    maxXp: 59999,
+    approxWorkouts: '150 a 300 treinos (~1.5 a 2 anos)',
+    description: 'Super avançado de alta performance. Nível de força e maturidade muscular raro na maioria das academias.',
+    badgeStyle: TIER_STYLES.diamond,
+    examples: {
+      supino: '115 - 134 kg',
+      agachamento: '180 - 219 kg',
+      legPress: '360 - 439 kg',
+      rosca: '42 - 49 kg'
+    }
+  },
+  {
+    id: 'titan',
+    name: 'Titã Elite',
+    subTiers: 'Patente Máxima',
+    minXp: 60000,
+    maxXp: null,
+    approxWorkouts: '300+ treinos (Veterano)',
+    description: 'Patente lendária máxima da plataforma. Nível de atleta veterano, recordista e referência absoluta.',
+    badgeStyle: TIER_STYLES.titan,
+    examples: {
+      supino: '135+ kg',
+      agachamento: '220+ kg',
+      legPress: '440+ kg',
+      rosca: '50+ kg'
+    }
+  }
 ];
 
 /**

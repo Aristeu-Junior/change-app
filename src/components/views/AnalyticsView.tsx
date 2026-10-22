@@ -51,6 +51,7 @@ import {
   LeaderboardEntry
 } from '../../services/cloudSync';
 import { ShareRankModal } from '../ShareRankModal';
+import { RanksGuideModal } from '../RanksGuideModal';
 
 // Emblema Hexagonal Geométrico no estilo Hevy Rank
 const HevyRankEmblem: React.FC<{ rank: RankInfo; size?: 'sm' | 'md' | 'lg' }> = ({
@@ -139,6 +140,7 @@ export const AnalyticsView: React.FC = () => {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isRanksGuideOpen, setIsRanksGuideOpen] = useState(false);
 
   // Estados dos Formulários
   const [newCompName, setNewCompName] = useState('');
@@ -581,7 +583,7 @@ export const AnalyticsView: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-full view-container space-y-4 text-white">
-      {/* Topo com Botão de Compartilhar Rank Estilo Hevy */}
+      {/* Topo com Botão de Compartilhar Rank e Ver Ranks */}
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-black text-white leading-tight truncate">
@@ -591,13 +593,25 @@ export const AnalyticsView: React.FC = () => {
             Patentes Hevy, Pastas de Competições Privadas & Links
           </p>
         </div>
-        <button
-          onClick={() => setIsShareModalOpen(true)}
-          className="px-3 py-2 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition active:scale-95 shrink-0"
-        >
-          <Share2 className="w-3.5 h-3.5" />
-          <span>Compartilhar Rank</span>
-        </button>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            onClick={() => setIsRanksGuideOpen(true)}
+            className="px-2.5 sm:px-3 py-2 bg-[#18181b] hover:bg-zinc-800 border border-[#27272a] text-zinc-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition active:scale-95 shadow-sm"
+          >
+            <Shield className="w-3.5 h-3.5 text-white" />
+            <span className="hidden sm:inline">Ver Todos os Ranks</span>
+            <span className="sm:hidden">Ranks</span>
+          </button>
+
+          <button
+            onClick={() => setIsShareModalOpen(true)}
+            className="px-3 py-2 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition active:scale-95 shrink-0"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Compartilhar Rank</span>
+            <span className="sm:hidden">Compartilhar</span>
+          </button>
+        </div>
       </div>
 
       {compActionSuccess && (
@@ -699,14 +713,23 @@ export const AnalyticsView: React.FC = () => {
               </div>
             </div>
 
-            {/* Botão Rápido: Gerar Card de Rank para Desafiar Amigos */}
-            <button
-              onClick={() => setIsShareModalOpen(true)}
-              className="w-full py-2.5 bg-[#18181b] hover:bg-[#222226] border border-[#27272a] rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition active:scale-98"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-              <span>Gerar Card do Meu Rank para WhatsApp / Stories</span>
-            </button>
+            {/* Botões: Ver Todos os Ranks do App & Gerar Card para Compartilhar */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              <button
+                onClick={() => setIsRanksGuideOpen(true)}
+                className="py-2.5 bg-[#18181b] hover:bg-[#222226] border border-[#27272a] rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition active:scale-98 shadow-sm"
+              >
+                <Shield className="w-3.5 h-3.5" />
+                <span>Ver Todos os Ranks do App</span>
+              </button>
+              <button
+                onClick={() => setIsShareModalOpen(true)}
+                className="py-2.5 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-black flex items-center justify-center gap-2 transition active:scale-98 shadow-sm"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Gerar Card para WhatsApp</span>
+              </button>
+            </div>
           </div>
 
           {/* Rank por Grupo Muscular (8 Grupos Estilo Hevy) */}
@@ -1669,6 +1692,14 @@ export const AnalyticsView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Modal Guia de Todos os Ranks e Patentes do App */}
+      <RanksGuideModal
+        isOpen={isRanksGuideOpen}
+        onClose={() => setIsRanksGuideOpen(false)}
+        currentScore={overallRank.score}
+        currentTierId={overallRank.tierId}
+      />
 
       {/* Modal de Compartilhamento do Card de Rank */}
       <ShareRankModal
