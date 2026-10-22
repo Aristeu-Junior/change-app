@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { KeyRound, Copy, Check, X, BellRing, UserCheck, UserX } from 'lucide-react';
 import { AppProvider, useApp } from './context/AppContext';
 import { MobileTabBar, DesktopSidebar, TabType } from './components/MobileTabBar';

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'change-workout-v13';
+const CACHE_NAME = 'change-workout-v14';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -20,21 +20,28 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Nunca usar cache para chamadas ao Supabase ou version.json ou navegação HTML
-  if (
-    url.hostname.includes('supabase.co') ||
-    url.pathname.endsWith('version.json') ||
-    event.request.mode === 'navigate'
-  ) {
+  // Deixa chamadas ao Supabase irem direto pela rede sem interceptação
+  if (url.hostname.includes('supabase.co')) {
+    return;
+  }
+
+  // version.json sempre busca na rede
+  if (url.pathname.endsWith('version.json')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Navegação de página (HTML): busca sempre a versão mais recente da rede
+  if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request, { cache: 'no-store' }).catch(() => caches.match(event.request))
+      fetch(event.request).catch(() => caches.match(event.request))
     );
     return;
   }
 
-  // Network-first para garantir que atualizações de layout e código apareçam imediatamente no Web App
+  // Demais recursos: network-first com fallback para cache
   event.respondWith(
-    fetch(event.request, { cache: 'no-cache' })
+    fetch(event.request)
       .then((networkResponse) => {
         return networkResponse;
       })
