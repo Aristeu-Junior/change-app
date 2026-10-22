@@ -146,3 +146,18 @@ export interface BodyMeasurement {
   calves_cm?: number | null;
   notes?: string;
 }
+
+export type CompetitionMetric = 'score' | 'weekly' | 'workouts' | 'volume';
+
+export interface ChangeCompetition {
+  id: string;
+  invite_code: string;
+  name: string;
+  description?: string;
+  creator_email: string;
+  creator_name: string;
+  metric: CompetitionMetric;
+  member_emails: string[];
+  created_at: string;
+  updated_at: string;
+}

@@ -92,23 +92,31 @@ const TIER_STYLES: Record<
 
 /**
  * Define as metas de carga real (kg) de acordo com a categoria biomecânica do exercício (estilo Hevy)
+ * Baseado nos padrões mundiais de força (Strength Standards) para atletas naturais.
  */
 const getExerciseWeightThresholds = (title: string): number[] => {
   const t = title.toLowerCase();
   // [Ferro, Bronze, Prata, Ouro, Platina, Diamante, Titã]
+
+  // Leg Press (Máquinas pesadas de perna)
   if (t.includes('leg press')) {
-    return [20, 40, 80, 120, 160, 220, 300];
+    return [40, 80, 140, 200, 280, 360, 440];
   }
+
+  // Agachamento, Terra, Elevação Pélvica, Stiff, RDL (Grandes compostos de cadeia posterior/membros inferiores)
   if (
     t.includes('agachamento') ||
     t.includes('terra') ||
     t.includes('hip thrust') ||
     t.includes('elevação pélvica') ||
+    t.includes('elevacao pelvica') ||
     t.includes('stiff') ||
     t.includes('rdl')
   ) {
-    return [10, 20, 40, 60, 85, 110, 140];
+    return [25, 50, 80, 110, 145, 180, 220];
   }
+
+  // Supino, Remadas, Puxadas, Desenvolvimento (Compostos principais superiores)
   if (
     t.includes('supino') ||
     t.includes('puxada') ||
@@ -117,10 +125,11 @@ const getExerciseWeightThresholds = (title: string): number[] => {
     t.includes('extensora') ||
     t.includes('flexora')
   ) {
-    return [8, 15, 25, 40, 60, 80, 100];
+    return [15, 35, 55, 75, 95, 115, 135];
   }
+
   // Isoladores, halteres, roscas, tríceps, elevações laterais, panturrilha
-  return [5, 10, 15, 22, 30, 40, 50];
+  return [6, 12, 18, 26, 34, 42, 50];
 };
 
 const TIER_DEFINITIONS: { id: RankTierId; name: string }[] = [
@@ -140,8 +149,9 @@ export const calculateExerciseRank = (
   exerciseTitle: string,
   maxWeightKg: number
 ): RankInfo => {
+  const thresholds = getExerciseWeightThresholds(exerciseTitle);
+
   if (!maxWeightKg || maxWeightKg <= 0) {
-    const thresholds = getExerciseWeightThresholds(exerciseTitle);
     return {
       tierId: 'unranked',
       tierName: 'Sem Rank',
@@ -155,15 +165,29 @@ export const calculateExerciseRank = (
     };
   }
 
-  const thresholds = getExerciseWeightThresholds(exerciseTitle);
-  let tierIdx = 0;
-
+  let tierIdx = -1;
   for (let i = 0; i < thresholds.length; i++) {
     if (maxWeightKg >= thresholds[i]) {
       tierIdx = i;
     } else {
       break;
     }
+  }
+
+  if (tierIdx === -1) {
+    // Abaixo do primeiro limiar (Ferro)
+    const progress = Math.min(99, Math.round((maxWeightKg / thresholds[0]) * 100));
+    return {
+      tierId: 'unranked',
+      tierName: 'Sem Rank',
+      subTier: '',
+      fullLabel: 'Sem Rank',
+      score: Math.round(progress * 0.5),
+      progressPercent: progress,
+      nextTierLabel: 'Ferro I',
+      nextTargetValue: thresholds[0],
+      badgeStyle: TIER_STYLES.unranked
+    };
   }
 
   const currentTier = TIER_DEFINITIONS[tierIdx];
@@ -201,7 +225,8 @@ export const calculateExerciseRank = (
 };
 
 /**
- * Calcula a Patente Geral do Atleta (Hevy Overall Rank) combinando treinos, séries e recordes
+ * Calcula a Patente Geral do Atleta (Hevy Overall Rank) combinando treinos, séries, volume e recordes
+ * Balanceamento idêntico ao modelo de prestígio Hevy e RPG de progressão contínua a longo prazo.
  */
 export const calculateAthleteOverallRank = (
   workouts: Workout[],
@@ -209,31 +234,79 @@ export const calculateAthleteOverallRank = (
 ): RankInfo => {
   const completedWorkouts = workouts.length;
   const totalSets = workouts.reduce((acc, w) => acc + (w.total_sets || 0), 0);
-  const prValues = Object.values(personalRecords);
+  const totalVolumeKg = workouts.reduce((acc, w) => acc + (w.total_volume_kg || 0), 0);
 
-  const prScore = prValues.reduce((acc, pr) => {
+  // Pontos por PR atingido graduados pelo nível da carga
+  const prScore = Object.values(personalRecords).reduce((acc, pr) => {
     const exRank = calculateExerciseRank(pr.exercise_title, pr.max_weight_kg);
-    return acc + Math.round(exRank.score * 0.35);
+    let pts = 0;
+    switch (exRank.tierId) {
+      case 'iron':
+        pts = 15;
+        break;
+      case 'bronze':
+        pts = 35;
+        break;
+      case 'silver':
+        pts = 70;
+        break;
+      case 'gold':
+        pts = 120;
+        break;
+      case 'platinum':
+        pts = 180;
+        break;
+      case 'diamond':
+        pts = 260;
+        break;
+      case 'titan':
+        pts = 360;
+        break;
+      default:
+        pts = 5;
+    }
+    return acc + pts;
   }, 0);
 
-  // Pontuação Hevy: cada treino = 50 pts, cada série concluída = 8 pts + bônus de força nos PRs
-  const totalScore = completedWorkouts * 50 + totalSets * 8 + prScore;
+  // Bônus de consistência semanal (GymRats Streak): +50 pts se treinou 3x ou mais nos últimos 7 dias
+  const now = Date.now();
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  const weeklyWorkoutsCount = workouts.filter((w) => {
+    const t = new Date(w.end_time || w.start_time).getTime();
+    return now - t <= sevenDaysMs;
+  }).length;
+  const weeklyStreakBonus = weeklyWorkoutsCount >= 3 ? 50 : 0;
 
-  // Limiares de pontuação para cada patente geral
-  const scoreThresholds = [50, 200, 500, 1000, 1800, 3000, 5000];
+  // Pontuação Hevy calibrada:
+  // - 80 pts por treino concluído
+  // - 4 pts por série válida finalizada
+  // - 1 pt a cada 250 kg de volume levantado
+  // - Pontos de conquista por cada PR
+  // - Bônus de consistência ativa
+  const volumeBonus = Math.floor(totalVolumeKg / 250);
+  const totalScore =
+    completedWorkouts * 80 +
+    totalSets * 4 +
+    volumeBonus +
+    prScore +
+    weeklyStreakBonus;
+
+  // Limiares de pontuação para cada patente geral (Curva progressiva sólida)
+  // [Ferro, Bronze, Prata, Ouro, Platina, Diamante, Titã]
+  const scoreThresholds = [200, 1000, 3000, 7000, 15000, 30000, 60000];
 
   if (totalScore < scoreThresholds[0]) {
     const prog = Math.min(99, Math.round((totalScore / scoreThresholds[0]) * 100));
     return {
-      tierId: totalScore > 0 ? 'iron' : 'unranked',
-      tierName: totalScore > 0 ? 'Ferro' : 'Sem Rank',
-      subTier: totalScore > 0 ? 'I' : '',
-      fullLabel: totalScore > 0 ? 'Ferro I' : 'Sem Rank',
+      tierId: 'unranked',
+      tierName: 'Sem Rank',
+      subTier: '',
+      fullLabel: 'Sem Rank',
       score: totalScore,
       progressPercent: prog,
-      nextTierLabel: 'Bronze I',
+      nextTierLabel: 'Ferro I',
       nextTargetValue: scoreThresholds[0],
-      badgeStyle: totalScore > 0 ? TIER_STYLES.iron : TIER_STYLES.unranked
+      badgeStyle: TIER_STYLES.unranked
     };
   }
 

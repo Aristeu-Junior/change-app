@@ -6,7 +6,9 @@ import {
   ExerciseTemplate,
   PersonalRecord,
   BodyMeasurement,
-  UserSettings
+  UserSettings,
+  ChangeCompetition,
+  CompetitionMetric
 } from '../types';
 import { verifyTotpCode } from '../utils/totp';
 
@@ -190,17 +192,61 @@ export const authenticateUserInCloud = async (
 };
 
 /**
- * Busca dados públicos do Ranking (Leaderboard) via RPC segura (sem expor password_hash)
+ * Gera um código amigável de convite para a competição (ex: CHG-7X9P)
  */
-export const fetchCloudLeaderboard = async (): Promise<LeaderboardEntry[]> => {
+export const generateInviteCode = (): string => {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let code = 'CHG-';
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+};
+
+/**
+ * Busca todas as competições privadas em que o usuário participa
+ */
+export const fetchUserCompetitions = async (
+  userEmail: string
+): Promise<ChangeCompetition[]> => {
   const config = getSupabaseConfig();
-  if (!config) return [];
+  if (!config || !userEmail) return [];
 
   try {
-    const res = await fetch(`${config.url}/rest/v1/rpc/get_change_leaderboard`, {
+    const cleanEmail = normalizeLoginIdentifier(userEmail);
+    const res = await fetch(`${config.url}/rest/v1/rpc/get_user_competitions`, {
       method: 'POST',
       headers: buildHeaders(config),
-      body: JSON.stringify({})
+      body: JSON.stringify({ p_user_email: cleanEmail })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        return data as ChangeCompetition[];
+      }
+    }
+    return [];
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * Busca dados da tabela de classificação de UMA competição privada específica
+ * Retorna ESTRITAMENTE os dados dos membros participantes daquela competição (sem expor outros usuários)
+ */
+export const fetchCompetitionLeaderboard = async (
+  competitionId: string
+): Promise<LeaderboardEntry[]> => {
+  const config = getSupabaseConfig();
+  if (!config || !competitionId) return [];
+
+  try {
+    const res = await fetch(`${config.url}/rest/v1/rpc/get_competition_leaderboard`, {
+      method: 'POST',
+      headers: buildHeaders(config),
+      body: JSON.stringify({ p_competition_id: competitionId })
     });
 
     if (res.ok) {
@@ -212,6 +258,170 @@ export const fetchCloudLeaderboard = async (): Promise<LeaderboardEntry[]> => {
     return [];
   } catch {
     return [];
+  }
+};
+
+/**
+ * Cria uma nova competição privada na nuvem
+ */
+export const createCloudCompetition = async (params: {
+  name: string;
+  description?: string;
+  metric?: CompetitionMetric;
+  creatorEmail: string;
+  creatorName: string;
+}): Promise<ChangeCompetition | null> => {
+  const config = getSupabaseConfig();
+  if (!config) return null;
+
+  try {
+    const cleanEmail = normalizeLoginIdentifier(params.creatorEmail);
+    const compId = `comp-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const inviteCode = generateInviteCode();
+
+    const newComp: Partial<ChangeCompetition> = {
+      id: compId,
+      invite_code: inviteCode,
+      name: sanitizeInput(params.name, 60),
+      description: sanitizeInput(params.description || '', 160),
+      creator_email: cleanEmail,
+      creator_name: sanitizeInput(params.creatorName, 60),
+      metric: params.metric || 'score',
+      member_emails: [cleanEmail]
+    };
+
+    const res = await fetch(`${config.url}/rest/v1/change_competitions`, {
+      method: 'POST',
+      headers: buildHeaders(config, { Prefer: 'return=representation' }),
+      body: JSON.stringify(newComp)
+    });
+
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        return rows[0] as ChangeCompetition;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Entra em uma competição através do código de convite ou ID
+ */
+export const joinCloudCompetition = async (
+  codeOrId: string,
+  userEmail: string
+): Promise<ChangeCompetition | null> => {
+  const config = getSupabaseConfig();
+  if (!config || !codeOrId || !userEmail) return null;
+
+  try {
+    const cleanEmail = normalizeLoginIdentifier(userEmail);
+    const cleanCode = codeOrId.trim();
+
+    const res = await fetch(`${config.url}/rest/v1/rpc/join_change_competition`, {
+      method: 'POST',
+      headers: buildHeaders(config),
+      body: JSON.stringify({
+        p_code_or_id: cleanCode,
+        p_user_email: cleanEmail
+      })
+    });
+
+    if (res.ok) {
+      const comp = await res.json();
+      if (comp && comp.id) {
+        return comp as ChangeCompetition;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Sai de uma competição privada
+ */
+export const leaveCloudCompetition = async (
+  competitionId: string,
+  userEmail: string
+): Promise<boolean> => {
+  const config = getSupabaseConfig();
+  if (!config || !competitionId || !userEmail) return false;
+
+  try {
+    const cleanEmail = normalizeLoginIdentifier(userEmail);
+    const res = await fetch(`${config.url}/rest/v1/rpc/leave_change_competition`, {
+      method: 'POST',
+      headers: buildHeaders(config),
+      body: JSON.stringify({
+        p_competition_id: competitionId,
+        p_user_email: cleanEmail
+      })
+    });
+
+    return res.ok;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Exclui uma competição (apenas criador ou admin)
+ */
+export const deleteCloudCompetition = async (
+  competitionId: string
+): Promise<boolean> => {
+  const config = getSupabaseConfig();
+  if (!config || !competitionId) return false;
+
+  try {
+    const res = await fetch(
+      `${config.url}/rest/v1/change_competitions?id=eq.${encodeURIComponent(competitionId)}`,
+      {
+        method: 'DELETE',
+        headers: buildHeaders(config)
+      }
+    );
+
+    return res.ok;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Busca os dados de uma competição pelo código de convite ou ID
+ */
+export const getCompetitionByCodeOrId = async (
+  codeOrId: string
+): Promise<ChangeCompetition | null> => {
+  const config = getSupabaseConfig();
+  if (!config || !codeOrId) return null;
+
+  try {
+    const clean = codeOrId.trim();
+    const res = await fetch(
+      `${config.url}/rest/v1/change_competitions?or=(invite_code.ilike.${clean},id.eq.${clean})&limit=1`,
+      {
+        method: 'GET',
+        headers: buildHeaders(config)
+      }
+    );
+
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        return rows[0] as ChangeCompetition;
+      }
+    }
+    return null;
+  } catch {
+    return null;
   }
 };
 

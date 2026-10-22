@@ -37,6 +37,17 @@ const AppContent: React.FC = () => {
   const [savedCustomPass, setSavedCustomPass] = useState(false);
   const [processingRequestEmail, setProcessingRequestEmail] = useState<string | null>(null);
 
+  // Redireciona automaticamente para a aba de Competições se abrir via link de convite (#comp= ou ?comp=)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hasComp =
+        window.location.hash.includes('comp=') || window.location.search.includes('comp=');
+      if (hasComp) {
+        setCurrentTab('analytics');
+      }
+    }
+  }, []);
+
   // Exige autenticação na tela de login estilo Hevy antes de exibir os treinos
   if (!isAuthenticated) {
     return <AuthLoginScreen />;
