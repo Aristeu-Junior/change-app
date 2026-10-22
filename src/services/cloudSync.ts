@@ -245,12 +245,10 @@ export const pullUserFromCloudByEmail = async (
 
   try {
     const normalized = normalizeLoginIdentifier(identifier);
-    const filter = userId
-      ? `or=(email.eq.${encodeURIComponent(normalized)},user_id.eq.${encodeURIComponent(userId)})`
-      : `email=eq.${encodeURIComponent(normalized)}`;
 
+    // 1. Busca prioritária e exata pelo e-mail
     const res = await fetch(
-      `${config.url}/rest/v1/change_user_data?${filter}&select=user_id,email,name,account_status,totp_enabled,totp_secret,avatar_color,workouts,routines,folders,custom_exercises,personal_records,measurements,settings,updated_at&limit=1&_t=${Date.now()}`,
+      `${config.url}/rest/v1/change_user_data?email=eq.${encodeURIComponent(normalized)}&select=user_id,email,name,account_status,totp_enabled,totp_secret,avatar_color,workouts,routines,folders,custom_exercises,personal_records,measurements,settings,updated_at&limit=1&_t=${Date.now()}`,
       {
         method: 'GET',
         cache: 'no-store',
@@ -264,6 +262,25 @@ export const pullUserFromCloudByEmail = async (
         return rows[0] as CloudUserPayload;
       }
     }
+
+    // 2. Fallback secundário por user_id somente se não encontrou por e-mail
+    if (userId) {
+      const resById = await fetch(
+        `${config.url}/rest/v1/change_user_data?user_id=eq.${encodeURIComponent(userId)}&select=user_id,email,name,account_status,totp_enabled,totp_secret,avatar_color,workouts,routines,folders,custom_exercises,personal_records,measurements,settings,updated_at&limit=1&_t=${Date.now()}`,
+        {
+          method: 'GET',
+          cache: 'no-store',
+          headers: buildHeaders(config)
+        }
+      );
+      if (resById.ok) {
+        const rowsById = await resById.json();
+        if (Array.isArray(rowsById) && rowsById.length > 0) {
+          return rowsById[0] as CloudUserPayload;
+        }
+      }
+    }
+
     return null;
   } catch {
     return null;
@@ -900,9 +917,10 @@ export const pushUserToCloud = async (
   const config = getSupabaseConfig();
   if (!config || !user?.email) return false;
 
+  const cleanEmail = normalizeLoginIdentifier(user.email);
   const payload: Record<string, any> = {
     user_id: user.id,
-    email: user.email.trim().toLowerCase(),
+    email: cleanEmail,
     name: sanitizeInput(user.name, 80),
     avatar_color: user.avatar_color || '#ffffff',
     workouts: data.workouts,
@@ -916,7 +934,7 @@ export const pushUserToCloud = async (
   };
 
   try {
-    const res = await fetch(`${config.url}/rest/v1/change_user_data?on_conflict=user_id`, {
+    const res = await fetch(`${config.url}/rest/v1/change_user_data?on_conflict=email`, {
       method: 'POST',
       headers: buildHeaders(config, {
         Prefer: 'resolution=merge-duplicates,return=minimal'
@@ -924,7 +942,23 @@ export const pushUserToCloud = async (
       body: JSON.stringify(payload)
     });
 
-    return res.ok;
+    if (res.ok) {
+      return true;
+    }
+
+    // Fallback de segurança com PATCH direto pelo e-mail caso o PostgREST exija
+    const patchRes = await fetch(
+      `${config.url}/rest/v1/change_user_data?email=eq.${encodeURIComponent(cleanEmail)}`,
+      {
+        method: 'PATCH',
+        headers: buildHeaders(config, {
+          Prefer: 'return=minimal'
+        }),
+        body: JSON.stringify(payload)
+      }
+    );
+
+    return patchRes.ok;
   } catch {
     return false;
   }

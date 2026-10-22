@@ -594,9 +594,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       window.clearTimeout(syncTimeoutRef.current);
     }
 
+    // Sincronização rápida em 300ms para refletir alterações instantaneamente em outros navegadores
     syncTimeoutRef.current = window.setTimeout(() => {
       syncNowWithCloud();
-    }, 800);
+    }, 300);
 
     return () => {
       if (syncTimeoutRef.current) {
@@ -634,53 +635,130 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             totp_secret: cloudData.totp_secret || null
           }));
         }
+
         const cloudWorkouts = normalizeSavedWorkouts(cloudData.workouts || []);
         const cloudRoutines = sanitizeUserRoutines(cloudData.routines || []);
         const cloudFolders = sanitizeUserFolders(cloudData.folders || [], cloudRoutines);
+        const cloudExercises = syncExercisesWithDefaults(cloudData.custom_exercises || []);
+        const cloudMeas = cloudData.measurements || [];
+        const cloudSettings = { ...DEFAULT_SETTINGS, ...(cloudData.settings || {}) };
 
+        // Carrega dados locais existentes neste navegador/dispositivo
         const localWorkoutsRaw = localStorage.getItem(`change_${user.id}_workouts`);
         const localRoutinesRaw = localStorage.getItem(`change_${user.id}_routines`);
+        const localFoldersRaw = localStorage.getItem(`change_${user.id}_folders`);
+        const localExercisesRaw = localStorage.getItem(`change_${user.id}_exercises`);
+        const localMeasRaw = localStorage.getItem(`change_${user.id}_measurements`);
+        const localSettingsRaw = localStorage.getItem(`change_${user.id}_settings`);
+
         const localWorkouts = localWorkoutsRaw ? normalizeSavedWorkouts(JSON.parse(localWorkoutsRaw)) : [];
         const localRoutines = localRoutinesRaw ? sanitizeUserRoutines(JSON.parse(localRoutinesRaw)) : [];
+        const localFolders = localFoldersRaw ? JSON.parse(localFoldersRaw) : [];
+        const localExercises = localExercisesRaw ? JSON.parse(localExercisesRaw) : [];
+        const localMeas = localMeasRaw ? JSON.parse(localMeasRaw) : [];
+        const localSettings = localSettingsRaw ? JSON.parse(localSettingsRaw) : {};
 
-        if (
-          cloudWorkouts.length === 0 &&
-          cloudRoutines.length === 0 &&
-          (localWorkouts.length > 0 || localRoutines.length > 0)
-        ) {
+        // MESCLAGEM INTELIGENTE BIDIRECIONAL
+        // 1. Workouts: combina treinos feitos em qualquer navegador ou celular sem apagar nada
+        const workoutMap = new Map<string, Workout>();
+        cloudWorkouts.forEach((w) => { if (w && w.id) workoutMap.set(w.id, w); });
+        localWorkouts.forEach((w) => {
+          if (!w || !w.id) return;
+          const existing = workoutMap.get(w.id);
+          if (!existing) {
+            workoutMap.set(w.id, w);
+          } else {
+            workoutMap.set(w.id, { ...existing, ...w });
+          }
+        });
+        const mergedWorkouts = Array.from(workoutMap.values()).sort((a, b) => {
+          const tA = new Date(a.end_time || a.start_time || 0).getTime();
+          const tB = new Date(b.end_time || b.start_time || 0).getTime();
+          return tB - tA;
+        });
+
+        // 2. Routines: preserva todas as rotinas criadas em qualquer lugar
+        const routineMap = new Map<string, Routine>();
+        cloudRoutines.forEach((r) => { if (r && r.id) routineMap.set(r.id, r); });
+        localRoutines.forEach((r) => {
+          if (!r || !r.id) return;
+          const existing = routineMap.get(r.id);
+          if (!existing) {
+            routineMap.set(r.id, r);
+          } else {
+            const timeLocal = new Date(r.updated_at || r.created_at || 0).getTime();
+            const timeCloud = new Date(existing.updated_at || existing.created_at || 0).getTime();
+            routineMap.set(r.id, timeLocal >= timeCloud ? r : existing);
+          }
+        });
+        const mergedRoutines = sanitizeUserRoutines(Array.from(routineMap.values()));
+
+        // 3. Folders: combina todas as pastas
+        const folderMap = new Map<number, RoutineFolder>();
+        cloudFolders.forEach((f) => { if (f && f.id) folderMap.set(f.id, f); });
+        localFolders.forEach((f: RoutineFolder) => {
+          if (f && f.id && !folderMap.has(f.id)) folderMap.set(f.id, f);
+        });
+        const mergedFolders = sanitizeUserFolders(Array.from(folderMap.values()), mergedRoutines);
+
+        // 4. Custom Exercises: combina todos os exercícios criados
+        const customExMap = new Map<string, ExerciseTemplate>();
+        cloudExercises.filter((e) => e.is_custom).forEach((e) => customExMap.set(e.id, e));
+        localExercises.filter((e: ExerciseTemplate) => e && e.is_custom).forEach((e: ExerciseTemplate) => {
+          if (!customExMap.has(e.id)) customExMap.set(e.id, e);
+        });
+        const mergedExercises = [...Array.from(customExMap.values()), ...DEFAULT_EXERCISES];
+
+        // 5. Measurements: combina registros corporais
+        const measMap = new Map<string, BodyMeasurement>();
+        cloudMeas.forEach((m) => measMap.set(m.date, m));
+        localMeas.forEach((m: BodyMeasurement) => {
+          if (m && m.date && !measMap.has(m.date)) measMap.set(m.date, m);
+        });
+        const mergedMeas = Array.from(measMap.values()).sort((a, b) => b.date.localeCompare(a.date));
+
+        // 6. Settings e PRs
+        const mergedSettings = { ...DEFAULT_SETTINGS, ...cloudSettings, ...localSettings };
+        const mergedPrs = rebuildPersonalRecords(mergedWorkouts);
+
+        // Aplica nos estados da aplicação
+        setWorkouts(mergedWorkouts);
+        setRoutines(mergedRoutines);
+        setFolders(mergedFolders);
+        setExercises(mergedExercises);
+        setPersonalRecords(mergedPrs);
+        setMeasurements(mergedMeas);
+        setSettings(mergedSettings);
+
+        // Salva no localStorage deste navegador
+        localStorage.setItem(`change_${user.id}_workouts`, JSON.stringify(mergedWorkouts));
+        localStorage.setItem(`change_${user.id}_routines`, JSON.stringify(mergedRoutines));
+        localStorage.setItem(`change_${user.id}_folders`, JSON.stringify(mergedFolders));
+        localStorage.setItem(`change_${user.id}_exercises`, JSON.stringify(mergedExercises));
+        localStorage.setItem(`change_${user.id}_prs`, JSON.stringify(mergedPrs));
+        localStorage.setItem(`change_${user.id}_measurements`, JSON.stringify(mergedMeas));
+        localStorage.setItem(`change_${user.id}_settings`, JSON.stringify(mergedSettings));
+
+        // Se local tinha itens que a nuvem não tinha, ou se a nuvem estava vazia, salva a união de volta na nuvem
+        const localHadExtra =
+          mergedWorkouts.length > cloudWorkouts.length ||
+          mergedRoutines.length > cloudRoutines.length ||
+          mergedFolders.length > cloudFolders.length ||
+          customExMap.size > cloudExercises.filter((e) => e.is_custom).length;
+
+        if (localHadExtra) {
           await pushUserToCloud(user, {
-            workouts: localWorkouts,
-            routines: localRoutines,
-            folders,
-            exercises,
-            personalRecords: rebuildPersonalRecords(localWorkouts),
-            measurements,
-            settings
+            workouts: mergedWorkouts,
+            routines: mergedRoutines,
+            folders: mergedFolders,
+            exercises: mergedExercises,
+            personalRecords: mergedPrs,
+            measurements: mergedMeas,
+            settings: mergedSettings
           });
-          setCloudStatus('synced');
-        } else {
-          const cloudExercises = syncExercisesWithDefaults(cloudData.custom_exercises || []);
-          const cloudPrs = rebuildPersonalRecords(cloudWorkouts);
-          const cloudMeas = cloudData.measurements || [];
-          const cloudSettings = { ...DEFAULT_SETTINGS, ...(cloudData.settings || {}) };
-
-          setWorkouts(cloudWorkouts);
-          setRoutines(cloudRoutines);
-          setFolders(cloudFolders);
-          setExercises(cloudExercises);
-          setPersonalRecords(cloudPrs);
-          setMeasurements(cloudMeas);
-          setSettings(cloudSettings);
-
-          localStorage.setItem(`change_${user.id}_workouts`, JSON.stringify(cloudWorkouts));
-          localStorage.setItem(`change_${user.id}_routines`, JSON.stringify(cloudRoutines));
-          localStorage.setItem(`change_${user.id}_folders`, JSON.stringify(cloudFolders));
-          localStorage.setItem(`change_${user.id}_exercises`, JSON.stringify(cloudExercises));
-          localStorage.setItem(`change_${user.id}_prs`, JSON.stringify(cloudPrs));
-          localStorage.setItem(`change_${user.id}_measurements`, JSON.stringify(cloudMeas));
-          localStorage.setItem(`change_${user.id}_settings`, JSON.stringify(cloudSettings));
-          setCloudStatus('synced');
         }
+
+        setCloudStatus('synced');
       } else {
         setCloudStatus('idle');
       }
@@ -743,6 +821,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const isAdmin = isAdminProfile(currentUser);
 
+    let pullCounter = 0;
     const syncAllFromCloud = () => {
       if (isAdmin) {
         refreshAccessRequests();
@@ -756,6 +835,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setWorkoutModalOpen(false);
           }
         });
+      }
+
+      pullCounter++;
+      // A cada 2 ciclos (~7 segundos) busca atualizações de treinos feitas em outros navegadores/aparelhos
+      if (pullCounter % 2 === 0) {
+        pullCloudDataForUser(currentUser);
       }
     };
 
@@ -1008,6 +1093,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     setCurrentUser(restoredUser);
     reloadUserData(restoredUser.id, restoredUser.name);
+
+    // Carrega instantaneamente os treinos e planos vindos da nuvem nesta nova aba/navegador
+    if (cloudAccount.workouts && cloudAccount.workouts.length > 0) {
+      const parsedWorkouts = normalizeSavedWorkouts(cloudAccount.workouts);
+      setWorkouts(parsedWorkouts);
+      localStorage.setItem(`change_${restoredUser.id}_workouts`, JSON.stringify(parsedWorkouts));
+      setPersonalRecords(rebuildPersonalRecords(parsedWorkouts));
+    }
+    if (cloudAccount.routines && cloudAccount.routines.length > 0) {
+      const parsedRoutines = sanitizeUserRoutines(cloudAccount.routines);
+      setRoutines(parsedRoutines);
+      localStorage.setItem(`change_${restoredUser.id}_routines`, JSON.stringify(parsedRoutines));
+    }
+    if (cloudAccount.folders && cloudAccount.folders.length > 0) {
+      setFolders(cloudAccount.folders);
+      localStorage.setItem(`change_${restoredUser.id}_folders`, JSON.stringify(cloudAccount.folders));
+    }
+    if (cloudAccount.custom_exercises && cloudAccount.custom_exercises.length > 0) {
+      const parsedEx = syncExercisesWithDefaults(cloudAccount.custom_exercises);
+      setExercises(parsedEx);
+      localStorage.setItem(`change_${restoredUser.id}_exercises`, JSON.stringify(parsedEx));
+    }
+    if (cloudAccount.settings) {
+      const parsedSettings = { ...DEFAULT_SETTINGS, ...cloudAccount.settings };
+      setSettings(parsedSettings);
+      localStorage.setItem(`change_${restoredUser.id}_settings`, JSON.stringify(parsedSettings));
+    }
+
     saveDeviceSession(restoredUser, true);
     localStorage.setItem('change_auth_session_active', 'true');
     setIsAuthenticated(true);
@@ -1263,11 +1376,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       prs_hit: prsHit
     };
 
-    setWorkouts((prev) => [finished, ...prev]);
+    const nextWorkouts = [finished, ...workouts];
+    setWorkouts(nextWorkouts);
     setPersonalRecords(updatedPrs);
     setActiveWorkout(null);
     setWorkoutModalOpen(false);
     setCompletedWorkoutSummary(finished);
+
+    localStorage.setItem(userKey('workouts'), JSON.stringify(nextWorkouts));
+    localStorage.setItem(userKey('prs'), JSON.stringify(updatedPrs));
+    localStorage.removeItem(userKey('active_workout'));
+
+    if (isCloudConfigured() && isAuthenticated) {
+      pushUserToCloud(currentUser, {
+        workouts: nextWorkouts,
+        routines,
+        folders,
+        exercises,
+        personalRecords: updatedPrs,
+        measurements,
+        settings
+      });
+    }
 
     try {
       import('canvas-confetti').then((m) => {
@@ -1292,16 +1422,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteWorkout = (workoutId: string) => {
-    setWorkouts((prev) => {
-      const next = prev.filter((w) => w.id !== workoutId);
-      setPersonalRecords(rebuildPersonalRecords(next));
-      return next;
-    });
+    const next = workouts.filter((w) => w.id !== workoutId);
+    const nextPrs = rebuildPersonalRecords(next);
+    setWorkouts(next);
+    setPersonalRecords(nextPrs);
+    localStorage.setItem(userKey('workouts'), JSON.stringify(next));
+    localStorage.setItem(userKey('prs'), JSON.stringify(nextPrs));
+
+    if (isCloudConfigured() && isAuthenticated) {
+      pushUserToCloud(currentUser, {
+        workouts: next,
+        routines,
+        folders,
+        exercises,
+        personalRecords: nextPrs,
+        measurements,
+        settings
+      });
+    }
   };
 
   const clearWorkouts = () => {
     setWorkouts([]);
     setPersonalRecords({});
+    localStorage.setItem(userKey('workouts'), JSON.stringify([]));
+    localStorage.setItem(userKey('prs'), JSON.stringify({}));
+
+    if (isCloudConfigured() && isAuthenticated) {
+      pushUserToCloud(currentUser, {
+        workouts: [],
+        routines,
+        folders,
+        exercises,
+        personalRecords: {},
+        measurements,
+        settings
+      });
+    }
   };
 
   const updateWorkoutTitle = (title: string) => {
@@ -1441,19 +1598,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const saveRoutine = (routine: Routine) => {
-    setRoutines((prev) => {
-      const idx = prev.findIndex((r) => r.id === routine.id);
-      if (idx !== -1) {
-        const next = [...prev];
-        next[idx] = { ...routine, updated_at: new Date().toISOString() };
-        return next;
-      }
-      return [routine, ...prev];
-    });
+    let nextRoutines: Routine[];
+    const idx = routines.findIndex((r) => r.id === routine.id);
+    if (idx !== -1) {
+      nextRoutines = [...routines];
+      nextRoutines[idx] = { ...routine, updated_at: new Date().toISOString() };
+    } else {
+      nextRoutines = [routine, ...routines];
+    }
+    setRoutines(nextRoutines);
+    localStorage.setItem(userKey('routines'), JSON.stringify(nextRoutines));
+
+    if (isCloudConfigured() && isAuthenticated) {
+      pushUserToCloud(currentUser, {
+        workouts,
+        routines: nextRoutines,
+        folders,
+        exercises,
+        personalRecords,
+        measurements,
+        settings
+      });
+    }
   };
 
   const deleteRoutine = (routineId: string) => {
-    setRoutines((prev) => prev.filter((r) => r.id !== routineId));
+    const nextRoutines = routines.filter((r) => r.id !== routineId);
+    setRoutines(nextRoutines);
+    localStorage.setItem(userKey('routines'), JSON.stringify(nextRoutines));
+
+    if (isCloudConfigured() && isAuthenticated) {
+      pushUserToCloud(currentUser, {
+        workouts,
+        routines: nextRoutines,
+        folders,
+        exercises,
+        personalRecords,
+        measurements,
+        settings
+      });
+    }
   };
 
   const createFolder = (title: string) => {
@@ -1462,14 +1646,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       title,
       index: folders.length
     };
-    setFolders((prev) => [...prev, newFolder]);
+    const nextFolders = [...folders, newFolder];
+    setFolders(nextFolders);
+    localStorage.setItem(userKey('folders'), JSON.stringify(nextFolders));
+
+    if (isCloudConfigured() && isAuthenticated) {
+      pushUserToCloud(currentUser, {
+        workouts,
+        routines,
+        folders: nextFolders,
+        exercises,
+        personalRecords,
+        measurements,
+        settings
+      });
+    }
   };
 
   const deleteFolder = (folderId: number) => {
-    setFolders((prev) => prev.filter((f) => f.id !== folderId));
-    setRoutines((prev) =>
-      prev.map((r) => (r.folder_id === folderId ? { ...r, folder_id: null } : r))
+    const nextFolders = folders.filter((f) => f.id !== folderId);
+    const nextRoutines = routines.map((r) =>
+      r.folder_id === folderId ? { ...r, folder_id: null } : r
     );
+    setFolders(nextFolders);
+    setRoutines(nextRoutines);
+    localStorage.setItem(userKey('folders'), JSON.stringify(nextFolders));
+    localStorage.setItem(userKey('routines'), JSON.stringify(nextRoutines));
+
+    if (isCloudConfigured() && isAuthenticated) {
+      pushUserToCloud(currentUser, {
+        workouts,
+        routines: nextRoutines,
+        folders: nextFolders,
+        exercises,
+        personalRecords,
+        measurements,
+        settings
+      });
+    }
   };
 
   const addFolderWithPreset = (folderTitle: string, routinePresets: RoutinePreset[]) => {
@@ -1507,8 +1721,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     });
 
-    setFolders((prev) => [...prev, newFolder]);
-    setRoutines((prev) => [...newRoutines, ...prev]);
+    const nextFolders = [...folders, newFolder];
+    const nextRoutines = [...newRoutines, ...routines];
+
+    setFolders(nextFolders);
+    setRoutines(nextRoutines);
+    localStorage.setItem(userKey('folders'), JSON.stringify(nextFolders));
+    localStorage.setItem(userKey('routines'), JSON.stringify(nextRoutines));
+
+    if (isCloudConfigured() && isAuthenticated) {
+      pushUserToCloud(currentUser, {
+        workouts,
+        routines: nextRoutines,
+        folders: nextFolders,
+        exercises,
+        personalRecords,
+        measurements,
+        settings
+      });
+    }
   };
 
   const addCustomExercise = (ex: Omit<ExerciseTemplate, 'id' | 'is_custom'>) => {
