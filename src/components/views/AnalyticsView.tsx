@@ -120,8 +120,11 @@ export const AnalyticsView: React.FC = () => {
     saveMeasurement,
     settings,
     exercises,
-    currentUser
+    currentUser,
+    theme
   } = useApp();
+
+  const isLight = theme === 'light';
 
   const [activeSubTab, setActiveSubTab] = useState<'my_rank' | 'competitions' | 'stats'>('my_rank');
   const [leaderboardFilter, setLeaderboardFilter] = useState<
@@ -628,14 +631,14 @@ export const AnalyticsView: React.FC = () => {
   const prList = Object.values(personalRecords);
 
   return (
-    <div className="flex flex-col min-h-full view-container space-y-4 text-white">
+    <div className={`flex flex-col min-h-full view-container space-y-4 ${isLight ? 'text-zinc-900' : 'text-white'}`}>
       {/* Topo com Botão de Compartilhar Rank e Ver Ranks */}
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-black text-white leading-tight truncate">
+          <h1 className={`text-xl sm:text-2xl font-black leading-tight truncate ${isLight ? 'text-zinc-900' : 'text-white'}`}>
             Rank & Competição
           </h1>
-          <p className="text-[11px] sm:text-xs text-zinc-400 truncate">
+          <p className={`text-[11px] sm:text-xs truncate ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>
             Patentes Hevy, Pastas de Competições Privadas & Links
           </p>
         </div>

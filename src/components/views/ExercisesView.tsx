@@ -202,7 +202,7 @@ export const ExercisesView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-full view-container space-y-4 text-white">
+    <div className={`flex flex-col min-h-full view-container space-y-4 ${isLight ? 'text-zinc-900' : 'text-white'}`}>
       {/* Toast Notificação */}
       {toastMessage && (
         <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-white text-black font-black text-xs px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-4 duration-200 border border-zinc-300">
@@ -214,12 +214,16 @@ export const ExercisesView: React.FC = () => {
       {/* Cabeçalho */}
       <div className="flex items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-black text-white">Exercícios</h1>
-          <p className="text-xs text-zinc-400">Guia de execução, animações 3D & PRs</p>
+          <h1 className={`text-2xl font-black ${isLight ? 'text-zinc-900' : 'text-white'}`}>Exercícios</h1>
+          <p className={`text-xs ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>Guia de execução, animações 3D & PRs</p>
         </div>
         <button
           onClick={() => setIsSearchModalOpen(true)}
-          className="p-2.5 bg-[#141416] hover:bg-[#1e1e24] border border-[#27272a] text-white rounded-xl flex items-center gap-1.5 text-xs font-bold transition active:scale-95 shrink-0"
+          className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition active:scale-95 shrink-0 ${
+            isLight
+              ? 'bg-white hover:bg-zinc-100 border-zinc-200 text-zinc-900 shadow-sm'
+              : 'bg-[#141416] hover:bg-[#1e1e24] border-[#27272a] text-white'
+          }`}
         >
           <Plus className="w-4 h-4" />
           <span>Criar</span>
@@ -229,14 +233,18 @@ export const ExercisesView: React.FC = () => {
       {/* BOTÃO DIRETO PARA MONTAR PLANO DE TREINO (Sugestões aparecem apenas ao clicar) */}
       <button
         onClick={handleCreateRoutineEmpty}
-        className="w-full bg-[#141416] hover:bg-[#1a1a1e] border border-[#27272a] rounded-2xl p-3.5 flex items-center justify-between gap-2 transition active:scale-98 shadow-sm group"
+        className={`w-full rounded-2xl p-3.5 border flex items-center justify-between gap-2 transition active:scale-98 shadow-sm group ${
+          isLight
+            ? 'bg-white hover:bg-zinc-50 border-zinc-200 text-zinc-900'
+            : 'bg-[#141416] hover:bg-[#1a1a1e] border-[#27272a] text-white'
+        }`}
       >
         <div className="flex items-center gap-2.5 min-w-0 text-left">
           <div className="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center font-black shrink-0 shadow-sm">
             <Sparkles className="w-4 h-4 text-black" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-xs font-black text-white leading-tight truncate">
+            <h2 className={`text-xs font-black leading-tight truncate ${isLight ? 'text-zinc-900' : 'text-white'}`}>
               Montar Novo Plano de Treino
             </h2>
             <p className="text-[11px] text-zinc-400 truncate">
@@ -258,7 +266,11 @@ export const ExercisesView: React.FC = () => {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar entre os 112 exercícios ou músculos..."
-          className="w-full bg-[#141416] border border-[#27272a] rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white transition"
+          className={`w-full rounded-xl pl-10 pr-4 py-2.5 text-xs transition focus:outline-none border ${
+            isLight
+              ? 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400 focus:border-black'
+              : 'bg-[#141416] border-[#27272a] text-white placeholder-zinc-500 focus:border-white'
+          }`}
         />
         {query && (
           <button
@@ -278,7 +290,11 @@ export const ExercisesView: React.FC = () => {
             onClick={() => setSelectedMuscle(f.value)}
             className={`px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition ${
               selectedMuscle === f.value
-                ? 'bg-white text-black'
+                ? isLight
+                  ? 'bg-black text-white shadow-sm'
+                  : 'bg-white text-black shadow-sm'
+                : isLight
+                ? 'bg-zinc-100 text-zinc-600 hover:text-black border border-zinc-200'
                 : 'bg-[#141416] text-zinc-400 hover:text-white border border-[#27272a]'
             }`}
           >
@@ -299,7 +315,11 @@ export const ExercisesView: React.FC = () => {
             <div
               key={ex.id}
               onClick={() => setSelectedDetailExercise(ex)}
-              className="bg-[#141416] border border-[#27272a] hover:border-zinc-500 rounded-2xl p-2.5 shadow-sm flex items-center justify-between cursor-pointer transition active:scale-98 gap-3 group"
+              className={`rounded-2xl p-2.5 border shadow-sm flex items-center justify-between cursor-pointer transition active:scale-98 gap-3 group ${
+                isLight
+                  ? 'bg-white border-zinc-200 hover:border-zinc-400 text-zinc-900'
+                  : 'bg-[#141416] border-[#27272a] hover:border-zinc-500 text-white'
+              }`}
             >
               <div className="flex items-center gap-3 min-w-0">
                 {/* Miniatura 3D em GIF animada à esquerda */}
@@ -324,7 +344,7 @@ export const ExercisesView: React.FC = () => {
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <h4 className="text-xs font-bold text-white truncate">{ex.title}</h4>
+                    <h4 className={`text-xs font-bold truncate ${isLight ? 'text-zinc-900' : 'text-white'}`}>{ex.title}</h4>
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-[10px] font-semibold text-zinc-400 capitalize">
@@ -345,7 +365,7 @@ export const ExercisesView: React.FC = () => {
               <div className="flex items-center gap-2 shrink-0">
                 {pr && (
                   <div className="flex flex-col items-end mr-1">
-                    <div className="flex items-center gap-1 text-xs font-black text-white">
+                    <div className={`flex items-center gap-1 text-xs font-black ${isLight ? 'text-zinc-900' : 'text-white'}`}>
                       <Trophy className="w-3.5 h-3.5 text-zinc-300" />
                       <span>{displayWeight(pr.max_weight_kg, settings.weight_unit)}</span>
                     </div>
@@ -358,7 +378,11 @@ export const ExercisesView: React.FC = () => {
                     e.stopPropagation();
                     setExerciseToAddToRoutine(ex);
                   }}
-                  className="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-[#18181b] hover:bg-zinc-800 border border-[#27272a] text-zinc-300 hover:text-white text-[10px] font-bold flex items-center gap-1 transition active:scale-95"
+                  className={`p-2 sm:px-2.5 sm:py-1.5 rounded-xl border text-[10px] font-bold flex items-center gap-1 transition active:scale-95 ${
+                    isLight
+                      ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-800'
+                      : 'bg-[#18181b] hover:bg-zinc-800 border-[#27272a] text-zinc-300 hover:text-white'
+                  }`}
                   title="Adicionar a um treino"
                 >
                   <BookmarkPlus className="w-3.5 h-3.5" />

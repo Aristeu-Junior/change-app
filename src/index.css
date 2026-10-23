@@ -288,3 +288,21 @@ select {
   backdrop-filter: blur(24px) saturate(200%);
   -webkit-backdrop-filter: blur(24px) saturate(200%);
 }
+
+/* Correção definitiva para textos invisíveis no Modo Claro (Light Mode) */
+.theme-light h1,
+.theme-light h2,
+.theme-light h3,
+.theme-light h4,
+.theme-light h5,
+.theme-light h6 {
+  color: #09090b;
+}
+
+.theme-light .text-white:not([class*="bg-black"]):not([class*="bg-zinc-800"]):not([class*="bg-zinc-900"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]):not([class*="bg-blue-"]):not([class*="bg-sky-600"]):not(.stay-white) {
+  color: #09090b !important;
+}
+
+.theme-light .view-container svg.text-white:not([class*="bg-black"]):not([class*="bg-zinc-900"]) {
+  color: #09090b !important;
+}

@@ -56,6 +56,8 @@ export const DesktopSidebar: React.FC<NavigationProps> = ({ currentTab, onSelect
   }, [activeWorkout]);
 
   const isLight = theme === 'light';
+  const activeIndex = NAV_ITEMS.findIndex((item) => item.id === currentTab);
+  const safeActiveIndex = activeIndex >= 0 ? activeIndex : 0;
 
   return (
     <>
@@ -328,7 +330,7 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
         }}
       >
         <nav
-          className={`w-full p-1.5 rounded-[28px] transition-all duration-300 grid grid-cols-5 gap-1 items-center pointer-events-auto ${
+          className={`relative w-full p-1.5 rounded-[28px] transition-colors duration-300 grid grid-cols-5 gap-1 items-center pointer-events-auto ${
             isLight
               ? 'bg-white/75 border border-black/[0.08] text-black shadow-[0_14px_36px_-6px_rgba(0,0,0,0.12),inset_0_1px_1.5px_0_rgba(255,255,255,0.95)]'
               : 'bg-[#0c0d12]/75 border border-white/[0.12] text-white shadow-[0_16px_40px_-6px_rgba(0,0,0,0.75),inset_0_1px_1.5px_0_rgba(255,255,255,0.18)]'
@@ -337,6 +339,19 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
             WebkitBackdropFilter: 'blur(24px) saturate(200%)'
           }}
         >
+          {/* Pílula Deslizante Física de Vidro Líquido (glides smoothly across tabs) */}
+          <div
+            className={`absolute top-1.5 bottom-1.5 rounded-[22px] transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] pointer-events-none z-0 ${
+              isLight
+                ? 'bg-black/[0.09] shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.9),0_2px_8px_rgba(0,0,0,0.06)] ring-1 ring-black/5'
+                : 'bg-white/[0.14] shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.25),0_2px_12px_rgba(255,255,255,0.06)] ring-1 ring-white/15'
+            }`}
+            style={{
+              width: 'calc((100% - 12px - 16px) / 5)',
+              left: `calc(6px + ${safeActiveIndex} * ((100% - 12px - 16px) / 5 + 4px))`
+            }}
+          />
+
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = currentTab === item.id;
@@ -346,11 +361,11 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
                 type="button"
                 onClick={(e) => handleTabClick(e, item.id)}
                 onTouchEnd={(e) => handleTabClick(e, item.id)}
-                className={`relative flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition-all duration-200 select-none active:scale-95 cursor-pointer pointer-events-auto ${
+                className={`relative z-10 flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition-all duration-200 select-none active:scale-95 cursor-pointer pointer-events-auto bg-transparent ${
                   isActive
                     ? isLight
-                      ? 'bg-black/[0.08] text-black font-black shadow-sm ring-1 ring-black/5'
-                      : 'bg-white/[0.12] text-white font-black shadow-sm ring-1 ring-white/10'
+                      ? 'text-black font-black'
+                      : 'text-white font-black'
                     : isLight
                     ? 'text-zinc-500 hover:text-black font-semibold'
                     : 'text-zinc-400 hover:text-zinc-200 font-semibold'

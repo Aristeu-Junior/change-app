@@ -37,7 +37,8 @@ export const WaterTrackerModal: React.FC<WaterTrackerModalProps> = ({ isOpen, on
     removeWaterLog,
     updateWaterGoal,
     updateWaterTrackerConfig,
-    measurements
+    measurements,
+    settings
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'tracker' | 'settings'>('tracker');
@@ -56,7 +57,7 @@ export const WaterTrackerModal: React.FC<WaterTrackerModalProps> = ({ isOpen, on
   const remainingMl = Math.max(0, goalMl - todayWaterIntake);
 
   // Pega o peso corporal mais recente registrado pelo usuário
-  const latestWeight = measurements.length > 0 && measurements[0].weight_kg ? measurements[0].weight_kg : null;
+  const latestWeight = measurements.length > 0 && measurements[0].weight_kg ? measurements[0].weight_kg : settings.body_weight_kg || null;
 
   const handleQuickAdd = (amount: number) => {
     triggerHaptic(15);

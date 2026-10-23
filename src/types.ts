@@ -140,6 +140,8 @@ export interface UserSettings {
   wake_lock_enabled: boolean;
   theme: 'dark' | 'light';
   user_name: string;
+  height_cm?: number | null;
+  body_weight_kg?: number | null;
   water_tracker?: WaterTrackerConfig;
 }
 

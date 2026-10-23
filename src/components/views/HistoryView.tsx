@@ -157,12 +157,12 @@ export const HistoryView: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-full view-container space-y-5 text-white">
+    <div className={`flex flex-col min-h-full view-container space-y-5 ${isLight ? 'text-zinc-900' : 'text-white'}`}>
       {/* Topo */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-white">Histórico</h1>
-          <p className="text-xs text-zinc-400">Calendário mensal completo & cargas reais</p>
+          <h1 className={`text-2xl font-black ${isLight ? 'text-zinc-900' : 'text-white'}`}>Histórico</h1>
+          <p className={`text-xs ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>Calendário mensal completo & cargas reais</p>
         </div>
 
         {workouts.length > 0 &&
@@ -196,12 +196,12 @@ export const HistoryView: React.FC = () => {
       </div>
 
       {/* Calendário do Mês Inteiro (Do dia 1º até o último dia do mês no formato oficial) */}
-      <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md space-y-3">
+      <div className={`border rounded-2xl p-4 shadow-md space-y-3 ${isLight ? 'bg-white border-zinc-200 text-zinc-900' : 'bg-[#141416] border-[#27272a] text-white'}`}>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <CalendarIcon className="w-4 h-4 text-white shrink-0" />
             <div>
-              <h2 className="text-sm font-black text-white leading-tight">
+              <h2 className={`text-sm font-black leading-tight ${isLight ? 'text-zinc-900' : 'text-white'}`}>
                 {MONTHS_PT[viewMonth]} {viewYear}
               </h2>
               <span className="text-[10px] text-zinc-400 font-semibold block">
@@ -225,7 +225,11 @@ export const HistoryView: React.FC = () => {
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="p-1.5 rounded-lg bg-[#1c1c1f] hover:bg-zinc-800 border border-[#27272a] text-zinc-300 hover:text-white transition"
+              className={`p-1.5 rounded-lg border transition ${
+                isLight
+                  ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700'
+                  : 'bg-[#1c1c1f] hover:bg-zinc-800 border-[#27272a] text-zinc-300'
+              }`}
               title="Mês anterior"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -233,7 +237,11 @@ export const HistoryView: React.FC = () => {
             <button
               type="button"
               onClick={handleNextMonth}
-              className="p-1.5 rounded-lg bg-[#1c1c1f] hover:bg-zinc-800 border border-[#27272a] text-zinc-300 hover:text-white transition"
+              className={`p-1.5 rounded-lg border transition ${
+                isLight
+                  ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700'
+                  : 'bg-[#1c1c1f] hover:bg-zinc-800 border-[#27272a] text-zinc-300'
+              }`}
               title="Próximo mês"
             >
               <ChevronRight className="w-4 h-4" />
@@ -266,9 +274,15 @@ export const HistoryView: React.FC = () => {
                 key={d.dateKey}
                 className={`aspect-square rounded-xl flex flex-col items-center justify-center text-xs font-black transition relative select-none ${
                   trained
-                    ? 'bg-white text-black shadow-md'
+                    ? isLight
+                      ? 'bg-black text-white shadow-md'
+                      : 'bg-white text-black shadow-md'
                     : d.isToday
-                    ? 'bg-[#1c1c1f] text-white border-2 border-white/60'
+                    ? isLight
+                      ? 'bg-zinc-100 text-zinc-900 border-2 border-black'
+                      : 'bg-[#1c1c1f] text-white border-2 border-white/60'
+                    : isLight
+                    ? 'bg-zinc-50 text-zinc-600 border border-zinc-200'
                     : 'bg-[#1c1c1f] text-zinc-500 border border-[#27272a]/50'
                 }`}
                 title={`${d.dateKey}: ${d.workoutCount} ${
@@ -277,7 +291,7 @@ export const HistoryView: React.FC = () => {
               >
                 <span>{d.dayNumber}</span>
                 {trained && (
-                  <span className="w-1 h-1 rounded-full bg-black mt-0.5" />
+                  <span className={`w-1 h-1 rounded-full mt-0.5 ${isLight ? 'bg-white' : 'bg-black'}`} />
                 )}
               </div>
             );
@@ -292,7 +306,7 @@ export const HistoryView: React.FC = () => {
         </span>
 
         {workouts.length === 0 ? (
-          <div className="bg-[#141416] border border-[#27272a] rounded-2xl p-8 text-center text-zinc-500 space-y-2">
+          <div className={`border rounded-2xl p-8 text-center space-y-2 ${isLight ? 'bg-white border-zinc-200 text-zinc-500' : 'bg-[#141416] border-[#27272a] text-zinc-500'}`}>
             <Dumbbell className="w-10 h-10 mx-auto opacity-30" />
             <p className="text-xs font-bold">Nenhum treino registrado ainda</p>
             <p className="text-[11px] text-zinc-600">
@@ -315,7 +329,7 @@ export const HistoryView: React.FC = () => {
             return (
               <div
                 key={w.id}
-                className="bg-[#141416] border border-[#27272a] rounded-2xl p-4 shadow-md flex flex-col gap-3 transition"
+                className={`border rounded-2xl p-4 shadow-md flex flex-col gap-3 transition ${isLight ? 'bg-white border-zinc-200 text-zinc-900' : 'bg-[#141416] border-[#27272a] text-white'}`}
               >
                 {/* Cabeçalho */}
                 <div className="flex items-start justify-between">
@@ -323,7 +337,7 @@ export const HistoryView: React.FC = () => {
                     className="flex-1 cursor-pointer"
                     onClick={() => toggleExpand(w.id)}
                   >
-                    <h3 className="text-sm font-bold text-white transition">{w.title}</h3>
+                    <h3 className={`text-sm font-bold transition ${isLight ? 'text-zinc-900' : 'text-white'}`}>{w.title}</h3>
                     <div className="flex items-center gap-2 text-xs text-zinc-400 mt-1">
                       <span>
                         {new Date(w.start_time).toLocaleDateString('pt-BR', {
@@ -451,7 +465,11 @@ export const HistoryView: React.FC = () => {
 
                     <button
                       onClick={() => handleRepeatWorkout(w)}
-                      className="w-full py-2.5 bg-[#18181b] hover:bg-[#222226] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition border border-[#27272a]"
+                      className={`w-full py-2.5 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition border ${
+                        isLight
+                          ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-200'
+                          : 'bg-[#18181b] hover:bg-[#222226] text-white border-[#27272a]'
+                      }`}
                     >
                       <RotateCcw className="w-3.5 h-3.5" /> Repetir Este Treino
                     </button>

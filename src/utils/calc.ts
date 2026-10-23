@@ -105,65 +105,86 @@ let audioCtx: AudioContext | null = null;
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
   if (!audioCtx) {
-    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (AudioContextClass) {
       audioCtx = new AudioContextClass();
     }
   }
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
   return audioCtx;
 }
 
-export function playGymTone(type: 'countdown' | 'complete' | 'check'): void {
+export function playGymTone(type: 'countdown' | 'complete' | 'check' | 'water'): void {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
 
-    if (type === 'countdown') {
-      // 3, 2, 1 subtle blip
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(440, ctx.currentTime); // A4
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.12);
-    } else if (type === 'complete') {
-      // Rest timer finished: double high chime
+    const play = () => {
       const now = ctx.currentTime;
-      [880, 1174.66].forEach((freq, idx) => {
+      if (type === 'countdown') {
+        // 3, 2, 1 som de contagem
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, now + idx * 0.14);
-        gain.gain.setValueAtTime(0.25, now + idx * 0.14);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.14 + 0.35);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, now);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
         osc.connect(gain);
         gain.connect(ctx.destination);
-        osc.start(now + idx * 0.14);
-        osc.stop(now + idx * 0.14 + 0.35);
-      });
-    } else if (type === 'check') {
-      // Satisfying click / tap tone
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(600, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.08);
-      gain.gain.setValueAtTime(0.1, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.08);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      } else if (type === 'complete') {
+        // Fim do descanso: sino de academia nítido e encorpado
+        [880, 1174.66].forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.14);
+          gain.gain.setValueAtTime(0.35, now + idx * 0.14);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.14 + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + idx * 0.14);
+          osc.stop(now + idx * 0.14 + 0.35);
+        });
+      } else if (type === 'check') {
+        // Marcador de série concluída
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(950, now + 0.09);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.09);
+      } else if (type === 'water') {
+        // Gota de água cristalina
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(900, now);
+        osc.frequency.exponentialRampToValueAtTime(1450, now + 0.06);
+        osc.frequency.exponentialRampToValueAtTime(750, now + 0.15);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.15);
+      }
+    };
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(play).catch(() => {});
+    } else {
+      play();
     }
   } catch {
-    // AudioContext might be blocked until user gesture, safely ignore
+    // Ignora erros de permissão de áudio sem travar a interface
   }
 }
 
