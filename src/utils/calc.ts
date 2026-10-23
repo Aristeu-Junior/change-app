@@ -168,14 +168,20 @@ export function playGymTone(type: 'countdown' | 'complete' | 'check'): void {
 }
 
 // Haptic feedback
-export function triggerHaptic(type: 'light' | 'medium' | 'success' = 'light'): void {
+export function triggerHaptic(type: 'light' | 'medium' | 'success' | number = 'light'): void {
   if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-    if (type === 'light') {
-      navigator.vibrate(15);
-    } else if (type === 'medium') {
-      navigator.vibrate(30);
-    } else if (type === 'success') {
-      navigator.vibrate([40, 60, 80]);
+    try {
+      if (typeof type === 'number') {
+        navigator.vibrate(type);
+      } else if (type === 'light') {
+        navigator.vibrate(15);
+      } else if (type === 'medium') {
+        navigator.vibrate(30);
+      } else if (type === 'success') {
+        navigator.vibrate([40, 60, 80]);
+      }
+    } catch {
+      // Ignore vibration errors on unsupported or restricted environments
     }
   }
 }

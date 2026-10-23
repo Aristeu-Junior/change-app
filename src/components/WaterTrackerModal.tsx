@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   Droplets,
+  Droplet,
   Plus,
   Trash2,
   X,
@@ -131,10 +132,10 @@ export const WaterTrackerModal: React.FC<WaterTrackerModalProps> = ({ isOpen, on
 
         <div className={`flex items-center justify-between px-5 py-3.5 border-b ${isLight ? 'border-zinc-200' : 'border-zinc-800/80'}`}>
           <div className="flex items-center gap-2.5">
-            <div className={`w-9 h-9 rounded-2xl flex items-center justify-center shadow-inner ${
-              isLight ? 'bg-sky-100 text-sky-700' : 'bg-sky-950/60 text-sky-400 border border-sky-800/50'
+            <div className={`w-9 h-9 rounded-xl font-black flex items-center justify-center shadow-md border shrink-0 ${
+              isLight ? 'bg-black text-white border-black' : 'bg-white text-black border-zinc-300'
             }`}>
-              <Droplets className="w-5 h-5 fill-current" />
+              <Droplet className={`w-5 h-5 stroke-[2.4] ${isLight ? 'text-white' : 'text-black'}`} />
             </div>
             <div>
               <h2 className={`text-base font-black tracking-tight ${isLight ? 'text-zinc-900' : 'text-white'}`}>

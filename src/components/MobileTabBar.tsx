@@ -14,7 +14,7 @@ import {
   Users
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { formatDuration } from '../utils/calc';
+import { formatDuration, triggerHaptic } from '../utils/calc';
 import { UserAccountModal } from './UserAccountModal';
 
 export type TabType = 'routines' | 'exercises' | 'history' | 'analytics' | 'settings';

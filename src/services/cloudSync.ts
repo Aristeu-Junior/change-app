@@ -180,9 +180,10 @@ export const authenticateUserInCloud = async (
     });
 
     if (res.ok) {
-      const rows = await res.json();
-      if (Array.isArray(rows) && rows.length > 0) {
-        return rows[0] as CloudUserPayload;
+      const data = await res.json();
+      const payload = Array.isArray(data) ? (data.length > 0 ? data[0] : null) : data;
+      if (payload && payload.email) {
+        return payload as CloudUserPayload;
       }
     }
     return null;
@@ -518,6 +519,7 @@ export const createCloudUserByAdmin = async (
     user_id: newUser.id,
     email: sanitizeInput(newUser.email, 100).toLowerCase(),
     name: sanitizeInput(newUser.name, 80),
+    account_status: 'approved',
     password_hash: hashedPassword,
     avatar_color: newUser.avatar_color || '#ffffff',
     workouts: [],
@@ -609,7 +611,8 @@ export const updateCloudUserCredentials = async (
 
     if (res.ok) {
       const data = await res.json();
-      return data;
+      const payload = Array.isArray(data) ? (data.length > 0 ? data[0] : null) : data;
+      return payload || { ok: false, error: 'Resposta inválida do servidor.' };
     }
     return { ok: false, error: 'Não foi possível salvar os novos dados.' };
   } catch {
@@ -822,9 +825,10 @@ export const recoverPasswordWithTotp = async (
     });
 
     if (resetRes.ok) {
-      const rows = await resetRes.json();
-      if (Array.isArray(rows) && rows.length > 0) {
-        return { ok: true, account: rows[0] as CloudUserPayload };
+      const data = await resetRes.json();
+      const payload = Array.isArray(data) ? (data.length > 0 ? data[0] : null) : data;
+      if (payload && payload.email) {
+        return { ok: true, account: payload as CloudUserPayload };
       }
     }
     return { ok: false, error: 'Não foi possível redefinir a senha.' };
@@ -995,7 +999,8 @@ export const requestOrCheckGoogleAccess = async (
 
     if (res.ok) {
       const data = await res.json();
-      return data;
+      const payload = Array.isArray(data) ? (data.length > 0 ? data[0] : null) : data;
+      return payload || { status: 'error', message: 'Resposta inválida do servidor.' };
     }
     return { status: 'error', message: 'Erro ao consultar status de aprovação.' };
   } catch {

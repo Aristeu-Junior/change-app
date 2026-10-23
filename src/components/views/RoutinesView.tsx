@@ -20,7 +20,8 @@ import {
   Clock,
   X,
   Sparkles,
-  Droplets
+  Droplets,
+  Droplet
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Routine, ExerciseTemplate } from '../../types';
@@ -650,7 +651,7 @@ export const RoutinesView: React.FC = () => {
 
       {/* WIDGET HERO: HIDRATAÇÃO & ÁGUA DIÁRIA */}
       <div
-        className={`p-3.5 rounded-2xl border transition-all ${
+        className={`p-3 rounded-2xl border transition-all ${
           isLight
             ? 'bg-white border-zinc-200/90 shadow-sm text-zinc-900'
             : 'bg-[#121318] border-zinc-800/90 shadow-lg text-white'
@@ -661,63 +662,65 @@ export const RoutinesView: React.FC = () => {
             onClick={() => setWaterModalOpen(true)}
             className="flex items-center gap-3 min-w-0 text-left active:scale-[0.98] transition flex-1"
           >
+            {/* Ícone com identidade visual Change (igual ao halter do canto) */}
             <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-inner ${
-                isLight ? 'bg-sky-100 text-sky-700' : 'bg-sky-950/60 text-sky-400 border border-sky-800/40'
+              className={`w-9 h-9 rounded-xl font-black flex items-center justify-center shadow-md border shrink-0 ${
+                isLight ? 'bg-black text-white border-black' : 'bg-white text-black border-zinc-300'
               }`}
             >
-              <Droplets className="w-5 h-5 fill-current" />
+              <Droplet className={`w-5 h-5 stroke-[2.4] ${isLight ? 'text-white' : 'text-black'}`} />
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center justify-between gap-2">
                 <span className={`text-xs font-black tracking-tight ${isLight ? 'text-zinc-900' : 'text-white'}`}>
                   Hidratação Hoje
                 </span>
-                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-sky-500/15 text-sky-500">
-                  {todayWaterProgressPercent}%
-                </span>
-              </div>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className={`text-sm font-black ${isLight ? 'text-zinc-900' : 'text-white'}`}>
+                <span className={`text-xs font-black ${isLight ? 'text-zinc-900' : 'text-white'}`}>
                   {todayWaterIntake.toLocaleString('pt-BR')} ml
-                </span>
-                <span className={`text-[10px] font-semibold ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                  / {(waterTrackerConfig.daily_goal_ml || 2500).toLocaleString('pt-BR')} ml
-                </span>
-                <span className={`text-[10px] ml-auto font-bold truncate ${isLight ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                  {todayWaterIntake >= (waterTrackerConfig.daily_goal_ml || 2500)
-                    ? 'Meta Batida! 🏆'
-                    : `Falta ${Math.max(0, (waterTrackerConfig.daily_goal_ml || 2500) - todayWaterIntake).toLocaleString('pt-BR')} ml`}
                 </span>
               </div>
 
               {/* Barra de Progresso Fluida */}
-              <div className="mt-2 w-full h-1.5 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800">
+              <div className="mt-1.5 w-full h-1.5 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800">
                 <div
-                  className="h-full bg-gradient-to-r from-sky-500 to-cyan-400 transition-all duration-300 rounded-full"
+                  className={`h-full transition-all duration-300 rounded-full ${
+                    isLight ? 'bg-black' : 'bg-white'
+                  }`}
                   style={{ width: `${Math.min(100, todayWaterProgressPercent)}%` }}
                 />
+              </div>
+
+              {/* Pequeno embaixo da barrinha: 'faltam tanto tanto' */}
+              <div className="mt-1 flex items-center justify-between text-[10px]">
+                <span className={`font-semibold ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                  {todayWaterIntake >= (waterTrackerConfig.daily_goal_ml || 2500)
+                    ? 'Meta batida! 🏆'
+                    : `Faltam ${Math.max(0, (waterTrackerConfig.daily_goal_ml || 2500) - todayWaterIntake).toLocaleString('pt-BR')} ml`}
+                </span>
+                <span className={`font-bold ${isLight ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                  {todayWaterProgressPercent}%
+                </span>
               </div>
             </div>
           </button>
 
-          {/* Ações Rápidas de Ingestão: +250ml e +500ml */}
-          <div className="flex items-center gap-1.5 shrink-0 pl-1 border-l border-zinc-200 dark:border-zinc-800">
+          {/* Ações Rápidas de Ingestão: +250ml e +500ml reduzidos */}
+          <div className="flex items-center gap-1 shrink-0 pl-1.5 border-l border-zinc-200 dark:border-zinc-800">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 addWaterLog(250);
               }}
-              className={`px-2 py-2 rounded-xl text-[11px] font-black border transition active:scale-95 flex flex-col items-center justify-center ${
+              className={`px-2 py-1 rounded-lg text-[10px] font-black border transition active:scale-95 flex flex-col items-center justify-center ${
                 isLight
-                  ? 'bg-zinc-100 hover:bg-sky-50 text-zinc-900 border-zinc-200 shadow-sm'
+                  ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-200 shadow-sm'
                   : 'bg-[#181a20] hover:bg-zinc-800 text-zinc-200 border-zinc-700/80 shadow-sm'
               }`}
               title="Registrar +250 ml de água"
             >
               <span>+250</span>
-              <span className="text-[8px] opacity-60">ml</span>
+              <span className="text-[7px] opacity-60 leading-none">ml</span>
             </button>
 
             <button
@@ -725,7 +728,7 @@ export const RoutinesView: React.FC = () => {
                 e.stopPropagation();
                 addWaterLog(500);
               }}
-              className={`px-2 py-2 rounded-xl text-[11px] font-black border transition active:scale-95 flex flex-col items-center justify-center ${
+              className={`px-2 py-1 rounded-lg text-[10px] font-black border transition active:scale-95 flex flex-col items-center justify-center ${
                 isLight
                   ? 'bg-black text-white hover:bg-zinc-800 border-black shadow-sm'
                   : 'bg-white text-black hover:bg-zinc-200 border-white shadow-sm'
@@ -733,7 +736,7 @@ export const RoutinesView: React.FC = () => {
               title="Registrar +500 ml de água"
             >
               <span>+500</span>
-              <span className="text-[8px] opacity-60">ml</span>
+              <span className="text-[7px] opacity-60 leading-none">ml</span>
             </button>
           </div>
         </div>

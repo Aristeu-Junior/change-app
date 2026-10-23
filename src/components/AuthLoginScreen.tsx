@@ -226,7 +226,9 @@ export const AuthLoginScreen: React.FC = () => {
     const checkExisting = await requestOrCheckGoogleAccess(cleanEmail);
     if (checkExisting.status === 'approved') {
       setIsLoading(false);
-      setErrorMsg('Este e-mail já possui cadastro ativo. Volte e entre usando sua senha.');
+      setMode('login');
+      setIdentifier(cleanEmail);
+      setSuccessMsg('Sua conta já está cadastrada e aprovada! Digite sua senha para entrar.');
       return;
     }
     if (checkExisting.status === 'rejected') {
@@ -244,6 +246,13 @@ export const AuthLoginScreen: React.FC = () => {
     const res = await requestOrCheckGoogleAccess(cleanEmail, cleanName, cleanPass);
     setIsLoading(false);
 
+    if (res.status === 'approved') {
+      setMode('login');
+      setIdentifier(cleanEmail);
+      setSuccessMsg('Sua conta foi aprovada pelo administrador! Digite sua senha para entrar.');
+      return;
+    }
+
     if (res.status === 'pending') {
       localStorage.setItem('change_pending_google_email', cleanEmail);
       setPassword(cleanPass);
@@ -256,7 +265,7 @@ export const AuthLoginScreen: React.FC = () => {
       return;
     }
 
-    setErrorMsg(res.message || 'Não foi possível enviar a solicitação de acesso.');
+    setErrorMsg(res.message || 'Não foi possível enviar a solicitação de acesso. Verifique sua conexão e tente novamente.');
   };
 
   // 4. Esqueci Minha Senha (Envio de Nova Senha por E-mail ou Redefinição Imediata via 2FA)
