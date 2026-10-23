@@ -68,6 +68,7 @@ export const RoutinesView: React.FC = () => {
   } = useApp();
 
   const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
+  const [selectedFolderForNewRoutine, setSelectedFolderForNewRoutine] = useState<number | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [activeMenuRoutineId, setActiveMenuRoutineId] = useState<string | null>(null);
   const [routineToDelete, setRoutineToDelete] = useState<Routine | null>(null);
@@ -942,19 +943,49 @@ export const RoutinesView: React.FC = () => {
                   <span className="text-sm font-bold text-white">{f.title}</span>
                   <span className="text-xs text-zinc-500 font-normal">({folderQueue.length})</span>
                 </div>
-                <button
-                  onClick={() => deleteFolder(f.id)}
-                  className="text-zinc-500 hover:text-red-400 p-1"
-                  title="Excluir Pasta"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFolderForNewRoutine(f.id);
+                      setEditingRoutine(null);
+                      setIsEditorOpen(true);
+                    }}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#27272a] hover:bg-white hover:text-black text-white text-[11px] font-black transition active:scale-95 shadow-sm"
+                    title={`Adicionar novo treino na pasta ${f.title}`}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Treino</span>
+                  </button>
+                  <button
+                    onClick={() => deleteFolder(f.id)}
+                    className="text-zinc-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-zinc-800 transition"
+                    title="Excluir Pasta"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {folderQueue.length === 0 ? (
-                  <p className="text-xs text-zinc-500 italic pl-6 col-span-full">
-                    Nenhum plano nesta pasta ainda.
-                  </p>
+                  <div className="col-span-full p-4 rounded-2xl border border-dashed border-[#27272a] bg-[#141416]/50 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs text-zinc-300 font-bold">Nenhum plano nesta pasta ainda.</p>
+                      <p className="text-[11px] text-zinc-500">Adicione seu primeiro treino para esta divisão</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedFolderForNewRoutine(f.id);
+                        setEditingRoutine(null);
+                        setIsEditorOpen(true);
+                      }}
+                      className="px-3 py-1.5 bg-white text-black font-black text-xs rounded-xl shadow active:scale-95 transition flex items-center gap-1 shrink-0"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>+ Criar Treino</span>
+                    </button>
+                  </div>
                 ) : (
                   folderQueue.map((meta) => renderRoutineCard(meta, folderQueue))
                 )}
@@ -984,7 +1015,7 @@ export const RoutinesView: React.FC = () => {
 
       {/* Modal de Confirmação quando o usuário tenta repetir um treino já realizado na semana */}
       {repeatConfirmRoutine && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="w-full max-w-sm bg-[#141416] border border-[#27272a] rounded-3xl p-6 shadow-2xl text-center space-y-4 text-white">
             <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 text-white flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
@@ -1057,7 +1088,7 @@ export const RoutinesView: React.FC = () => {
       {/* Modal Rápido de Demonstração 3D de Exercício dentro do Plano */}
       {previewExercise3D && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-150"
           onClick={(e) => {
             if (e.target === e.currentTarget) setPreviewExercise3D(null);
           }}
@@ -1084,7 +1115,7 @@ export const RoutinesView: React.FC = () => {
 
       {/* Modal de Confirmação de Exclusão */}
       {routineToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="w-full max-w-xs bg-[#18181b] border border-[#27272a] rounded-2xl p-5 shadow-2xl text-center space-y-4">
             <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
@@ -1116,10 +1147,12 @@ export const RoutinesView: React.FC = () => {
       {/* Modal Editor / Criador de Plano */}
       <RoutineEditorModal
         routineToEdit={editingRoutine}
+        defaultFolderId={selectedFolderForNewRoutine}
         isOpen={isEditorOpen}
         onClose={() => {
           setIsEditorOpen(false);
           setEditingRoutine(null);
+          setSelectedFolderForNewRoutine(null);
         }}
       />
 

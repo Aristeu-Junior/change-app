@@ -8,12 +8,14 @@ import { POPULAR_ROUTINE_PRESETS, RoutinePreset } from '../../data/defaultRoutin
 
 interface RoutineEditorModalProps {
   routineToEdit?: Routine | null;
+  defaultFolderId?: number | null;
   isOpen: boolean;
   onClose: () => void;
 }
 
 export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
   routineToEdit,
+  defaultFolderId,
   isOpen,
   onClose
 }) => {
@@ -32,7 +34,7 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setTitle(routineToEdit?.title || '');
-      setFolderId(routineToEdit?.folder_id ?? null);
+      setFolderId(routineToEdit?.folder_id ?? defaultFolderId ?? null);
       setNotes(routineToEdit?.notes || '');
       setExercises(
         routineToEdit?.exercises ? JSON.parse(JSON.stringify(routineToEdit.exercises)) : []
@@ -41,7 +43,7 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
       setNewFolderTitle('');
       setShowPresets(false);
     }
-  }, [isOpen, routineToEdit]);
+  }, [isOpen, routineToEdit, defaultFolderId]);
 
   if (!isOpen) return null;
 
@@ -119,9 +121,12 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
     });
   };
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) return;
+  const handleSave = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!title.trim()) {
+      alert('Por favor, informe o nome do plano de treino.');
+      return;
+    }
 
     const routine: Routine = {
       id: routineToEdit?.id || `routine-${Date.now()}`,
@@ -146,29 +151,45 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-lg bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl flex flex-col h-[86dvh] modal-safe-sheet text-white">
-        {/* Topo */}
-        <div className="flex items-center justify-between pb-3 border-b border-[#27272a] shrink-0">
-          <div>
-            <h2 className="text-base font-black text-white">
-              {routineToEdit ? 'Editar Plano de Treino' : 'Montar Novo Plano de Treino'}
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm animate-in fade-in duration-200 p-0 sm:p-4">
+      <div className="w-full max-w-lg bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col h-[90dvh] sm:h-auto sm:max-h-[88vh] text-white overflow-hidden">
+        {/* Topo com botão Salvar Rápido */}
+        <div className="flex items-center justify-between pb-3 border-b border-[#27272a] shrink-0 gap-2">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-sm sm:text-base font-black text-white truncate">
+              {routineToEdit ? 'Editar Plano de Treino' : 'Montar Novo Plano'}
             </h2>
-            <p className="text-[11px] text-zinc-400">
-              Escolha uma sugestão conhecida abaixo ou monte seu treino do zero
+            <p className="text-[11px] text-zinc-400 truncate">
+              {folderId
+                ? `Pasta: ${folders.find((f) => f.id === folderId)?.title || 'Selecionada'}`
+                : 'Lista Principal de Treinos'}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800 transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => handleSave()}
+              className="px-3.5 py-1.5 bg-white hover:bg-zinc-200 text-black font-black text-xs rounded-xl shadow active:scale-95 transition"
+            >
+              Salvar
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800 transition"
+              title="Fechar"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Formulário */}
         <form onSubmit={handleSave} className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          <div className="flex-1 min-h-0 overflow-y-auto space-y-4 py-3 pr-1">
+          <div
+            className="flex-1 min-h-0 overflow-y-auto space-y-4 py-3 pr-1"
+            style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
+          >
             {/* SUGESTÕES DE TREINOS CONHECIDOS (Compacto e Recolhível por padrão) */}
             <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-2.5 space-y-2">
               <div className="flex items-center justify-between">
@@ -472,13 +493,21 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
             </div>
           </div>
 
-          {/* Botão Salvar Plano */}
-          <div className="pt-3 border-t border-[#27272a] shrink-0">
+          {/* Botão Salvar Plano Inferior com Safe-Area */}
+          <div
+            className="pt-3 border-t border-[#27272a] shrink-0 bg-[#121214]"
+            style={{ paddingBottom: 'max(14px, env(safe-area-inset-bottom, 14px))' }}
+          >
             <button
               type="submit"
-              className="w-full py-3.5 bg-white text-black font-black text-xs uppercase tracking-wider rounded-xl active:scale-98 transition shadow-lg"
+              className="w-full py-3.5 bg-white text-black font-black text-xs uppercase tracking-wider rounded-xl active:scale-98 transition shadow-xl flex items-center justify-center gap-2"
             >
-              Salvar Plano de Treino
+              <span>Salvar Plano de Treino</span>
+              {exercises.length > 0 && (
+                <span className="text-[10px] bg-black text-white px-2 py-0.5 rounded-full font-bold">
+                  {exercises.length} {exercises.length === 1 ? 'exercício' : 'exercícios'}
+                </span>
+              )}
             </button>
           </div>
         </form>

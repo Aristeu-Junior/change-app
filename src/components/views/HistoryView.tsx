@@ -41,7 +41,8 @@ const toLocalDateKey = (dateInput: string | Date): string => {
 };
 
 export const HistoryView: React.FC = () => {
-  const { workouts, startWorkout, deleteWorkout, clearWorkouts, settings } = useApp();
+  const { workouts, startWorkout, deleteWorkout, clearWorkouts, settings, theme } = useApp();
+  const isLight = theme === 'light';
   const [expandedWorkoutId, setExpandedWorkoutId] = useState<string | null>(null);
   const [confirmClearAll, setConfirmClearAll] = useState(false);
 

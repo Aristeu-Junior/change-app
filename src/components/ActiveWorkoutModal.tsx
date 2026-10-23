@@ -161,7 +161,7 @@ export const ActiveWorkoutModal: React.FC = () => {
   const progressPct = totalSetsCount > 0 ? Math.round((completedSetsCount / totalSetsCount) * 100) : 0;
 
   return (
-    <div className="fixed inset-0 z-40 bg-black md:bg-black/85 md:backdrop-blur-sm flex flex-col md:items-center md:justify-center md:p-6 overflow-hidden animate-in slide-in-from-bottom duration-200 text-white">
+    <div className="fixed inset-0 z-[90] bg-black md:bg-black/85 md:backdrop-blur-sm flex flex-col md:items-center md:justify-center md:p-6 overflow-hidden animate-in slide-in-from-bottom duration-200 text-white">
       <div className="w-full md:max-w-2xl flex-1 md:flex-initial md:h-[90dvh] bg-black md:bg-[#0d0d0f] md:border md:border-[#27272a] md:rounded-3xl md:shadow-2xl flex flex-col overflow-hidden relative">
         {/* Barra de Topo Minimalista (protegida por pt-safe no Web App celular e limpa no PC) */}
         <div className="flex items-center justify-between px-4 pb-2.5 pt-safe md:!pt-3.5 bg-[#121214] border-b border-[#27272a] shrink-0">

@@ -300,6 +300,32 @@ const rebuildPersonalRecords = (workoutsList: Workout[]): Record<string, Persona
   return prs;
 };
 
+const getTombstones = (userId: string): Set<string> => {
+  try {
+    const raw = localStorage.getItem(`change_${userId}_tombstones`);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+};
+
+const addTombstone = (userId: string, id: string | number) => {
+  try {
+    const current = getTombstones(userId);
+    current.add(String(id));
+    localStorage.setItem(`change_${userId}_tombstones`, JSON.stringify(Array.from(current)));
+  } catch {}
+};
+
+const removeTombstone = (userId: string, id: string | number) => {
+  try {
+    const current = getTombstones(userId);
+    if (current.delete(String(id))) {
+      localStorage.setItem(`change_${userId}_tombstones`, JSON.stringify(Array.from(current)));
+    }
+  } catch {}
+};
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -857,11 +883,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const localMeas = localMeasRaw ? JSON.parse(localMeasRaw) : [];
         const localSettings = localSettingsRaw ? JSON.parse(localSettingsRaw) : {};
 
-        // MESCLAGEM INTELIGENTE BIDIRECIONAL
+        // MESCLAGEM INTELIGENTE BIDIRECIONAL COM SUPORTE A TOMBSTONES (Exclusões Permanentes)
+        const tombstones = getTombstones(user.id);
+
+        const filteredCloudWorkouts = cloudWorkouts.filter((w) => !tombstones.has(String(w.id)));
+        const filteredLocalWorkouts = localWorkouts.filter((w) => !tombstones.has(String(w.id)));
+
+        const filteredCloudRoutines = cloudRoutines.filter((r) => !tombstones.has(String(r.id)));
+        const filteredLocalRoutines = localRoutines.filter((r) => !tombstones.has(String(r.id)));
+
+        const filteredCloudFolders = cloudFolders.filter((f) => !tombstones.has(String(f.id)));
+        const filteredLocalFolders = localFolders.filter((f: RoutineFolder) => !tombstones.has(String(f.id)));
+
         // 1. Workouts: combina treinos feitos em qualquer navegador ou celular sem apagar nada
         const workoutMap = new Map<string, Workout>();
-        cloudWorkouts.forEach((w) => { if (w && w.id) workoutMap.set(w.id, w); });
-        localWorkouts.forEach((w) => {
+        filteredCloudWorkouts.forEach((w) => { if (w && w.id) workoutMap.set(w.id, w); });
+        filteredLocalWorkouts.forEach((w) => {
           if (!w || !w.id) return;
           const existing = workoutMap.get(w.id);
           if (!existing) {
@@ -878,8 +915,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         // 2. Routines: preserva todas as rotinas criadas em qualquer lugar
         const routineMap = new Map<string, Routine>();
-        cloudRoutines.forEach((r) => { if (r && r.id) routineMap.set(r.id, r); });
-        localRoutines.forEach((r) => {
+        filteredCloudRoutines.forEach((r) => { if (r && r.id) routineMap.set(r.id, r); });
+        filteredLocalRoutines.forEach((r) => {
           if (!r || !r.id) return;
           const existing = routineMap.get(r.id);
           if (!existing) {
@@ -894,16 +931,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         // 3. Folders: combina todas as pastas
         const folderMap = new Map<number, RoutineFolder>();
-        cloudFolders.forEach((f) => { if (f && f.id) folderMap.set(f.id, f); });
-        localFolders.forEach((f: RoutineFolder) => {
+        filteredCloudFolders.forEach((f) => { if (f && f.id) folderMap.set(f.id, f); });
+        filteredLocalFolders.forEach((f: RoutineFolder) => {
           if (f && f.id && !folderMap.has(f.id)) folderMap.set(f.id, f);
         });
         const mergedFolders = sanitizeUserFolders(Array.from(folderMap.values()), mergedRoutines);
 
         // 4. Custom Exercises: combina todos os exercícios criados
         const customExMap = new Map<string, ExerciseTemplate>();
-        cloudExercises.filter((e) => e.is_custom).forEach((e) => customExMap.set(e.id, e));
-        localExercises.filter((e: ExerciseTemplate) => e && e.is_custom).forEach((e: ExerciseTemplate) => {
+        cloudExercises.filter((e) => e.is_custom && !tombstones.has(String(e.id))).forEach((e) => customExMap.set(e.id, e));
+        localExercises.filter((e: ExerciseTemplate) => e && e.is_custom && !tombstones.has(String(e.id))).forEach((e: ExerciseTemplate) => {
           if (!customExMap.has(e.id)) customExMap.set(e.id, e);
         });
         const mergedExercises = [...Array.from(customExMap.values()), ...DEFAULT_EXERCISES];
@@ -1638,6 +1675,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteWorkout = (workoutId: string) => {
+    addTombstone(currentUser.id, workoutId);
     const next = workouts.filter((w) => w.id !== workoutId);
     const nextPrs = rebuildPersonalRecords(next);
     setWorkouts(next);
@@ -1814,6 +1852,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const saveRoutine = (routine: Routine) => {
+    removeTombstone(currentUser.id, routine.id);
     let nextRoutines: Routine[];
     const idx = routines.findIndex((r) => r.id === routine.id);
     if (idx !== -1) {
@@ -1839,6 +1878,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteRoutine = (routineId: string) => {
+    addTombstone(currentUser.id, routineId);
     const nextRoutines = routines.filter((r) => r.id !== routineId);
     setRoutines(nextRoutines);
     localStorage.setItem(userKey('routines'), JSON.stringify(nextRoutines));
@@ -1862,6 +1902,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       title,
       index: folders.length
     };
+    removeTombstone(currentUser.id, newFolder.id);
     const nextFolders = [...folders, newFolder];
     setFolders(nextFolders);
     localStorage.setItem(userKey('folders'), JSON.stringify(nextFolders));
@@ -1880,6 +1921,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteFolder = (folderId: number) => {
+    addTombstone(currentUser.id, folderId);
     const nextFolders = folders.filter((f) => f.id !== folderId);
     const nextRoutines = routines.map((r) =>
       r.folder_id === folderId ? { ...r, folder_id: null } : r
@@ -1968,6 +2010,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteCustomExercise = (id: string) => {
+    addTombstone(currentUser.id, id);
     setExercises((prev) => prev.filter((e) => e.id !== id));
   };
 

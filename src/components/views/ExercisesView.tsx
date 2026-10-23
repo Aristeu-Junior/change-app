@@ -60,8 +60,11 @@ export const ExercisesView: React.FC = () => {
     settings,
     deleteCustomExercise,
     routines,
-    saveRoutine
+    saveRoutine,
+    theme
   } = useApp();
+
+  const isLight = theme === 'light';
 
   const [query, setQuery] = useState('');
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
@@ -542,7 +545,7 @@ export const ExercisesView: React.FC = () => {
       {/* Modal: Escolher a Qual Treino Adicionar Este Exercício */}
       {exerciseToAddToRoutine && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-150"
           onClick={(e) => {
             if (e.target === e.currentTarget) setExerciseToAddToRoutine(null);
           }}

@@ -222,7 +222,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
   const guestUsers = users.filter((u) => !isAdminProfile(u));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="w-full max-w-sm bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl flex flex-col gap-4 text-white modal-safe-sheet overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-[#27272a]">
