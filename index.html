@@ -88,6 +88,13 @@
 
         // Registro do Service Worker sem cache para atualização imediata
         if ('serviceWorker' in navigator) {
+          var isRefreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', function () {
+            if (isRefreshing) return;
+            isRefreshing = true;
+            window.location.reload();
+          });
+
           window.addEventListener('load', function () {
             navigator.serviceWorker
               .register('./sw.js', { scope: './', updateViaCache: 'none' })

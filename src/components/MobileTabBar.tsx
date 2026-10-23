@@ -247,13 +247,21 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
 
   const isLight = theme === 'light';
 
-  const handleTabClick = (tab: TabType) => {
-    triggerHaptic(10);
+  const handleTabClick = (e: React.SyntheticEvent, tab: TabType) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     onSelectTab(tab);
+    try {
+      triggerHaptic(10);
+    } catch {
+      // Ignore vibration errors
+    }
   };
 
   return (
-    <div className="md:hidden fixed inset-x-0 bottom-0 z-40 pointer-events-none select-none">
+    <div className="md:hidden fixed inset-x-0 bottom-0 z-50 pointer-events-none select-none">
       {/* Pílula Flutuante de Treino Ativo (quando minimizado) */}
       {activeWorkout && !isWorkoutModalOpen && (
         <div
@@ -261,11 +269,19 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
           style={{ marginBottom: 'max(76px, calc(var(--safe-bottom) + 68px))' }}
         >
           <button
-            onClick={() => {
-              triggerHaptic(15);
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
               setWorkoutModalOpen(true);
+              try { triggerHaptic(15); } catch {}
             }}
-            className={`w-full p-3 ${
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              setWorkoutModalOpen(true);
+              try { triggerHaptic(15); } catch {}
+            }}
+            style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+            className={`w-full p-3 cursor-pointer pointer-events-auto ${
               isLight
                 ? 'bg-black text-white shadow-[0_12px_32px_rgba(0,0,0,0.25)] border border-black/10'
                 : 'bg-white text-black shadow-[0_12px_32px_rgba(0,0,0,0.75)] border border-white/20'
@@ -312,7 +328,7 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
         }}
       >
         <nav
-          className={`w-full p-1.5 rounded-[28px] transition-all duration-300 grid grid-cols-5 gap-1 items-center ${
+          className={`w-full p-1.5 rounded-[28px] transition-all duration-300 grid grid-cols-5 gap-1 items-center pointer-events-auto ${
             isLight
               ? 'bg-white/75 border border-black/[0.08] text-black shadow-[0_14px_36px_-6px_rgba(0,0,0,0.12),inset_0_1px_1.5px_0_rgba(255,255,255,0.95)]'
               : 'bg-[#0c0d12]/75 border border-white/[0.12] text-white shadow-[0_16px_40px_-6px_rgba(0,0,0,0.75),inset_0_1px_1.5px_0_rgba(255,255,255,0.18)]'
@@ -327,8 +343,10 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
             return (
               <button
                 key={item.id}
-                onClick={() => handleTabClick(item.id)}
-                className={`relative flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition-all duration-200 select-none active:scale-95 ${
+                type="button"
+                onClick={(e) => handleTabClick(e, item.id)}
+                onTouchEnd={(e) => handleTabClick(e, item.id)}
+                className={`relative flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition-all duration-200 select-none active:scale-95 cursor-pointer pointer-events-auto ${
                   isActive
                     ? isLight
                       ? 'bg-black/[0.08] text-black font-black shadow-sm ring-1 ring-black/5'
@@ -337,6 +355,10 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
                     ? 'text-zinc-500 hover:text-black font-semibold'
                     : 'text-zinc-400 hover:text-zinc-200 font-semibold'
                 }`}
+                style={{
+                  WebkitTapHighlightColor: 'transparent',
+                  touchAction: 'manipulation'
+                }}
               >
                 <Icon
                   className={`w-5 h-5 transition-transform duration-200 ${
