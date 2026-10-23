@@ -72,6 +72,7 @@ export const RoutinesView: React.FC = () => {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [activeMenuRoutineId, setActiveMenuRoutineId] = useState<string | null>(null);
   const [routineToDelete, setRoutineToDelete] = useState<Routine | null>(null);
+  const [folderToDelete, setFolderToDelete] = useState<{ id: number; title: string; count: number } | null>(null);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderTitle, setNewFolderTitle] = useState('');
@@ -345,6 +346,13 @@ export const RoutinesView: React.FC = () => {
     if (routineToDelete) {
       deleteRoutine(routineToDelete.id);
       setRoutineToDelete(null);
+    }
+  };
+
+  const confirmDeleteFolder = () => {
+    if (folderToDelete) {
+      deleteFolder(folderToDelete.id);
+      setFolderToDelete(null);
     }
   };
 
@@ -958,9 +966,9 @@ export const RoutinesView: React.FC = () => {
                     <span>+ Treino</span>
                   </button>
                   <button
-                    onClick={() => deleteFolder(f.id)}
+                    onClick={() => setFolderToDelete({ id: f.id, title: f.title, count: folderQueue.length })}
                     className="text-zinc-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-zinc-800 transition"
-                    title="Excluir Pasta"
+                    title="Excluir Pasta e Planos"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -1113,7 +1121,7 @@ export const RoutinesView: React.FC = () => {
         </div>
       )}
 
-      {/* Modal de Confirmação de Exclusão */}
+      {/* Modal de Confirmação de Exclusão de Plano */}
       {routineToDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="w-full max-w-xs bg-[#18181b] border border-[#27272a] rounded-2xl p-5 shadow-2xl text-center space-y-4">
@@ -1138,6 +1146,42 @@ export const RoutinesView: React.FC = () => {
                 className="flex-1 py-2 bg-red-600 text-white font-bold text-xs rounded-xl hover:bg-red-700 transition shadow-md"
               >
                 Sim, Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão de Pasta e seus Treinos */}
+      {folderToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="w-full max-w-xs bg-[#18181b] border border-[#27272a] rounded-2xl p-5 shadow-2xl text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">Excluir Pasta e Conteúdo?</h3>
+              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                Tem certeza que deseja apagar a pasta <strong>"{folderToDelete.title}"</strong>
+                {folderToDelete.count > 0 ? (
+                  <> e todos os <strong>{folderToDelete.count} {folderToDelete.count === 1 ? 'treino' : 'treinos'}</strong> contidos nela?</>
+                ) : (
+                  <>?</>
+                )} Esta ação apagará a pasta e seus exercícios permanentemente.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setFolderToDelete(null)}
+                className="flex-1 py-2 bg-[#27272a] text-zinc-300 font-bold text-xs rounded-xl hover:bg-zinc-700 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteFolder}
+                className="flex-1 py-2 bg-red-600 text-white font-bold text-xs rounded-xl hover:bg-red-700 transition shadow-md"
+              >
+                Sim, Excluir Tudo
               </button>
             </div>
           </div>

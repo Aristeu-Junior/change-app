@@ -1922,10 +1922,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteFolder = (folderId: number) => {
     addTombstone(currentUser.id, folderId);
+    const routinesToDelete = routines.filter((r) => r.folder_id === folderId);
+    routinesToDelete.forEach((r) => addTombstone(currentUser.id, r.id));
+
     const nextFolders = folders.filter((f) => f.id !== folderId);
-    const nextRoutines = routines.map((r) =>
-      r.folder_id === folderId ? { ...r, folder_id: null } : r
-    );
+    const nextRoutines = routines.filter((r) => r.folder_id !== folderId);
     setFolders(nextFolders);
     setRoutines(nextRoutines);
     localStorage.setItem(userKey('folders'), JSON.stringify(nextFolders));
