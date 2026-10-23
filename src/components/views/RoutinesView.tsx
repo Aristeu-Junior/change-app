@@ -88,6 +88,19 @@ export const RoutinesView: React.FC = () => {
   // Modal rápido para visualizar a execução 3D de um exercício direto do card do plano
   const [previewExercise3D, setPreviewExercise3D] = useState<ExerciseTemplate | null>(null);
 
+  // Toast flutuante de sucesso ao salvar plano de treino
+  const [toastFeedback, setToastFeedback] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastFeedback(msg);
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate([30, 20, 30]);
+    }
+    setTimeout(() => {
+      setToastFeedback(null);
+    }, 3800);
+  };
+
   const isLight = theme === 'light';
 
   // Mapa rápido de ExerciseTemplate para exibir miniaturas 3D dentro dos planos de treino
@@ -369,12 +382,13 @@ export const RoutinesView: React.FC = () => {
     setShowSuggestedFolders(false);
   };
 
-  // Agrupamento por pasta
+  // Agrupamento por pasta com proteção contra pastas órfãs
   const routinesByFolder: Record<string, Routine[]> = {};
   const uncategorized: Routine[] = [];
+  const existingFolderIds = new Set(folders.map((f) => f.id));
 
   routines.forEach((r) => {
-    if (r.folder_id) {
+    if (r.folder_id && existingFolderIds.has(r.folder_id)) {
       if (!routinesByFolder[r.folder_id]) routinesByFolder[r.folder_id] = [];
       routinesByFolder[r.folder_id].push(r);
     } else {
@@ -1198,7 +1212,27 @@ export const RoutinesView: React.FC = () => {
           setEditingRoutine(null);
           setSelectedFolderForNewRoutine(null);
         }}
+        onSaved={(routine) => {
+          showToast(`✓ Plano "${routine.title}" salvo com sucesso!`);
+        }}
       />
+
+      {/* Toast Flutuante de Sucesso / Confirmação */}
+      {toastFeedback && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[120] max-w-sm w-[90%] px-4 py-3 bg-white text-black border border-zinc-200 rounded-2xl shadow-2xl flex items-center gap-2.5 animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-4 h-4 text-white" />
+          </div>
+          <span className="text-xs font-black truncate flex-1">{toastFeedback}</span>
+          <button
+            type="button"
+            onClick={() => setToastFeedback(null)}
+            className="p-1 text-zinc-500 hover:text-black rounded-lg"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Modal de Troca / Cadastro de Usuários */}
       <UserAccountModal

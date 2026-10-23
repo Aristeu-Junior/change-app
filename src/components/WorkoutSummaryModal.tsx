@@ -1,10 +1,12 @@
-import React from 'react';
-import { Trophy, Clock, Dumbbell, CheckCircle2, Flame, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Trophy, Clock, Dumbbell, CheckCircle2, Flame, X, BookmarkPlus } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { formatDuration, displayWeight } from '../utils/calc';
+import { Routine } from '../types';
 
 export const WorkoutSummaryModal: React.FC = () => {
-  const { completedWorkoutSummary, closeSummaryModal, settings } = useApp();
+  const { completedWorkoutSummary, closeSummaryModal, settings, saveRoutine } = useApp();
+  const [hasSavedRoutine, setHasSavedRoutine] = useState(false);
 
   if (!completedWorkoutSummary) return null;
 
@@ -18,6 +20,38 @@ export const WorkoutSummaryModal: React.FC = () => {
         )
       )
     : 0;
+
+  const handleSaveAsRoutine = () => {
+    if (hasSavedRoutine) return;
+    const routine: Routine = {
+      id: `routine-${Date.now()}`,
+      title: completedWorkoutSummary.title || 'Meu Plano de Treino',
+      folder_id: null,
+      notes: `Plano gerado a partir do treino concluído em ${new Date().toLocaleDateString('pt-BR')}.`,
+      exercises: completedWorkoutSummary.exercises.map((ex, exIdx) => ({
+        id: `re-${Date.now()}-${exIdx}`,
+        exercise_template_id: ex.exercise_template_id,
+        title: ex.title,
+        rest_seconds: ex.rest_seconds || 90,
+        sets: ex.sets.map((s, sIdx) => ({
+          id: `rs-${Date.now()}-${exIdx}-${sIdx}`,
+          index: sIdx,
+          type: s.type || 'normal',
+          weight_kg: s.weight_kg !== null && s.weight_kg !== undefined ? Number(s.weight_kg) : 20,
+          reps: s.reps !== null && s.reps !== undefined ? Number(s.reps) : 10,
+          completed: false
+        }))
+      })),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    saveRoutine(routine);
+    setHasSavedRoutine(true);
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate([40, 30, 40]);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 text-white">
@@ -85,13 +119,39 @@ export const WorkoutSummaryModal: React.FC = () => {
           })}
         </div>
 
-        {/* Botão Fechar */}
-        <button
-          onClick={closeSummaryModal}
-          className="w-full mt-5 py-3.5 bg-white text-black font-black text-xs uppercase tracking-wider rounded-xl active:scale-98 transition shadow-lg"
-        >
-          Excelente
-        </button>
+        {/* Botões de Ação */}
+        <div className="w-full flex flex-col gap-2 mt-5">
+          <button
+            type="button"
+            onClick={handleSaveAsRoutine}
+            disabled={hasSavedRoutine}
+            className={`w-full py-3 border rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition shadow-sm ${
+              hasSavedRoutine
+                ? 'bg-zinc-900 border-zinc-600 text-white'
+                : 'bg-[#18181b] hover:bg-[#222226] border-[#3f3f46] text-white active:scale-98'
+            }`}
+          >
+            {hasSavedRoutine ? (
+              <>
+                <CheckCircle2 className="w-4 h-4 text-white" />
+                <span>✓ Salvo como Plano de Treino</span>
+              </>
+            ) : (
+              <>
+                <BookmarkPlus className="w-4 h-4 text-white" />
+                <span>Salvar como Plano de Treino</span>
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={closeSummaryModal}
+            className="w-full py-3.5 bg-white text-black font-black text-xs uppercase tracking-wider rounded-xl active:scale-98 transition shadow-lg"
+          >
+            Excelente
+          </button>
+        </div>
       </div>
     </div>
   );

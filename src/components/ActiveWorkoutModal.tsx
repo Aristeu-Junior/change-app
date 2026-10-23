@@ -9,10 +9,13 @@ import {
   Dumbbell,
   Eye,
   EyeOff,
-  ChevronRight
+  ChevronRight,
+  BookmarkPlus,
+  CheckCircle2,
+  X
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { WorkoutSet, SetType, ExerciseTemplate } from '../types';
+import { WorkoutSet, SetType, ExerciseTemplate, Routine } from '../types';
 import { formatDuration } from '../utils/calc';
 import { ExerciseSearchModal } from './ExerciseSearchModal';
 import { PlateCalculatorModal } from './PlateCalculatorModal';
@@ -36,7 +39,8 @@ export const ActiveWorkoutModal: React.FC = () => {
     settings,
     restTimer,
     adjustRestTimer,
-    skipRestTimer
+    skipRestTimer,
+    saveRoutine
   } = useApp();
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -45,6 +49,45 @@ export const ActiveWorkoutModal: React.FC = () => {
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [focusedExIdx, setFocusedExIdx] = useState<number>(0);
   const [showLive3D, setShowLive3D] = useState<boolean>(true);
+  const [routineSaveFeedback, setRoutineSaveFeedback] = useState<string | null>(null);
+
+  const handleSaveAsRoutine = () => {
+    if (!activeWorkout || activeWorkout.exercises.length === 0) {
+      setRoutineSaveFeedback('Adicione ao menos um exercício antes de salvar.');
+      setTimeout(() => setRoutineSaveFeedback(null), 3000);
+      return;
+    }
+
+    const routine: Routine = {
+      id: `routine-${Date.now()}`,
+      title: activeWorkout.title || 'Meu Novo Plano de Treino',
+      folder_id: null,
+      notes: 'Plano salvo a partir de um treino em andamento.',
+      exercises: activeWorkout.exercises.map((ex, exIdx) => ({
+        id: `re-${Date.now()}-${exIdx}`,
+        exercise_template_id: ex.exercise_template_id,
+        title: ex.title,
+        rest_seconds: ex.rest_seconds || 90,
+        sets: ex.sets.map((s, sIdx) => ({
+          id: `rs-${Date.now()}-${exIdx}-${sIdx}`,
+          index: sIdx,
+          type: s.type || 'normal',
+          weight_kg: s.weight_kg !== null && s.weight_kg !== undefined ? Number(s.weight_kg) : 20,
+          reps: s.reps !== null && s.reps !== undefined ? Number(s.reps) : 10,
+          completed: false
+        }))
+      })),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    saveRoutine(routine);
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate([40, 30, 40]);
+    }
+    setRoutineSaveFeedback(`✓ Salvo como Plano "${routine.title}"!`);
+    setTimeout(() => setRoutineSaveFeedback(null), 3500);
+  };
 
   useEffect(() => {
     if (!activeWorkout) return;
@@ -200,6 +243,23 @@ export const ActiveWorkoutModal: React.FC = () => {
             style={{ width: `${progressPct}%` }}
           />
         </div>
+
+        {/* Toast Feedback de Salvar Plano */}
+        {routineSaveFeedback && (
+          <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[100] max-w-sm w-[90%] px-4 py-2.5 bg-white text-black border border-zinc-200 rounded-2xl shadow-2xl flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="flex items-center gap-2 truncate">
+              <CheckCircle2 className="w-4 h-4 text-black shrink-0" />
+              <span className="text-xs font-black truncate">{routineSaveFeedback}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setRoutineSaveFeedback(null)}
+              className="p-1 text-zinc-500 hover:text-black rounded"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* Seletor Rápido Horizontal de Exercícios do Treino (Guia em Tempo Real) */}
         {activeWorkout.exercises.length > 0 && (
@@ -500,6 +560,18 @@ export const ActiveWorkoutModal: React.FC = () => {
             <Plus className="w-4 h-4" />
             Adicionar Exercício
           </button>
+
+          {/* Botão Salvar Treino como Plano */}
+          {activeWorkout.exercises.length > 0 && (
+            <button
+              type="button"
+              onClick={handleSaveAsRoutine}
+              className="w-full py-3 bg-[#18181b] hover:bg-[#222226] border border-[#27272a] hover:border-white text-zinc-200 hover:text-white font-black text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2 transition active:scale-98 shadow-sm"
+            >
+              <BookmarkPlus className="w-4 h-4 text-white" />
+              <span>Salvar Este Treino como Plano</span>
+            </button>
+          )}
 
           {/* Botão Cancelar Treino */}
           <div className="pt-3 flex justify-center">

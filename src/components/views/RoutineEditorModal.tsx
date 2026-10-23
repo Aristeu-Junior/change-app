@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, FolderPlus, Sparkles, ChevronRight, RotateCcw, Dumbbell, Eye } from 'lucide-react';
+import { X, Plus, Trash2, FolderPlus, Sparkles, ChevronRight, RotateCcw, Dumbbell, Eye, Check } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Routine, WorkoutExercise, ExerciseTemplate } from '../../types';
 import { ExerciseSearchModal } from '../ExerciseSearchModal';
@@ -11,13 +11,15 @@ interface RoutineEditorModalProps {
   defaultFolderId?: number | null;
   isOpen: boolean;
   onClose: () => void;
+  onSaved?: (routine: Routine) => void;
 }
 
 export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
   routineToEdit,
   defaultFolderId,
   isOpen,
-  onClose
+  onClose,
+  onSaved
 }) => {
   const { folders, createFolder, saveRoutine, exercises: allTemplates } = useApp();
 
@@ -30,6 +32,7 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
   const [newFolderTitle, setNewFolderTitle] = useState('');
   const [showPresets, setShowPresets] = useState(false);
   const [preview3DExId, setPreview3DExId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -123,23 +126,61 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
 
   const handleSave = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!title.trim()) {
-      alert('Por favor, informe o nome do plano de treino.');
-      return;
+    if (isSaving) return;
+
+    let finalTitle = title.trim();
+    if (!finalTitle) {
+      if (exercises.length > 0) {
+        const sample = exercises.slice(0, 2).map((ex) => ex.title.split(' ')[0]).join(' & ');
+        finalTitle = `Treino ${sample}`;
+      } else if (folderId) {
+        const folderName = folders.find((f) => f.id === folderId)?.title || 'Novo';
+        finalTitle = `Plano ${folderName}`;
+      } else {
+        finalTitle = 'Meu Plano de Treino';
+      }
     }
+
+    setIsSaving(true);
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate([40, 30, 40]);
+    }
+
+    const sanitizedExercises: WorkoutExercise[] = exercises.map((ex, exIdx) => ({
+      id: ex.id || `re-${Date.now()}-${exIdx}`,
+      exercise_template_id: ex.exercise_template_id,
+      title: ex.title,
+      notes: ex.notes || '',
+      rest_seconds: ex.rest_seconds ?? 90,
+      sets: (ex.sets || []).map((s, sIdx) => ({
+        id: s.id || `rs-${Date.now()}-${exIdx}-${sIdx}`,
+        index: sIdx,
+        type: s.type || 'normal',
+        weight_kg: s.weight_kg !== null && s.weight_kg !== undefined ? Number(s.weight_kg) : 20,
+        reps: s.reps !== null && s.reps !== undefined ? Number(s.reps) : 10,
+        completed: false
+      }))
+    }));
 
     const routine: Routine = {
       id: routineToEdit?.id || `routine-${Date.now()}`,
-      title: title.trim(),
+      title: finalTitle,
       folder_id: folderId,
       notes: notes.trim(),
-      exercises,
+      exercises: sanitizedExercises,
       created_at: routineToEdit?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
     saveRoutine(routine);
-    onClose();
+
+    setTimeout(() => {
+      setIsSaving(false);
+      if (onSaved) {
+        onSaved(routine);
+      }
+      onClose();
+    }, 120);
   };
 
   const handleCreateFolder = (e: React.FormEvent) => {
@@ -169,9 +210,17 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
             <button
               type="button"
               onClick={() => handleSave()}
-              className="px-3.5 py-1.5 bg-white hover:bg-zinc-200 text-black font-black text-xs rounded-xl shadow active:scale-95 transition"
+              disabled={isSaving}
+              className="px-3.5 py-1.5 bg-white hover:bg-zinc-200 text-black font-black text-xs rounded-xl shadow active:scale-95 transition flex items-center gap-1.5 disabled:opacity-50"
             >
-              Salvar
+              {isSaving ? (
+                <span>Salvando...</span>
+              ) : (
+                <>
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>Salvar</span>
+                </>
+              )}
             </button>
             <button
               type="button"
@@ -263,16 +312,18 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
 
             {/* Nome do Plano */}
             <div>
-              <label className="text-xs uppercase text-zinc-400 font-bold mb-1 block">
-                Nome do Plano de Treino
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs uppercase text-zinc-400 font-bold block">
+                  Nome do Plano de Treino
+                </label>
+                <span className="text-[10px] text-zinc-500 font-semibold">Opcional</span>
+              </div>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Ex: Treino A - Peitoral e Tríceps"
                 className="w-full bg-[#18181b] border border-[#27272a] rounded-xl px-3.5 py-2.5 text-xs text-white font-bold placeholder-zinc-500 focus:outline-none focus:border-white"
-                required
               />
             </div>
 
@@ -499,14 +550,23 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
             style={{ paddingBottom: 'max(14px, env(safe-area-inset-bottom, 14px))' }}
           >
             <button
-              type="submit"
-              className="w-full py-3.5 bg-white text-black font-black text-xs uppercase tracking-wider rounded-xl active:scale-98 transition shadow-xl flex items-center justify-center gap-2"
+              type="button"
+              onClick={() => handleSave()}
+              disabled={isSaving}
+              className="w-full py-3.5 bg-white text-black font-black text-xs uppercase tracking-wider rounded-xl active:scale-98 transition shadow-xl flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <span>Salvar Plano de Treino</span>
-              {exercises.length > 0 && (
-                <span className="text-[10px] bg-black text-white px-2 py-0.5 rounded-full font-bold">
-                  {exercises.length} {exercises.length === 1 ? 'exercício' : 'exercícios'}
-                </span>
+              {isSaving ? (
+                <span>Salvando plano...</span>
+              ) : (
+                <>
+                  <Check className="w-4 h-4 stroke-[3]" />
+                  <span>Salvar Plano de Treino</span>
+                  {exercises.length > 0 && (
+                    <span className="text-[10px] bg-black text-white px-2 py-0.5 rounded-full font-bold">
+                      {exercises.length} {exercises.length === 1 ? 'exercício' : 'exercícios'}
+                    </span>
+                  )}
+                </>
               )}
             </button>
           </div>
