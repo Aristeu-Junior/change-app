@@ -967,19 +967,6 @@ export const RoutinesView: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedFolderForNewRoutine(f.id);
-                      setEditingRoutine(null);
-                      setIsEditorOpen(true);
-                    }}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#27272a] hover:bg-white hover:text-black text-white text-[11px] font-black transition active:scale-95 shadow-sm"
-                    title={`Adicionar novo treino na pasta ${f.title}`}
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>+ Treino</span>
-                  </button>
-                  <button
                     onClick={() => setFolderToDelete({ id: f.id, title: f.title, count: folderQueue.length })}
                     className="text-zinc-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-zinc-800 transition"
                     title="Excluir Pasta e Planos"
@@ -1005,11 +992,25 @@ export const RoutinesView: React.FC = () => {
                       className="px-3 py-1.5 bg-white text-black font-black text-xs rounded-xl shadow active:scale-95 transition flex items-center gap-1 shrink-0"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>+ Criar Treino</span>
+                      <span>Criar Treino</span>
                     </button>
                   </div>
                 ) : (
-                  folderQueue.map((meta) => renderRoutineCard(meta, folderQueue))
+                  <>
+                    {folderQueue.map((meta) => renderRoutineCard(meta, folderQueue))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedFolderForNewRoutine(f.id);
+                        setEditingRoutine(null);
+                        setIsEditorOpen(true);
+                      }}
+                      className="col-span-full py-2.5 rounded-xl border border-dashed border-[#27272a] hover:border-zinc-500 text-zinc-400 hover:text-white flex items-center justify-center gap-1.5 text-xs font-bold transition active:scale-98"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Adicionar Treino em {f.title}</span>
+                    </button>
+                  </>
                 )}
               </div>
             </div>

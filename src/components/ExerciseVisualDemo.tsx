@@ -35,7 +35,7 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
   const isLight = theme === 'light';
 
   const [isPlaying, setIsPlaying] = useState(true);
-  const [viewMode, setViewMode] = useState<'video' | 'anatomy' | 'cadence'>('video');
+  const [viewMode, setViewMode] = useState<'video' | 'anatomy'>('video');
   const [gifLoaded, setGifLoaded] = useState(false);
   const [gifError, setGifError] = useState(false);
   const [activePreset, setActivePreset] = useState<CadencePreset>('hypertrophy');
@@ -177,11 +177,6 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
           }`}
           loading="lazy"
         />
-
-        <div className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-[10px] font-black text-white pointer-events-none">
-          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-          <span>Biomecânica 3D • Músculo em Destaque</span>
-        </div>
       </div>
     );
   };
@@ -358,7 +353,7 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
     <div className={`rounded-2xl overflow-hidden flex flex-col shadow-2xl border transition-colors ${
       isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#141416] border-[#27272a]'
     }`}>
-      {/* Seletor Superior: 3D Real vs Anatomia Symmetria vs Cadência */}
+      {/* Seletor Superior: Boneco 3D vs Anatomia */}
       <div className={`flex items-center justify-between p-2.5 border-b ${
         isLight ? 'bg-white border-zinc-200' : 'bg-[#000000] border-[#27272a]'
       }`}>
@@ -396,28 +391,6 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
             <User className="w-3.5 h-3.5" />
             <span>Anatomia</span>
           </button>
-
-          <button
-            onClick={() => setViewMode('cadence')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-              viewMode === 'cadence'
-                ? isLight
-                  ? 'bg-black text-white shadow-md'
-                  : 'bg-white text-black shadow-md'
-                : isLight
-                ? 'text-zinc-600 hover:text-black'
-                : 'text-zinc-400 hover:text-white'
-            }`}
-          >
-            <Timer className="w-3.5 h-3.5" />
-            <span>Cadência</span>
-          </button>
-        </div>
-
-        {/* Badge Symmetry */}
-        <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-zinc-400 px-2">
-          <Sparkles className="w-3 h-3 text-sky-400" />
-          <span className="hidden sm:inline">Symmetry Biomechanics</span>
         </div>
       </div>
 
@@ -427,23 +400,6 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
       }`}>
         {viewMode === 'video' && render3dVideo()}
         {viewMode === 'anatomy' && renderAnatomyMap()}
-        {viewMode === 'cadence' && renderCadenceEngine()}
-
-        {/* Legenda Anatômica dos Músculos (Symmetry Style) */}
-        <div className="flex items-center justify-center gap-4 mt-3 text-[10px] font-bold text-zinc-400">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block shadow-sm shadow-sky-400/50" />
-            <span className={isLight ? 'text-zinc-800' : 'text-zinc-200'}>Músculo Alvo (Symmetry)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block shadow-sm shadow-amber-500/50" />
-            <span className="text-zinc-400">Músculo Sinergista</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className={`w-2.5 h-2.5 rounded-full inline-block shadow-sm ${isLight ? 'bg-slate-300' : 'bg-slate-800'}`} />
-            <span className="text-zinc-500">Manequim Android</span>
-          </div>
-        </div>
       </div>
 
       {/* Informações Anatômicas e Instruções Biomecânicas */}
