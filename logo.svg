@@ -1,71 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
-  <!-- Fundo Preto Puro com Bordas Arredondadas (Estilo App iOS/Android) -->
+  <!-- Fundo Preto Puro com Bordas Arredondadas (Estilo App Oficial CHANGE) -->
   <rect width="512" height="512" rx="116" fill="#000000"/>
-  <rect x="6" y="6" width="500" height="500" rx="110" stroke="#27272A" stroke-width="3"/>
+  <rect x="8" y="8" width="496" height="496" rx="108" stroke="#27272A" stroke-width="4"/>
 
-  <!-- Barra Olímpica e Anilhas (Elemento de Musculação & Treino Pesado) -->
-  <g id="barbell" opacity="0.95">
-    <!-- Anilhas do Lado Esquerdo -->
-    <rect x="42" y="200" width="14" height="112" rx="4" fill="#71717A"/>
-    <rect x="60" y="170" width="20" height="172" rx="5" fill="#D4D4D8"/>
-    <rect x="84" y="140" width="28" height="232" rx="6" fill="#FFFFFF"/>
-    <!-- Colar / Presilha Esquerda -->
-    <rect x="116" y="232" width="16" height="48" rx="3" fill="#A1A1AA"/>
-
-    <!-- Anilhas do Lado Direito -->
-    <!-- Colar / Presilha Direita -->
-    <rect x="380" y="232" width="16" height="48" rx="3" fill="#A1A1AA"/>
-    <rect x="400" y="140" width="28" height="232" rx="6" fill="#FFFFFF"/>
-    <rect x="432" y="170" width="20" height="172" rx="5" fill="#D4D4D8"/>
-    <rect x="456" y="200" width="14" height="112" rx="4" fill="#71717A"/>
-
-    <!-- Haste Central de Aço da Barra -->
-    <rect x="120" y="244" width="272" height="24" rx="4" fill="#FFFFFF"/>
-    
-    <!-- Textura de Recartilhado (Knurling de Pegada Olímpica) -->
-    <rect x="148" y="246" width="50" height="20" fill="#E4E4E7" opacity="0.6"/>
-    <rect x="314" y="246" width="50" height="20" fill="#E4E4E7" opacity="0.6"/>
-  </g>
-
-  <!-- O "C" Monumental de CHANGE: Letra C Atlética com Ângulos Precisos e Recorte Muscular -->
-  <!-- Sombra e Contorno para Profundidade Máxima -->
-  <path d="M 368 152 
-           C 334 108 288 88 232 88 
-           C 138 88 64 162 64 256 
-           C 64 350 138 424 232 424 
-           C 288 424 334 404 368 360 
-           L 316 320 
-           C 292 348 264 362 232 362 
-           C 174 362 126 314 126 256 
-           C 126 198 174 150 232 150 
-           C 264 150 292 164 316 192 
-           Z" 
-        fill="#000000" 
-        stroke="#000000" 
-        stroke-width="20" 
-        stroke-linejoin="round"/>
-
-  <!-- Letra C em Branco Puro Monocromático -->
-  <path d="M 368 152 
-           C 334 108 288 88 232 88 
-           C 138 88 64 162 64 256 
-           C 64 350 138 424 232 424 
-           C 288 424 334 404 368 360 
-           L 316 320 
-           C 292 348 264 362 232 362 
-           C 174 362 126 314 126 256 
-           C 126 198 174 150 232 150 
-           C 264 150 292 164 316 192 
-           Z" 
-        fill="#FFFFFF"/>
-
-  <!-- Halter Central Minimalista Embutido no Núcleo do C -->
-  <g transform="translate(232, 256) scale(0.72) translate(-232, -256)">
-    <!-- Barra interna do Halter -->
-    <rect x="194" y="248" width="76" height="16" rx="4" fill="#000000"/>
-    <rect x="210" y="249" width="44" height="14" rx="2" fill="#FFFFFF"/>
-    <!-- Placas do Halter interno -->
-    <rect x="180" y="224" width="14" height="64" rx="4" fill="#000000"/>
-    <rect x="270" y="224" width="14" height="64" rx="4" fill="#000000"/>
+  <!-- Halter Oficial do CHANGE (Lucide Dumbbell com Traço Atlético) -->
+  <g transform="translate(88, 88) scale(14)" fill="none" stroke="#FFFFFF" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z"/>
+    <path d="m2.5 21.5 1.4-1.4"/>
+    <path d="m20.1 3.9 1.4-1.4"/>
+    <path d="M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z"/>
+    <path d="m9.6 14.4 4.8-4.8"/>
   </g>
 </svg>
