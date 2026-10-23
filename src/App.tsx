@@ -242,10 +242,77 @@ const AppContent: React.FC = () => {
   );
 };
 
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('ErrorBoundary caught:', error, errorInfo);
+  }
+
+  handleReload = () => {
+    window.location.reload();
+  };
+
+  handleReset = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.reload();
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center text-xl font-black">
+            !
+          </div>
+          <h1 className="text-xl font-black">Ops! Algo deu errado.</h1>
+          <p className="text-xs text-zinc-400 max-w-sm">
+            {this.state.error?.message || 'Ocorreu um erro inesperado no aplicativo.'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <button
+              onClick={this.handleReload}
+              className="px-5 py-2.5 bg-white text-black font-black text-xs rounded-xl shadow active:scale-95 transition"
+            >
+              Recarregar Aplicativo
+            </button>
+            <button
+              onClick={this.handleReset}
+              className="px-5 py-2.5 bg-zinc-800 text-zinc-300 font-bold text-xs rounded-xl hover:text-white active:scale-95 transition"
+            >
+              Restaurar Sessão
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
+    </ErrorBoundary>
   );
 }

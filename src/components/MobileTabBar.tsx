@@ -56,8 +56,8 @@ export const DesktopSidebar: React.FC<NavigationProps> = ({ currentTab, onSelect
   }, [activeWorkout]);
 
   const isLight = theme === 'light';
-  const activeIndex = NAV_ITEMS.findIndex((item) => item.id === currentTab);
-  const safeActiveIndex = activeIndex >= 0 ? activeIndex : 0;
+
+
 
   return (
     <>
@@ -248,6 +248,9 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
   }, [activeWorkout]);
 
   const isLight = theme === 'light';
+
+  const activeIndex = NAV_ITEMS.findIndex((item) => item.id === currentTab);
+  const safeActiveIndex = activeIndex >= 0 ? activeIndex : 0;
 
   const handleTabClick = (e: React.SyntheticEvent, tab: TabType) => {
     if (e) {

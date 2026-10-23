@@ -430,18 +430,41 @@ export const getCompetitionByCodeOrId = async (
  * Busca a lista de todos os perfis cadastrados na nuvem (sem expor senhas)
  */
 export const pullAllUserProfilesFromCloud = async (): Promise<UserProfile[]> => {
-  const entries = await fetchCloudLeaderboard();
-  return entries.map((r) => {
-    const profile: UserProfile = {
-      id: r.user_id || `user-${r.email}`,
-      name: r.name,
-      email: r.email,
-      avatar_color: r.avatar_color || '#ffffff',
-      created_at: r.updated_at || new Date().toISOString()
-    };
-    profile.is_admin = isAdminProfile(profile);
-    return profile;
-  });
+  const config = getSupabaseConfig();
+  if (!config) return [];
+
+  try {
+    const res = await fetch(
+      `${config.url}/rest/v1/change_user_data?select=user_id,email,name,avatar_color,updated_at`,
+      {
+        method: 'GET',
+        cache: 'no-store',
+        headers: buildHeaders(config)
+      }
+    );
+
+    if (!res.ok) return [];
+    const entries = (await res.json()) as {
+      user_id?: string;
+      email: string;
+      name: string;
+      avatar_color?: string;
+      updated_at?: string;
+    }[];
+    return entries.map((r) => {
+      const profile: UserProfile = {
+        id: r.user_id || `user-${r.email}`,
+        name: r.name,
+        email: r.email,
+        avatar_color: r.avatar_color || '#ffffff',
+        created_at: r.updated_at || new Date().toISOString()
+      };
+      profile.is_admin = isAdminProfile(profile);
+      return profile;
+    });
+  } catch {
+    return [];
+  }
 };
 
 /**
