@@ -9,7 +9,9 @@ import {
   UserProfile,
   UserSettings,
   PersonalRecord,
-  BodyMeasurement
+  BodyMeasurement,
+  WaterLogEntry,
+  WaterTrackerConfig
 } from '../types';
 import { DEFAULT_EXERCISES } from '../data/defaultExercises';
 import { LEGACY_DEFAULT_ROUTINE_IDS, RoutinePreset } from '../data/defaultRoutines';
@@ -146,6 +148,24 @@ interface AppContextType {
   measurements: BodyMeasurement[];
   saveMeasurement: (m: BodyMeasurement) => void;
 
+  // Hidratação & Consumo Diário de Água (Water Intake Tracker)
+  waterLogs: WaterLogEntry[];
+  waterTrackerConfig: WaterTrackerConfig;
+  todayWaterIntake: number;
+  todayWaterProgressPercent: number;
+  todayWaterLogs: WaterLogEntry[];
+  addWaterLog: (amountMl: number) => void;
+  removeWaterLog: (logId: string) => void;
+  updateWaterGoal: (newGoalMl: number) => void;
+  updateWaterTrackerConfig: (updates: Partial<WaterTrackerConfig>) => void;
+  isWaterModalOpen: boolean;
+  setWaterModalOpen: (open: boolean) => void;
+  waterRhythmStatus: {
+    status: 'behind' | 'on_track' | 'goal_reached';
+    label: string;
+    remainingMl: number;
+  };
+
   // Configurações
   settings: UserSettings;
   updateSettings: (newSettings: Partial<UserSettings>) => void;
@@ -159,6 +179,23 @@ interface AppContextType {
   closeSummaryModal: () => void;
 }
 
+export const DEFAULT_WATER_CONFIG: WaterTrackerConfig = {
+  daily_goal_ml: 2500,
+  quick_amounts: [200, 300, 500, 750],
+  reminders_enabled: false,
+  reminder_interval_minutes: 90,
+  reminder_start_time: '08:00',
+  reminder_end_time: '22:00'
+};
+
+export const getTodayDateKey = (): string => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const DEFAULT_SETTINGS: UserSettings = {
   weight_unit: 'kg',
   distance_unit: 'quilometros',
@@ -167,7 +204,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   haptics_enabled: true,
   wake_lock_enabled: true,
   theme: 'dark',
-  user_name: 'Aristeu'
+  user_name: 'Aristeu',
+  water_tracker: DEFAULT_WATER_CONFIG
 };
 
 const INITIAL_USERS: UserProfile[] = [
@@ -507,6 +545,167 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
+  // Estados de Hidratação & Consumo Diário de Água
+  const [waterLogs, setWaterLogs] = useState<WaterLogEntry[]>(() => {
+    try {
+      const saved = localStorage.getItem(`change_${currentUser.id}_water_logs`);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [isWaterModalOpen, setWaterModalOpen] = useState(false);
+
+  const waterTrackerConfig = useMemo<WaterTrackerConfig>(() => {
+    return {
+      ...DEFAULT_WATER_CONFIG,
+      ...(settings.water_tracker || {})
+    };
+  }, [settings.water_tracker]);
+
+  const todayKey = getTodayDateKey();
+  const todayWaterLogs = useMemo(() => {
+    return waterLogs
+      .filter((w) => w.date === todayKey)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }, [waterLogs, todayKey]);
+
+  const todayWaterIntake = useMemo(() => {
+    return todayWaterLogs.reduce((acc, curr) => acc + (Number(curr.amount_ml) || 0), 0);
+  }, [todayWaterLogs]);
+
+  const todayWaterProgressPercent = useMemo(() => {
+    const goal = waterTrackerConfig.daily_goal_ml || 2500;
+    return Math.min(100, Math.round((todayWaterIntake / goal) * 100));
+  }, [todayWaterIntake, waterTrackerConfig.daily_goal_ml]);
+
+  const waterRhythmStatus = useMemo(() => {
+    const goal = waterTrackerConfig.daily_goal_ml || 2500;
+    const remainingMl = Math.max(0, goal - todayWaterIntake);
+    if (todayWaterIntake >= goal) {
+      return {
+        status: 'goal_reached' as const,
+        label: 'Meta diária concluída! 🎉',
+        remainingMl: 0
+      };
+    }
+    const now = new Date();
+    const currentHour = now.getHours() + now.getMinutes() / 60;
+    const activeStart = 8;
+    const activeEnd = 22;
+    let expectedPercent = 0;
+    if (currentHour <= activeStart) {
+      expectedPercent = 0.1;
+    } else if (currentHour >= activeEnd) {
+      expectedPercent = 1.0;
+    } else {
+      expectedPercent = (currentHour - activeStart) / (activeEnd - activeStart);
+    }
+    const currentPercent = todayWaterIntake / goal;
+    if (currentPercent >= expectedPercent - 0.05) {
+      return {
+        status: 'on_track' as const,
+        label: 'Excelente ritmo de hidratação 💧',
+        remainingMl
+      };
+    }
+    return {
+      status: 'behind' as const,
+      label: `Beba água para manter o ritmo (faltam ${remainingMl.toLocaleString('pt-BR')} ml)`,
+      remainingMl
+    };
+  }, [todayWaterIntake, waterTrackerConfig.daily_goal_ml]);
+
+  const addWaterLog = (amountMl: number) => {
+    if (!amountMl || amountMl <= 0) return;
+    const cleanAmount = Math.round(amountMl);
+    const newEntry: WaterLogEntry = {
+      id: `water-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      amount_ml: cleanAmount,
+      timestamp: new Date().toISOString(),
+      date: getTodayDateKey()
+    };
+    triggerHaptic(15);
+    playGymTone(540, 0.12);
+    setWaterLogs((prev) => [newEntry, ...prev].slice(0, 150));
+  };
+
+  const removeWaterLog = (logId: string) => {
+    triggerHaptic(10);
+    setWaterLogs((prev) => prev.filter((item) => item.id !== logId));
+  };
+
+  const updateWaterGoal = (newGoalMl: number) => {
+    const cleanGoal = Math.max(500, Math.min(10000, Math.round(newGoalMl)));
+    updateWaterTrackerConfig({ daily_goal_ml: cleanGoal });
+  };
+
+  const updateWaterTrackerConfig = (updates: Partial<WaterTrackerConfig>) => {
+    setSettings((prev) => {
+      const currentConfig = prev.water_tracker || DEFAULT_WATER_CONFIG;
+      const updatedConfig = { ...currentConfig, ...updates };
+      return {
+        ...prev,
+        water_tracker: updatedConfig
+      };
+    });
+  };
+
+  // Salva logs de hidratação no localStorage e reflete em settings
+  useEffect(() => {
+    localStorage.setItem(userKey('water_logs'), JSON.stringify(waterLogs));
+  }, [waterLogs, currentUser.id]);
+
+  // Lembretes inteligentes de hidratação
+  useEffect(() => {
+    if (!waterTrackerConfig.reminders_enabled) return;
+
+    const checkReminder = () => {
+      const now = new Date();
+      const currentH = now.getHours();
+      const currentM = now.getMinutes();
+      const currentMinutesOfDay = currentH * 60 + currentM;
+
+      const [startH, startM] = (waterTrackerConfig.reminder_start_time || '08:00').split(':').map(Number);
+      const [endH, endM] = (waterTrackerConfig.reminder_end_time || '22:00').split(':').map(Number);
+      const startMinutes = (startH || 8) * 60 + (startM || 0);
+      const endMinutes = (endH || 22) * 60 + (endM || 0);
+
+      if (currentMinutesOfDay < startMinutes || currentMinutesOfDay > endMinutes) {
+        return;
+      }
+
+      if (todayWaterIntake >= (waterTrackerConfig.daily_goal_ml || 2500)) {
+        return;
+      }
+
+      const lastAlertRaw = localStorage.getItem(`change_${currentUser.id}_last_water_reminder`);
+      const lastAlert = lastAlertRaw ? Number(lastAlertRaw) : 0;
+      const intervalMs = (waterTrackerConfig.reminder_interval_minutes || 90) * 60 * 1000;
+
+      if (Date.now() - lastAlert >= intervalMs) {
+        localStorage.setItem(`change_${currentUser.id}_last_water_reminder`, String(Date.now()));
+        triggerHaptic(20);
+        playGymTone(660, 0.2);
+
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+          try {
+            new Notification('Change - Hidratação 💧', {
+              body: `Hora de beber água! Você tomou ${todayWaterIntake} ml da sua meta de ${waterTrackerConfig.daily_goal_ml} ml.`,
+              icon: './vite.svg'
+            });
+          } catch {
+            // Ignore
+          }
+        }
+      }
+    };
+
+    const intervalId = window.setInterval(checkReminder, 60 * 1000);
+    return () => window.clearInterval(intervalId);
+  }, [waterTrackerConfig, todayWaterIntake, currentUser.id]);
+
   const [completedWorkoutSummary, setCompletedWorkoutSummary] = useState<Workout | null>(null);
 
   const [restTimer, setRestTimer] = useState<RestTimerState>({
@@ -739,6 +938,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         localStorage.setItem(`change_${user.id}_measurements`, JSON.stringify(mergedMeas));
         localStorage.setItem(`change_${user.id}_settings`, JSON.stringify(mergedSettings));
 
+        // 7. Hidratação & Consumo Diário de Água
+        const localWaterLogsRaw = localStorage.getItem(`change_${user.id}_water_logs`);
+        const localWaterLogs: WaterLogEntry[] = localWaterLogsRaw ? JSON.parse(localWaterLogsRaw) : [];
+        const cloudWaterLogs: WaterLogEntry[] = (cloudSettings.water_tracker as any)?.logs || [];
+        const waterMap = new Map<string, WaterLogEntry>();
+        cloudWaterLogs.forEach((w) => { if (w && w.id) waterMap.set(w.id, w); });
+        localWaterLogs.forEach((w) => { if (w && w.id) waterMap.set(w.id, w); });
+        const mergedWaterLogs = Array.from(waterMap.values()).sort(
+          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        ).slice(0, 150);
+        setWaterLogs(mergedWaterLogs);
+        localStorage.setItem(`change_${user.id}_water_logs`, JSON.stringify(mergedWaterLogs));
+
         // Se local tinha itens que a nuvem não tinha, ou se a nuvem estava vazia, salva a união de volta na nuvem
         const localHadExtra =
           mergedWorkouts.length > cloudWorkouts.length ||
@@ -898,6 +1110,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const savedMeas = localStorage.getItem(`change_${userId}_measurements`);
       setMeasurements(savedMeas ? JSON.parse(savedMeas) : []);
 
+      const savedWater = localStorage.getItem(`change_${userId}_water_logs`);
+      setWaterLogs(savedWater ? JSON.parse(savedWater) : []);
+
       const savedSettings = localStorage.getItem(`change_${userId}_settings`);
       setSettings(
         savedSettings
@@ -981,6 +1196,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         localStorage.removeItem(`change_${resolvedUserId}_exercises`);
         localStorage.removeItem(`change_${resolvedUserId}_prs`);
         localStorage.removeItem(`change_${resolvedUserId}_measurements`);
+        localStorage.removeItem(`change_${resolvedUserId}_water_logs`);
         localStorage.removeItem(`change_${resolvedUserId}_settings`);
       } catch {
         // Ignore
@@ -1778,6 +1994,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       exercises,
       personalRecords,
       measurements,
+      waterLogs,
       settings
     };
     return JSON.stringify(data, null, 2);
@@ -1795,6 +2012,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (data.folders) setFolders(data.folders);
       if (data.exercises) setExercises(syncExercisesWithDefaults(data.exercises));
       if (data.measurements) setMeasurements(data.measurements);
+      if (data.waterLogs) setWaterLogs(data.waterLogs);
       if (data.settings) setSettings(data.settings);
       return true;
     } catch {
@@ -1864,6 +2082,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       personalRecords,
       measurements,
       saveMeasurement,
+      waterLogs,
+      waterTrackerConfig,
+      todayWaterIntake,
+      todayWaterProgressPercent,
+      todayWaterLogs,
+      addWaterLog,
+      removeWaterLog,
+      updateWaterGoal,
+      updateWaterTrackerConfig,
+      isWaterModalOpen,
+      setWaterModalOpen,
+      waterRhythmStatus,
       settings,
       updateSettings,
       exportDataJson,
@@ -1888,6 +2118,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       exercises,
       personalRecords,
       measurements,
+      waterLogs,
+      waterTrackerConfig,
+      todayWaterIntake,
+      todayWaterProgressPercent,
+      todayWaterLogs,
+      isWaterModalOpen,
+      waterRhythmStatus,
       settings,
       completedWorkoutSummary,
       recoveryPasswordNotice

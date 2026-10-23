@@ -115,6 +115,22 @@ export interface UserProfile {
   created_at: string;
 }
 
+export interface WaterLogEntry {
+  id: string;
+  amount_ml: number;
+  timestamp: string;
+  date: string; // YYYY-MM-DD
+}
+
+export interface WaterTrackerConfig {
+  daily_goal_ml: number;
+  quick_amounts: number[];
+  reminders_enabled: boolean;
+  reminder_interval_minutes: number;
+  reminder_start_time: string;
+  reminder_end_time: string;
+}
+
 export interface UserSettings {
   weight_unit: 'kg' | 'lbs';
   distance_unit: 'quilometros' | 'milhas';
@@ -124,6 +140,7 @@ export interface UserSettings {
   wake_lock_enabled: boolean;
   theme: 'dark' | 'light';
   user_name: string;
+  water_tracker?: WaterTrackerConfig;
 }
 
 export interface PersonalRecord {

@@ -247,24 +247,29 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
 
   const isLight = theme === 'light';
 
-  const tabClass = (tab: TabType) => {
-    const isActive = currentTab === tab;
-    if (isActive) {
-      return isLight ? 'text-black font-black scale-105' : 'text-white font-black scale-105';
-    }
-    return isLight ? 'text-zinc-500 hover:text-black' : 'text-zinc-500 hover:text-zinc-300';
+  const handleTabClick = (tab: TabType) => {
+    triggerHaptic(10);
+    onSelectTab(tab);
   };
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex flex-col pointer-events-none">
+    <div className="md:hidden fixed inset-x-0 bottom-0 z-40 pointer-events-none select-none">
       {/* Pílula Flutuante de Treino Ativo (quando minimizado) */}
       {activeWorkout && !isWorkoutModalOpen && (
-        <div className="px-4 pb-2 w-full max-w-md mx-auto pointer-events-auto animate-in slide-in-from-bottom duration-150">
+        <div
+          className="px-3.5 w-full max-w-md mx-auto pointer-events-auto animate-in slide-in-from-bottom duration-200"
+          style={{ marginBottom: 'max(76px, calc(var(--safe-bottom) + 68px))' }}
+        >
           <button
-            onClick={() => setWorkoutModalOpen(true)}
-            className={`w-full p-3.5 ${
-              isLight ? 'bg-black text-white' : 'bg-white text-black'
-            } rounded-2xl shadow-2xl flex items-center justify-between active:scale-98 transition group border border-zinc-200/20`}
+            onClick={() => {
+              triggerHaptic(15);
+              setWorkoutModalOpen(true);
+            }}
+            className={`w-full p-3 ${
+              isLight
+                ? 'bg-black text-white shadow-[0_12px_32px_rgba(0,0,0,0.25)] border border-black/10'
+                : 'bg-white text-black shadow-[0_12px_32px_rgba(0,0,0,0.75)] border border-white/20'
+            } rounded-2xl flex items-center justify-between active:scale-[0.98] transition-all group`}
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <div
@@ -272,10 +277,10 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
                   isLight ? 'bg-white text-black' : 'bg-black text-white'
                 } flex items-center justify-center animate-pulse`}
               >
-                <Play className={`w-4 h-4 ${isLight ? 'fill-black' : 'fill-white'}`} />
+                <Play className={`w-3.5 h-3.5 ${isLight ? 'fill-black' : 'fill-white'}`} />
               </div>
               <div className="text-left min-w-0">
-                <span className="text-xs font-black block truncate">{activeWorkout.title}</span>
+                <span className="text-xs font-black block truncate leading-tight">{activeWorkout.title}</span>
                 <span
                   className={`text-[10px] ${
                     isLight ? 'text-zinc-300' : 'text-zinc-600'
@@ -288,7 +293,7 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
             </div>
 
             <div
-              className={`flex items-center gap-1 text-xs font-extrabold shrink-0 ${
+              className={`flex items-center gap-1 text-[11px] font-black shrink-0 ${
                 isLight ? 'bg-white text-black' : 'bg-black text-white'
               } px-3 py-1.5 rounded-lg shadow-sm`}
             >
@@ -299,31 +304,62 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
         </div>
       )}
 
-      {/* Barra de Navegação Inferior Intuitiva (com pb-safe para barra de início do iPhone/Android) */}
-      <nav
-        className={`w-full ${
-          isLight ? 'bg-white/95 border-zinc-200' : 'bg-[#000000]/95 border-[#27272a]'
-        } backdrop-blur-md border-t px-2 pt-2 pb-safe pointer-events-auto flex items-center justify-around shadow-2xl transition-colors`}
+      {/* Dock Flutuante iPhone / iOS Liquid Glass com Efeito Vidro Líquido */}
+      <div
+        className="px-3.5 w-full max-w-md mx-auto pointer-events-auto"
+        style={{
+          paddingBottom: 'max(10px, var(--safe-bottom))'
+        }}
       >
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              onClick={() => onSelectTab(item.id)}
-              className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition ${tabClass(
-                item.id
-              )}`}
-            >
-              <Icon className="w-5 h-5 stroke-[2.3]" />
-              <span className="text-[10px] tracking-tight">{item.label}</span>
-              {currentTab === item.id && (
-                <span className={`w-1 h-1 rounded-full ${isLight ? 'bg-black' : 'bg-white'}`} />
-              )}
-            </button>
-          );
-        })}
-      </nav>
+        <nav
+          className={`w-full p-1.5 rounded-[28px] transition-all duration-300 grid grid-cols-5 gap-1 items-center ${
+            isLight
+              ? 'bg-white/75 border border-black/[0.08] text-black shadow-[0_14px_36px_-6px_rgba(0,0,0,0.12),inset_0_1px_1.5px_0_rgba(255,255,255,0.95)]'
+              : 'bg-[#0c0d12]/75 border border-white/[0.12] text-white shadow-[0_16px_40px_-6px_rgba(0,0,0,0.75),inset_0_1px_1.5px_0_rgba(255,255,255,0.18)]'
+          } backdrop-blur-2xl backdrop-saturate-200`}
+          style={{
+            WebkitBackdropFilter: 'blur(24px) saturate(200%)'
+          }}
+        >
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const isActive = currentTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleTabClick(item.id)}
+                className={`relative flex flex-col items-center justify-center py-1.5 px-1 rounded-2xl transition-all duration-200 select-none active:scale-95 ${
+                  isActive
+                    ? isLight
+                      ? 'bg-black/[0.08] text-black font-black shadow-sm ring-1 ring-black/5'
+                      : 'bg-white/[0.12] text-white font-black shadow-sm ring-1 ring-white/10'
+                    : isLight
+                    ? 'text-zinc-500 hover:text-black font-semibold'
+                    : 'text-zinc-400 hover:text-zinc-200 font-semibold'
+                }`}
+              >
+                <Icon
+                  className={`w-5 h-5 transition-transform duration-200 ${
+                    isActive ? 'scale-110 stroke-[2.4]' : 'stroke-[2]'
+                  }`}
+                />
+                <span className="text-[10px] tracking-tight mt-0.5 leading-none">
+                  {item.label}
+                </span>
+                {isActive && (
+                  <span
+                    className={`w-1 h-1 rounded-full mt-1 ${
+                      isLight
+                        ? 'bg-black shadow-[0_0_6px_rgba(0,0,0,0.4)]'
+                        : 'bg-white shadow-[0_0_6px_rgba(255,255,255,0.8)]'
+                    }`}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
     </div>
   );
 };
