@@ -459,7 +459,7 @@ export const pullUserFromCloudByEmail = async (
 
     // 1. Busca prioritária e exata pelo e-mail
     const res = await fetch(
-      `${config.url}/rest/v1/change_user_data?email=eq.${encodeURIComponent(normalized)}&select=user_id,email,name,account_status,totp_enabled,totp_secret,avatar_color,workouts,routines,folders,custom_exercises,personal_records,measurements,settings,updated_at&limit=1&_t=${Date.now()}`,
+      `${config.url}/rest/v1/change_user_data?email=eq.${encodeURIComponent(normalized)}&select=user_id,email,name,account_status,totp_enabled,totp_secret,avatar_color,workouts,routines,folders,custom_exercises,personal_records,measurements,settings,updated_at&limit=1`,
       {
         method: 'GET',
         cache: 'no-store',
@@ -477,7 +477,7 @@ export const pullUserFromCloudByEmail = async (
     // 2. Fallback secundário por user_id somente se não encontrou por e-mail
     if (userId) {
       const resById = await fetch(
-        `${config.url}/rest/v1/change_user_data?user_id=eq.${encodeURIComponent(userId)}&select=user_id,email,name,account_status,totp_enabled,totp_secret,avatar_color,workouts,routines,folders,custom_exercises,personal_records,measurements,settings,updated_at&limit=1&_t=${Date.now()}`,
+        `${config.url}/rest/v1/change_user_data?user_id=eq.${encodeURIComponent(userId)}&select=user_id,email,name,account_status,totp_enabled,totp_secret,avatar_color,workouts,routines,folders,custom_exercises,personal_records,measurements,settings,updated_at&limit=1`,
         {
           method: 'GET',
           cache: 'no-store',
@@ -984,7 +984,7 @@ export const requestOrCheckGoogleAccess = async (
       rawPassword && rawPassword.trim() ? await hashPasswordSha256(rawPassword.trim()) : null;
 
     const res = await fetch(
-      `${config.url}/rest/v1/rpc/request_or_check_google_access?_t=${Date.now()}`,
+      `${config.url}/rest/v1/rpc/request_or_check_google_access`,
       {
         method: 'POST',
         cache: 'no-store',
@@ -1017,7 +1017,7 @@ export const fetchAccessRequestsFromCloud = async (): Promise<AccessRequestEntry
 
   try {
     const res = await fetch(
-      `${config.url}/rest/v1/rpc/get_change_access_requests?_t=${Date.now()}`,
+      `${config.url}/rest/v1/rpc/get_change_access_requests`,
       {
         method: 'POST',
         cache: 'no-store',
@@ -1050,7 +1050,7 @@ export const decideAccessRequestInCloud = async (
 
   try {
     const res = await fetch(
-      `${config.url}/rest/v1/rpc/admin_decide_access_request?_t=${Date.now()}`,
+      `${config.url}/rest/v1/rpc/admin_decide_access_request`,
       {
         method: 'POST',
         cache: 'no-store',
