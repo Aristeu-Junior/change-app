@@ -99,16 +99,25 @@ select {
   -webkit-user-select: text;
 }
 
+/* Scrollbars limpas: ocultas no celular para não gerar linha vertical na lateral */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 0px;
+  height: 0px;
+  display: none;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: 4px;
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    display: block;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(120, 120, 128, 0.25);
+    border-radius: 4px;
+  }
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -299,10 +308,24 @@ select {
   color: #09090b;
 }
 
-.theme-light .text-white:not([class*="bg-black"]):not([class*="bg-zinc-800"]):not([class*="bg-zinc-900"]):not([class*="bg-red-"]):not([class*="bg-emerald-"]):not([class*="bg-blue-"]):not([class*="bg-sky-600"]):not(.stay-white) {
-  color: #09090b !important;
+/* Garante que botões, badges e ícones dentro de elementos pretos sólidos ou marcados com .stay-white permaneçam 100% brancos no modo claro */
+.theme-light .stay-white,
+.theme-light .stay-white *,
+.theme-light button.bg-black,
+.theme-light button.bg-black *,
+.theme-light a.bg-black,
+.theme-light a.bg-black *,
+.theme-light span.bg-black,
+.theme-light span.bg-black *,
+.theme-light div.bg-black:not([class*="/"]),
+.theme-light div.bg-black:not([class*="/"]) * {
+  color: #ffffff !important;
 }
 
-.theme-light .view-container svg.text-white:not([class*="bg-black"]):not([class*="bg-zinc-900"]) {
-  color: #09090b !important;
+.theme-light .stay-white svg,
+.theme-light button.bg-black svg,
+.theme-light a.bg-black svg,
+.theme-light div.bg-black:not([class*="/"]) svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }

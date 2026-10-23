@@ -1,4 +1,4 @@
-const CACHE_NAME = 'change-workout-v28';
+const CACHE_NAME = 'change-workout-v29';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -34,7 +34,17 @@ self.addEventListener('fetch', (event) => {
   // Navegação de página (HTML): busca sempre a versão mais recente da rede
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request).then((res) => res || caches.match('./index.html')))
     );
     return;
   }
@@ -43,6 +53,12 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
         return networkResponse;
       })
       .catch(() => {

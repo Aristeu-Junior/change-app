@@ -412,11 +412,19 @@ export const RoutinesView: React.FC = () => {
     return (
       <div
         key={r.id}
-        className={`rounded-2xl p-4 shadow-md flex flex-col gap-3 relative transition text-white border ${
+        className={`rounded-2xl p-4 shadow-md flex flex-col gap-3 relative transition border ${
+          isLight ? 'text-black' : 'text-white'
+        } ${
           meta.isTopRecommended
-            ? 'bg-[#141416] border-white shadow-xl'
+            ? isLight
+              ? 'bg-white border-black shadow-xl ring-1 ring-black/5'
+              : 'bg-[#141416] border-white shadow-xl'
             : meta.isDoneInCurrentCycle
-            ? 'bg-[#111113] border-[#222225] opacity-80 hover:opacity-100'
+            ? isLight
+              ? 'bg-zinc-50/80 border-zinc-200 opacity-90'
+              : 'bg-[#111113] border-[#222225] opacity-80 hover:opacity-100'
+            : isLight
+            ? 'bg-white border-zinc-200 hover:border-zinc-400'
             : 'bg-[#141416] border-[#27272a] hover:border-zinc-500'
         }`}
       >
@@ -424,12 +432,16 @@ export const RoutinesView: React.FC = () => {
         {(meta.isTopRecommended || meta.isNextInQueue || meta.doneThisWeek) && (
           <div className="flex items-center justify-between gap-2 flex-wrap -mb-1">
             {meta.isTopRecommended ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white text-black text-[10px] font-black uppercase tracking-wider shadow-sm">
-                <Flame className="w-3 h-3 fill-black" />
+              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm ${
+                isLight ? 'bg-black stay-white text-white' : 'bg-white text-black'
+              }`}>
+                <Flame className={`w-3 h-3 ${isLight ? 'fill-white text-white' : 'fill-black text-black'}`} />
                 <span>Recomendado Agora • 1º da Fila</span>
               </span>
             ) : meta.isNextInQueue ? (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-600 text-zinc-200 text-[10px] font-bold uppercase tracking-wider">
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                isLight ? 'bg-zinc-100 border border-zinc-300 text-zinc-800' : 'bg-zinc-800 border border-zinc-600 text-zinc-200'
+              }`}>
                 <Clock className="w-3 h-3" />
                 <span>Próximo na Fila</span>
               </span>
@@ -438,8 +450,10 @@ export const RoutinesView: React.FC = () => {
             )}
 
             {meta.doneThisWeek && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-700 text-zinc-400 text-[10px] font-bold">
-                <CheckCircle2 className="w-3 h-3 text-zinc-300" />
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                isLight ? 'bg-zinc-100 border border-zinc-200 text-zinc-600' : 'bg-zinc-900 border border-zinc-700 text-zinc-400'
+              }`}>
+                <CheckCircle2 className={`w-3 h-3 ${isLight ? 'text-zinc-600' : 'text-zinc-300'}`} />
                 <span>Já treinado ({meta.lastDoneDateStr})</span>
               </span>
             )}
@@ -449,23 +463,27 @@ export const RoutinesView: React.FC = () => {
         {/* Cabeçalho do Card estilo Symmetry com Boneco Anatômico na Direita */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-sky-400 mb-1">
+            <div className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider mb-1 ${
+              isLight ? 'text-zinc-600' : 'text-sky-400'
+            }`}>
               <span>{r.exercises.length} {r.exercises.length === 1 ? 'exercício' : 'exercícios'}</span>
               <span>•</span>
               <span>{totalSets} séries</span>
             </div>
-            <h3 className="text-base font-black text-white hover:text-zinc-300 transition truncate">
+            <h3 className={`text-base font-black truncate transition ${
+              isLight ? 'text-black' : 'text-white hover:text-zinc-300'
+            }`}>
               {r.title}
             </h3>
             {r.notes ? (
-              <p className="text-[11px] text-zinc-400 mt-1 line-clamp-1">{r.notes}</p>
+              <p className={`text-[11px] mt-1 line-clamp-1 ${isLight ? 'text-zinc-600' : 'text-zinc-400'}`}>{r.notes}</p>
             ) : (
-              <div className="text-[11px] text-zinc-400 mt-1.5 space-y-0.5">
+              <div className="text-[11px] mt-1.5 space-y-0.5">
                 {r.exercises.slice(0, 3).map((ex, i) => (
-                  <span key={i} className="block truncate text-zinc-300">• {ex.title}</span>
+                  <span key={i} className={`block truncate ${isLight ? 'text-zinc-700' : 'text-zinc-300'}`}>• {ex.title}</span>
                 ))}
                 {r.exercises.length > 3 && (
-                  <span className="text-[10px] text-zinc-500 font-bold block">+ {r.exercises.length - 3} outros</span>
+                  <span className={`text-[10px] font-bold block ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>+ {r.exercises.length - 3} outros</span>
                 )}
               </div>
             )}
@@ -474,7 +492,11 @@ export const RoutinesView: React.FC = () => {
           <div className="flex items-start gap-1.5 shrink-0">
             {/* Boneco do Symmetry no Card */}
             <div
-              className="p-1 rounded-xl bg-black/60 border border-zinc-800/80 shadow-inner flex items-center justify-center cursor-pointer hover:border-sky-500/50 transition"
+              className={`p-1 rounded-xl shadow-inner flex items-center justify-center cursor-pointer transition ${
+                isLight
+                  ? 'bg-zinc-100 border border-zinc-200 hover:border-zinc-400'
+                  : 'bg-black/60 border border-zinc-800/80 hover:border-sky-500/50'
+              }`}
               title="Músculos trabalhados neste treino (Symmetry)"
             >
               <SymmetryBodyMap
@@ -490,37 +512,45 @@ export const RoutinesView: React.FC = () => {
                 onClick={() =>
                   setActiveMenuRoutineId(activeMenuRoutineId === r.id ? null : r.id)
                 }
-                className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition"
+                className={`p-1.5 rounded-lg transition ${
+                  isLight ? 'text-zinc-500 hover:text-black hover:bg-zinc-100' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                }`}
                 title="Mais opções do plano"
               >
                 <MoreVertical className="w-4 h-4" />
               </button>
 
             {activeMenuRoutineId === r.id && (
-              <div className="absolute right-0 top-8 z-30 w-44 bg-[#1c1c1f] border border-[#3f3f46] rounded-xl shadow-2xl py-1 text-xs text-zinc-200 animate-in fade-in duration-100">
+              <div className={`absolute right-0 top-8 z-30 w-44 rounded-xl shadow-2xl py-1 text-xs animate-in fade-in duration-100 border ${
+                isLight ? 'bg-white border-zinc-200 text-black' : 'bg-[#1c1c1f] border-[#3f3f46] text-zinc-200'
+              }`}>
                 <button
                   onClick={() => {
                     setEditingRoutine(r);
                     setIsEditorOpen(true);
                     setActiveMenuRoutineId(null);
                   }}
-                  className="w-full px-3 py-2 text-left hover:bg-zinc-800 flex items-center gap-2"
+                  className={`w-full px-3 py-2 text-left flex items-center gap-2 ${
+                    isLight ? 'hover:bg-zinc-100' : 'hover:bg-zinc-800'
+                  }`}
                 >
                   <Edit2 className="w-3.5 h-3.5" /> Editar Plano
                 </button>
                 <button
                   onClick={() => handleDuplicateRoutine(r)}
-                  className="w-full px-3 py-2 text-left hover:bg-zinc-800 flex items-center gap-2"
+                  className={`w-full px-3 py-2 text-left flex items-center gap-2 ${
+                    isLight ? 'hover:bg-zinc-100' : 'hover:bg-zinc-800'
+                  }`}
                 >
                   <Copy className="w-3.5 h-3.5" /> Duplicar Plano
                 </button>
-                <div className="h-px bg-[#27272a] my-1" />
+                <div className={`h-px my-1 ${isLight ? 'bg-zinc-200' : 'bg-[#27272a]'}`} />
                 <button
                   onClick={() => {
                     setRoutineToDelete(r);
                     setActiveMenuRoutineId(null);
                   }}
-                  className="w-full px-3 py-2 text-left text-red-400 hover:bg-red-950/40 flex items-center gap-2"
+                  className="w-full px-3 py-2 text-left text-red-500 hover:bg-red-50 flex items-center gap-2"
                 >
                   <Trash2 className="w-3.5 h-3.5" /> Excluir Plano
                 </button>
@@ -548,10 +578,16 @@ export const RoutinesView: React.FC = () => {
                   onClick={() => {
                     if (tpl) setPreviewExercise3D(tpl);
                   }}
-                  className="flex items-center gap-2 p-1.5 pr-2.5 rounded-xl bg-[#18181b] hover:bg-[#222226] border border-[#27272a] shrink-0 text-left transition active:scale-95 max-w-[195px]"
+                  className={`flex items-center gap-2 p-1.5 pr-2.5 rounded-xl border shrink-0 text-left transition active:scale-95 max-w-[195px] ${
+                    isLight
+                      ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-black'
+                      : 'bg-[#18181b] hover:bg-[#222226] border-[#27272a] text-white'
+                  }`}
                   title="Toque para ver a execução 3D deste exercício"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-white border border-[#27272a] overflow-hidden shrink-0 flex items-center justify-center">
+                  <div className={`w-9 h-9 rounded-lg border overflow-hidden shrink-0 flex items-center justify-center ${
+                    isLight ? 'bg-white border-zinc-200' : 'bg-white border-[#27272a]'
+                  }`}>
                     {thumbUrl ? (
                       <img
                         src={thumbUrl}
@@ -560,16 +596,22 @@ export const RoutinesView: React.FC = () => {
                         className="w-full h-full object-cover pointer-events-none"
                       />
                     ) : (
-                      <div className="w-full h-full bg-[#121214] flex items-center justify-center">
-                        <Dumbbell className="w-3.5 h-3.5 text-white" />
+                      <div className={`w-full h-full flex items-center justify-center ${
+                        isLight ? 'bg-zinc-200' : 'bg-[#121214]'
+                      }`}>
+                        <Dumbbell className={`w-3.5 h-3.5 ${isLight ? 'text-black' : 'text-white'}`} />
                       </div>
                     )}
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[11px] font-bold text-white truncate block">
+                    <span className={`text-[11px] font-bold truncate block ${
+                      isLight ? 'text-black' : 'text-white'
+                    }`}>
                       {ex.title}
                     </span>
-                    <span className="text-[9px] text-zinc-400 font-semibold block">
+                    <span className={`text-[9px] font-semibold block ${
+                      isLight ? 'text-zinc-500' : 'text-zinc-400'
+                    }`}>
                       {ex.sets.length} {ex.sets.length === 1 ? 'série' : 'séries'} • Ver 3D
                     </span>
                   </div>
@@ -578,13 +620,15 @@ export const RoutinesView: React.FC = () => {
             })}
           </div>
         ) : (
-          <p className="text-xs text-zinc-500 italic">Nenhum exercício adicionado</p>
+          <p className={`text-xs italic ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>Nenhum exercício adicionado</p>
         )}
 
         {/* Rodapé do Card com Botão Iniciar e Editar Rápido */}
-        <div className="flex items-center justify-between pt-2 border-t border-[#27272a]">
+        <div className={`flex items-center justify-between pt-2 border-t ${
+          isLight ? 'border-zinc-200' : 'border-[#27272a]'
+        }`}>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-zinc-500 font-semibold">
+            <span className={`text-[11px] font-semibold ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
               {r.exercises.length} {r.exercises.length === 1 ? 'Exercício' : 'Exercícios'}
             </span>
             <button
@@ -592,7 +636,9 @@ export const RoutinesView: React.FC = () => {
                 setEditingRoutine(r);
                 setIsEditorOpen(true);
               }}
-              className="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1 font-semibold underline"
+              className={`text-[11px] flex items-center gap-1 font-semibold underline ${
+                isLight ? 'text-zinc-600 hover:text-black' : 'text-zinc-400 hover:text-white'
+              }`}
             >
               <Edit2 className="w-3 h-3" /> Editar
             </button>
@@ -602,13 +648,19 @@ export const RoutinesView: React.FC = () => {
             onClick={() => handleStartRoutineClick(meta, groupQueue)}
             className={`px-4 py-2 font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-md active:scale-95 transition ${
               meta.isDoneInCurrentCycle
-                ? 'bg-[#222226] hover:bg-zinc-700 text-zinc-200 border border-[#3f3f46]'
+                ? isLight
+                  ? 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-300'
+                  : 'bg-[#222226] hover:bg-zinc-700 text-zinc-200 border border-[#3f3f46]'
+                : isLight
+                ? 'bg-black stay-white text-white hover:bg-zinc-800'
                 : 'bg-white hover:bg-zinc-200 text-black'
             }`}
           >
             <Play
               className={`w-3 h-3 ${
-                meta.isDoneInCurrentCycle ? 'fill-zinc-200' : 'fill-black'
+                meta.isDoneInCurrentCycle
+                  ? isLight ? 'fill-zinc-700 text-zinc-700' : 'fill-zinc-200 text-zinc-200'
+                  : isLight ? 'fill-white text-white' : 'fill-black text-black'
               }`}
             />
             <span>{meta.isDoneInCurrentCycle ? 'Repetir' : 'Iniciar'}</span>
@@ -688,7 +740,7 @@ export const RoutinesView: React.FC = () => {
             {/* Ícone com identidade visual Change (igual ao halter do canto) */}
             <div
               className={`w-9 h-9 rounded-xl font-black flex items-center justify-center shadow-md border shrink-0 ${
-                isLight ? 'bg-black text-white border-black' : 'bg-white text-black border-zinc-300'
+                isLight ? 'bg-black stay-white text-white border-black' : 'bg-white text-black border-zinc-300'
               }`}
             >
               <Droplet className={`w-5 h-5 stroke-[2.4] ${isLight ? 'text-white' : 'text-black'}`} />
@@ -753,7 +805,7 @@ export const RoutinesView: React.FC = () => {
               }}
               className={`px-2 py-1 rounded-lg text-[10px] font-black border transition active:scale-95 flex flex-col items-center justify-center ${
                 isLight
-                  ? 'bg-black text-white hover:bg-zinc-800 border-black shadow-sm'
+                  ? 'bg-black stay-white text-white hover:bg-zinc-800 border-black shadow-sm'
                   : 'bg-white text-black hover:bg-zinc-200 border-white shadow-sm'
               }`}
               title="Registrar +500 ml de água"
@@ -772,32 +824,50 @@ export const RoutinesView: React.FC = () => {
             setEditingRoutine(null);
             setIsEditorOpen(true);
           }}
-          className="w-full p-4 bg-white text-black rounded-2xl shadow-xl flex items-center justify-between active:scale-98 transition group border border-zinc-200"
+          className={`w-full p-4 rounded-2xl shadow-xl flex items-center justify-between active:scale-98 transition group border ${
+            isLight
+              ? 'bg-white border-zinc-200 text-black shadow-zinc-200/50'
+              : 'bg-[#141416] border-[#27272a] text-white'
+          }`}
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center shadow-md">
-              <Plus className="w-6 h-6 stroke-[3] text-white" />
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-md ${
+              isLight ? 'bg-black stay-white text-white' : 'bg-white text-black'
+            }`}>
+              <Plus className={`w-6 h-6 stroke-[3] ${isLight ? '!text-white' : 'text-black'}`} />
             </div>
             <div className="text-left">
-              <span className="text-sm font-black block">Montar Novo Plano de Treino</span>
-              <span className="text-xs text-zinc-700">
+              <span className={`text-sm font-black block ${isLight ? 'text-black' : 'text-white'}`}>
+                Montar Novo Plano de Treino
+              </span>
+              <span className={`text-xs ${isLight ? 'text-zinc-600' : 'text-zinc-400'}`}>
                 Use uma sugestão conhecida ou monte seu treino do zero
               </span>
             </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-zinc-800 group-hover:translate-x-1 transition" />
+          <ChevronRight className={`w-5 h-5 group-hover:translate-x-1 transition ${
+            isLight ? 'text-zinc-400 group-hover:text-black' : 'text-zinc-500 group-hover:text-white'
+          }`} />
         </button>
 
         {/* Treino Livre Rápido (Secundário) */}
         <button
           onClick={() => startWorkout(undefined, 'Treino Livre')}
-          className="w-full py-2.5 px-3.5 bg-[#141416] hover:bg-[#1a1a1d] border border-[#27272a] rounded-xl flex items-center justify-between text-xs font-bold transition active:scale-98"
+          className={`w-full py-3 px-3.5 rounded-xl border flex items-center justify-between text-xs font-bold transition active:scale-98 ${
+            isLight
+              ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-black shadow-sm'
+              : 'bg-[#141416] hover:bg-[#1a1a1d] border-[#27272a] text-zinc-300'
+          }`}
         >
-          <div className="flex items-center gap-2 text-zinc-300">
-            <Dumbbell className="w-4 h-4 text-white" />
-            <span>Iniciar Treino Vazio Rápido</span>
+          <div className="flex items-center gap-2">
+            <Dumbbell className={`w-4 h-4 ${isLight ? 'text-black' : 'text-white'}`} />
+            <span className={isLight ? 'text-black font-extrabold' : 'text-zinc-200'}>
+              Iniciar Treino Vazio Rápido
+            </span>
           </div>
-          <span className="text-[11px] text-zinc-500">Sem plano prévio →</span>
+          <span className={`text-[11px] font-semibold ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>
+            Sem plano prévio →
+          </span>
         </button>
       </div>
 
@@ -805,20 +875,24 @@ export const RoutinesView: React.FC = () => {
       <div className="space-y-4 pt-2">
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-xs font-black uppercase tracking-wider text-zinc-400 block">
+            <span className={`text-xs font-black uppercase tracking-wider block ${
+              isLight ? 'text-zinc-600' : 'text-zinc-400'
+            }`}>
               Seus Planos de Treino ({routines.length})
             </span>
             {routines.length > 1 && (
-              <span className="text-[10px] text-zinc-500">
+              <span className={`text-[10px] ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
                 Ordenados automaticamente por fila de prioridade (próximo treino no topo)
               </span>
             )}
           </div>
           <button
             onClick={() => setIsCreatingFolder(!isCreatingFolder)}
-            className="text-xs font-bold text-white hover:underline flex items-center gap-1 shrink-0"
+            className={`text-xs font-bold hover:underline flex items-center gap-1 shrink-0 ${
+              isLight ? 'text-black' : 'text-white'
+            }`}
           >
-            <FolderPlus className="w-3.5 h-3.5" />
+            <FolderPlus className={`w-3.5 h-3.5 ${isLight ? 'text-black' : 'text-white'}`} />
             <span>+ Nova Pasta</span>
           </button>
         </div>
@@ -827,26 +901,34 @@ export const RoutinesView: React.FC = () => {
         {isCreatingFolder && (
           <form
             onSubmit={handleCreateNewFolder}
-            className="p-3 bg-[#18181b] border border-[#27272a] rounded-xl flex items-center gap-2 animate-in fade-in duration-100"
+            className={`p-3 rounded-xl flex items-center gap-2 animate-in fade-in duration-100 border ${
+              isLight ? 'bg-white border-zinc-200 shadow-sm' : 'bg-[#18181b] border-[#27272a]'
+            }`}
           >
             <input
               type="text"
               value={newFolderTitle}
               onChange={(e) => setNewFolderTitle(e.target.value)}
               placeholder="Nome da pasta (Ex: Divisão ABC)"
-              className="flex-1 bg-[#121214] border border-[#27272a] rounded-lg px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white"
+              className={`flex-1 rounded-lg px-3 py-1.5 text-xs focus:outline-none border ${
+                isLight
+                  ? 'bg-zinc-50 border-zinc-300 text-black placeholder-zinc-400 focus:border-black'
+                  : 'bg-[#121214] border-[#27272a] text-white placeholder-zinc-500 focus:border-white'
+              }`}
               autoFocus
             />
             <button
               type="submit"
-              className="px-3 py-1.5 bg-white text-black font-bold text-xs rounded-lg active:scale-95 transition"
+              className={`px-3 py-1.5 font-bold text-xs rounded-lg active:scale-95 transition ${
+                isLight ? 'bg-black stay-white text-white' : 'bg-white text-black'
+              }`}
             >
               Criar
             </button>
             <button
               type="button"
               onClick={() => setIsCreatingFolder(false)}
-              className="px-2 py-1.5 text-zinc-400 text-xs hover:text-white"
+              className={`px-2 py-1.5 text-xs ${isLight ? 'text-zinc-500 hover:text-black' : 'text-zinc-400 hover:text-white'}`}
             >
               Cancelar
             </button>
@@ -854,19 +936,25 @@ export const RoutinesView: React.FC = () => {
         )}
 
         {/* Seção Compacta e Recolhível de Pastas de Treino Sugeridas (ABC, Upper/Lower, ABCD...) */}
-        <div className="bg-[#141416] border border-[#27272a] rounded-xl overflow-hidden transition">
+        <div className={`border rounded-xl overflow-hidden transition ${
+          isLight ? 'bg-white border-zinc-200 shadow-sm' : 'bg-[#141416] border-[#27272a]'
+        }`}>
           <button
             type="button"
             onClick={() => setShowSuggestedFolders(!showSuggestedFolders)}
-            className="w-full px-3 py-2.5 flex items-center justify-between text-left hover:bg-[#18181b] transition"
+            className={`w-full px-3 py-2.5 flex items-center justify-between text-left transition ${
+              isLight ? 'hover:bg-zinc-50' : 'hover:bg-[#18181b]'
+            }`}
           >
             <div className="flex items-center gap-2 min-w-0">
-              <Sparkles className="w-3.5 h-3.5 text-white shrink-0" />
-              <span className="text-xs font-black text-white truncate">
+              <Sparkles className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-black' : 'text-white'}`} />
+              <span className={`text-xs font-black truncate ${isLight ? 'text-black' : 'text-white'}`}>
                 Sugestões de Divisões Prontas (Pastas com Treinos)
               </span>
             </div>
-            <div className="flex items-center gap-1 text-[11px] font-bold text-zinc-400 shrink-0">
+            <div className={`flex items-center gap-1 text-[11px] font-bold shrink-0 ${
+              isLight ? 'text-zinc-500' : 'text-zinc-400'
+            }`}>
               <span>{showSuggestedFolders ? 'Recolher' : 'Ver divisões'}</span>
               <ChevronRight
                 className={`w-3.5 h-3.5 transition-transform duration-200 ${
@@ -877,27 +965,35 @@ export const RoutinesView: React.FC = () => {
           </button>
 
           {showSuggestedFolders && (
-            <div className="p-3 border-t border-[#27272a] space-y-2 bg-[#0d0d0f] animate-in fade-in duration-150">
-              <p className="text-[11px] text-zinc-400">
+            <div className={`p-3 border-t space-y-2 animate-in fade-in duration-150 ${
+              isLight ? 'border-zinc-200 bg-zinc-50/70' : 'border-[#27272a] bg-[#0d0d0f]'
+            }`}>
+              <p className={`text-[11px] ${isLight ? 'text-zinc-600' : 'text-zinc-400'}`}>
                 Toque para adicionar a pasta completa com todos os treinos da divisão já organizados dentro dela:
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                 {POPULAR_FOLDER_PRESETS.map((fPreset) => (
                   <div
                     key={fPreset.id}
-                    className="p-3 rounded-xl bg-[#141416] border border-[#27272a] hover:border-zinc-500 transition flex flex-col justify-between gap-2.5"
+                    className={`p-3 rounded-xl border transition flex flex-col justify-between gap-2.5 ${
+                      isLight
+                        ? 'bg-white border-zinc-200 hover:border-zinc-400 shadow-xs'
+                        : 'bg-[#141416] border-[#27272a] hover:border-zinc-500'
+                    }`}
                   >
                     <div>
                       <div className="flex items-center justify-between gap-1 mb-1">
-                        <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-white text-black">
+                        <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                          isLight ? 'bg-black stay-white text-white' : 'bg-white text-black'
+                        }`}>
                           {fPreset.tag}
                         </span>
-                        <span className="text-[10px] text-zinc-400 font-bold">
+                        <span className={`text-[10px] font-bold ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>
                           {fPreset.routines.map((r) => r.title.split('—')[0].trim()).join(' • ')}
                         </span>
                       </div>
-                      <h4 className="text-xs font-black text-white">{fPreset.title}</h4>
-                      <p className="text-[10px] text-zinc-400 line-clamp-2 mt-0.5">
+                      <h4 className={`text-xs font-black ${isLight ? 'text-black' : 'text-white'}`}>{fPreset.title}</h4>
+                      <p className={`text-[10px] line-clamp-2 mt-0.5 ${isLight ? 'text-zinc-600' : 'text-zinc-400'}`}>
                         {fPreset.description}
                       </p>
                     </div>
@@ -905,7 +1001,11 @@ export const RoutinesView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleAddFolderPreset(fPreset)}
-                      className="w-full py-2 bg-[#222226] hover:bg-white text-white hover:text-black rounded-lg text-[11px] font-black transition active:scale-95 flex items-center justify-center gap-1.5 border border-[#2e2e34]"
+                      className={`w-full py-2 rounded-lg text-[11px] font-black transition active:scale-95 flex items-center justify-center gap-1.5 border ${
+                        isLight
+                          ? 'bg-zinc-100 hover:bg-black hover:text-white text-black border-zinc-200'
+                          : 'bg-[#222226] hover:bg-white hover:text-black text-white border-[#2e2e34]'
+                      }`}
                     >
                       <FolderPlus className="w-3.5 h-3.5" />
                       <span>Adicionar Pasta Completa</span>
@@ -919,15 +1019,19 @@ export const RoutinesView: React.FC = () => {
 
         {/* Estado Vazio Limpo na Primeira Tela */}
         {routines.length === 0 && folders.length === 0 && (
-          <div className="bg-[#141416] border border-dashed border-[#27272a] rounded-2xl p-6 text-center space-y-3">
-            <div className="w-11 h-11 rounded-2xl bg-[#18181b] border border-[#27272a] flex items-center justify-center mx-auto text-zinc-300">
-              <Dumbbell className="w-5 h-5" />
+          <div className={`border border-dashed rounded-2xl p-6 text-center space-y-3 ${
+            isLight ? 'bg-white border-zinc-300' : 'bg-[#141416] border-[#27272a]'
+          }`}>
+            <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center mx-auto ${
+              isLight ? 'bg-zinc-100 border-zinc-200 text-black' : 'bg-[#18181b] border-[#27272a] text-zinc-300'
+            }`}>
+              <Dumbbell className={`w-5 h-5 ${isLight ? 'text-black' : 'text-zinc-300'}`} />
             </div>
             <div className="space-y-1">
-              <h3 className="text-sm font-black text-white">
+              <h3 className={`text-sm font-black ${isLight ? 'text-black' : 'text-white'}`}>
                 Nenhum plano de treino definido ainda
               </h3>
-              <p className="text-xs text-zinc-400 max-w-xs mx-auto leading-relaxed">
+              <p className={`text-xs max-w-xs mx-auto leading-relaxed ${isLight ? 'text-zinc-600' : 'text-zinc-400'}`}>
                 Sua tela inicial está limpa para você definir exatamente quais treinos vai começar a fazer.
               </p>
             </div>
@@ -937,16 +1041,24 @@ export const RoutinesView: React.FC = () => {
                   setEditingRoutine(null);
                   setIsEditorOpen(true);
                 }}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white text-black rounded-xl text-xs font-black transition active:scale-95 shadow-sm"
+                className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-black transition active:scale-95 shadow-sm border ${
+                  isLight
+                    ? 'bg-black stay-white text-white hover:bg-zinc-800 border-black'
+                    : 'bg-white text-black hover:bg-zinc-200 border-white'
+                }`}
               >
-                <Plus className="w-4 h-4" />
+                <Plus className={`w-4 h-4 stroke-[2.5] ${isLight ? 'text-white' : 'text-black'}`} />
                 <span>Montar Meu Primeiro Treino</span>
               </button>
               <button
                 onClick={() => setShowSuggestedFolders(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#1e1e22] hover:bg-[#27272c] border border-[#2e2e34] text-white rounded-xl text-xs font-bold transition active:scale-95"
+                className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition active:scale-95 border ${
+                  isLight
+                    ? 'bg-zinc-100 hover:bg-zinc-200 text-black border-zinc-300 shadow-sm'
+                    : 'bg-[#1e1e22] hover:bg-[#27272c] border-[#2e2e34] text-white'
+                }`}
               >
-                <Sparkles className="w-3.5 h-3.5" />
+                <Sparkles className={`w-3.5 h-3.5 ${isLight ? 'text-black' : 'text-white'}`} />
                 <span>Ver Pastas Prontas (ABC, Upper/Lower)</span>
               </button>
             </div>
@@ -959,16 +1071,18 @@ export const RoutinesView: React.FC = () => {
           const folderQueue = buildPriorityQueueForList(rawList);
           return (
             <div key={f.id} className="space-y-2.5">
-              <div className="flex items-center justify-between text-xs font-bold text-zinc-300">
+              <div className="flex items-center justify-between text-xs font-bold">
                 <div className="flex items-center gap-2">
-                  <Folder className="w-4 h-4 text-white" />
-                  <span className="text-sm font-bold text-white">{f.title}</span>
-                  <span className="text-xs text-zinc-500 font-normal">({folderQueue.length})</span>
+                  <Folder className={`w-4 h-4 ${isLight ? 'text-black' : 'text-white'}`} />
+                  <span className={`text-sm font-bold ${isLight ? 'text-black' : 'text-white'}`}>{f.title}</span>
+                  <span className={`text-xs font-normal ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>({folderQueue.length})</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => setFolderToDelete({ id: f.id, title: f.title, count: folderQueue.length })}
-                    className="text-zinc-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-zinc-800 transition"
+                    className={`p-1.5 rounded-lg transition ${
+                      isLight ? 'text-zinc-400 hover:text-red-500 hover:bg-zinc-100' : 'text-zinc-500 hover:text-red-400 hover:bg-zinc-800'
+                    }`}
                     title="Excluir Pasta e Planos"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -977,10 +1091,16 @@ export const RoutinesView: React.FC = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {folderQueue.length === 0 ? (
-                  <div className="col-span-full p-4 rounded-2xl border border-dashed border-[#27272a] bg-[#141416]/50 flex items-center justify-between gap-3">
+                  <div className={`col-span-full p-4 rounded-2xl border border-dashed flex items-center justify-between gap-3 ${
+                    isLight ? 'border-zinc-300 bg-zinc-50' : 'border-[#27272a] bg-[#141416]/50'
+                  }`}>
                     <div>
-                      <p className="text-xs text-zinc-300 font-bold">Nenhum plano nesta pasta ainda.</p>
-                      <p className="text-[11px] text-zinc-500">Adicione seu primeiro treino para esta divisão</p>
+                      <p className={`text-xs font-bold ${isLight ? 'text-black' : 'text-zinc-300'}`}>
+                        Nenhum plano nesta pasta ainda.
+                      </p>
+                      <p className={`text-[11px] ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                        Adicione seu primeiro treino para esta divisão
+                      </p>
                     </div>
                     <button
                       type="button"
@@ -989,7 +1109,11 @@ export const RoutinesView: React.FC = () => {
                         setEditingRoutine(null);
                         setIsEditorOpen(true);
                       }}
-                      className="px-3 py-1.5 bg-white text-black font-black text-xs rounded-xl shadow active:scale-95 transition flex items-center gap-1 shrink-0"
+                      className={`px-3 py-1.5 font-black text-xs rounded-xl shadow active:scale-95 transition flex items-center gap-1 shrink-0 ${
+                        isLight
+                          ? 'bg-black stay-white text-white hover:bg-zinc-800'
+                          : 'bg-white text-black hover:bg-zinc-200'
+                      }`}
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Criar Treino</span>
@@ -1005,7 +1129,11 @@ export const RoutinesView: React.FC = () => {
                         setEditingRoutine(null);
                         setIsEditorOpen(true);
                       }}
-                      className="col-span-full py-2.5 rounded-xl border border-dashed border-[#27272a] hover:border-zinc-500 text-zinc-400 hover:text-white flex items-center justify-center gap-1.5 text-xs font-bold transition active:scale-98"
+                      className={`col-span-full py-2.5 rounded-xl border border-dashed flex items-center justify-center gap-1.5 text-xs font-bold transition active:scale-98 ${
+                        isLight
+                          ? 'border-zinc-300 hover:border-black text-zinc-600 hover:text-black bg-zinc-50/70'
+                          : 'border-[#27272a] hover:border-zinc-500 text-zinc-400 hover:text-white'
+                      }`}
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Adicionar Treino em {f.title}</span>
@@ -1021,10 +1149,12 @@ export const RoutinesView: React.FC = () => {
         {uncategorizedQueue.length > 0 && (
           <div className="space-y-2.5">
             {folders.length > 0 && (
-              <div className="flex items-center gap-2 text-sm font-bold text-white">
-                <Dumbbell className="w-4 h-4 text-white" />
+              <div className={`flex items-center gap-2 text-sm font-bold ${
+                isLight ? 'text-black' : 'text-white'
+              }`}>
+                <Dumbbell className={`w-4 h-4 ${isLight ? 'text-black' : 'text-white'}`} />
                 <span>Planos Principais</span>
-                <span className="text-xs text-zinc-500 font-normal">
+                <span className={`text-xs font-normal ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
                   ({uncategorizedQueue.length})
                 </span>
               </div>

@@ -1,24 +1,15 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { KeyRound, Copy, Check, X, BellRing, UserCheck, UserX } from 'lucide-react';
 import { AppProvider, useApp } from './context/AppContext';
 import { MobileTabBar, DesktopSidebar, TabType } from './components/MobileTabBar';
 import { AuthLoginScreen } from './components/AuthLoginScreen';
-
-// Code-splitting de alta performance: carrega cada aba sob demanda
-const RoutinesView = lazy(() => import('./components/views/RoutinesView').then(m => ({ default: m.RoutinesView })));
-const ExercisesView = lazy(() => import('./components/views/ExercisesView').then(m => ({ default: m.ExercisesView })));
-const HistoryView = lazy(() => import('./components/views/HistoryView').then(m => ({ default: m.HistoryView })));
-const AnalyticsView = lazy(() => import('./components/views/AnalyticsView').then(m => ({ default: m.AnalyticsView })));
-const SettingsView = lazy(() => import('./components/views/SettingsView').then(m => ({ default: m.SettingsView })));
-const ActiveWorkoutModal = lazy(() => import('./components/ActiveWorkoutModal').then(m => ({ default: m.ActiveWorkoutModal })));
-const WorkoutSummaryModal = lazy(() => import('./components/WorkoutSummaryModal').then(m => ({ default: m.WorkoutSummaryModal })));
-
-const ViewLoadingFallback: React.FC = () => (
-  <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh] space-y-3">
-    <div className="w-7 h-7 rounded-full border-2 border-zinc-700 border-t-white animate-spin" />
-    <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Carregando...</span>
-  </div>
-);
+import { RoutinesView } from './components/views/RoutinesView';
+import { ExercisesView } from './components/views/ExercisesView';
+import { HistoryView } from './components/views/HistoryView';
+import { AnalyticsView } from './components/views/AnalyticsView';
+import { SettingsView } from './components/views/SettingsView';
+import { ActiveWorkoutModal } from './components/ActiveWorkoutModal';
+import { WorkoutSummaryModal } from './components/WorkoutSummaryModal';
 
 const AppContent: React.FC = () => {
   const {
@@ -162,13 +153,11 @@ const AppContent: React.FC = () => {
         )}
 
         <main className="flex-1 w-full max-w-4xl mx-auto overflow-x-hidden">
-          <Suspense fallback={<ViewLoadingFallback />}>
-            {currentTab === 'routines' && <RoutinesView />}
-            {currentTab === 'exercises' && <ExercisesView />}
-            {currentTab === 'history' && <HistoryView />}
-            {currentTab === 'analytics' && <AnalyticsView />}
-            {currentTab === 'settings' && <SettingsView />}
-          </Suspense>
+          {currentTab === 'routines' && <RoutinesView />}
+          {currentTab === 'exercises' && <ExercisesView />}
+          {currentTab === 'history' && <HistoryView />}
+          {currentTab === 'analytics' && <AnalyticsView />}
+          {currentTab === 'settings' && <SettingsView />}
         </main>
       </div>
 
@@ -234,10 +223,8 @@ const AppContent: React.FC = () => {
       )}
 
       {/* Modais Globais de Treino Ativo e Resumo */}
-      <Suspense fallback={null}>
-        <ActiveWorkoutModal />
-        <WorkoutSummaryModal />
-      </Suspense>
+      <ActiveWorkoutModal />
+      <WorkoutSummaryModal />
     </div>
   );
 };
