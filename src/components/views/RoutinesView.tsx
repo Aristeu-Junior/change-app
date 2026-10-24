@@ -21,7 +21,13 @@ import {
   X,
   Sparkles,
   Droplets,
-  Droplet
+  Droplet,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+  ChevronUp,
+  ChevronDown,
+  Check
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Routine, ExerciseTemplate } from '../../types';
@@ -51,8 +57,11 @@ export const RoutinesView: React.FC = () => {
     startWorkout,
     deleteRoutine,
     saveRoutine,
+    moveRoutine,
+    reorderRoutinesList,
     deleteFolder,
     createFolder,
+    moveFolder,
     addFolderWithPreset,
     currentUser,
     isCurrentUserAdmin,
@@ -77,6 +86,24 @@ export const RoutinesView: React.FC = () => {
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [newFolderTitle, setNewFolderTitle] = useState('');
   const [showSuggestedFolders, setShowSuggestedFolders] = useState(false);
+
+  // Modo de ordenação: 'manual' (ordem personalizada do usuário) ou 'priority' (fila inteligente por tempo)
+  const [routineSortMode, setRoutineSortMode] = useState<'manual' | 'priority'>(() => {
+    return (localStorage.getItem('change_routine_sort_mode') as 'manual' | 'priority') || 'manual';
+  });
+
+  const handleToggleSortMode = (mode: 'manual' | 'priority') => {
+    setRoutineSortMode(mode);
+    localStorage.setItem('change_routine_sort_mode', mode);
+    showToast(mode === 'manual' ? 'Modo: Sua Ordem Personalizada' : 'Modo: Fila Inteligente (Próximo no topo)');
+  };
+
+  // Modal para organizar a sequência dos treinos em uma pasta ou seção
+  const [reorderModalConfig, setReorderModalConfig] = useState<{
+    folderId: number | null;
+    folderTitle: string;
+    routines: Routine[];
+  } | null>(null);
 
   // Modal de Confirmação ao tentar repetir um treino já realizado na semana / ciclo
   const [repeatConfirmRoutine, setRepeatConfirmRoutine] = useState<{
@@ -282,10 +309,8 @@ export const RoutinesView: React.FC = () => {
       ];
     }
 
-    // 3. Ordena a fila de prioridade:
-    // Quem NUNCA foi feito (lastDoneTime === 0) ou foi feito HÁ MAIS TEMPO fica no TOPO (Recomendado).
-    // Quem acabou de ser feito (maior lastDoneTime) vai para o FINAL da fila!
-    const sorted = [...withLastTime].sort((a, b) => {
+    // 3. Determina o ranking inteligente da fila (quem nunca treinou ou treinou há mais tempo)
+    const prioritySorted = [...withLastTime].sort((a, b) => {
       if (a.lastDoneTime === 0 && b.lastDoneTime === 0) {
         return a.originalIdx - b.originalIdx;
       }
@@ -294,12 +319,19 @@ export const RoutinesView: React.FC = () => {
       return a.lastDoneTime - b.lastDoneTime;
     });
 
-    const anyDoneThisWeek = sorted.some((item) => item.doneThisWeek);
-    const allDoneThisWeek = sorted.every((item) => item.doneThisWeek);
+    const anyDoneThisWeek = prioritySorted.some((item) => item.doneThisWeek);
+    const allDoneThisWeek = prioritySorted.every((item) => item.doneThisWeek);
 
-    return sorted.map((item, idx) => {
+    const topRecommendedId = (!allDoneThisWeek || anyDoneThisWeek) ? prioritySorted[0]?.routine.id : null;
+    const nextInQueueId = prioritySorted.length >= 2 ? prioritySorted[1]?.routine.id : null;
+
+    // Se routineSortMode === 'priority', a ordem das cartas segue a fila inteligente.
+    // Se routineSortMode === 'manual' (padrão), PRESERVA A ORDEM DEFINIDA PELO USUÁRIO!
+    const displayList = routineSortMode === 'priority' ? prioritySorted : withLastTime;
+
+    return displayList.map((item) => {
       const isDoneInCurrentCycle = allDoneThisWeek
-        ? idx > 0 && item.doneThisWeek
+        ? item.routine.id !== topRecommendedId && item.doneThisWeek
         : item.doneThisWeek;
 
       return {
@@ -308,8 +340,8 @@ export const RoutinesView: React.FC = () => {
         lastDoneDateStr: item.lastDoneDateStr,
         doneThisWeek: item.doneThisWeek,
         isDoneInCurrentCycle,
-        isTopRecommended: idx === 0 && (!allDoneThisWeek || anyDoneThisWeek),
-        isNextInQueue: idx === 1 && sorted.length >= 2 && !isDoneInCurrentCycle
+        isTopRecommended: item.routine.id === topRecommendedId,
+        isNextInQueue: item.routine.id === nextInQueueId && !isDoneInCurrentCycle
       };
     });
   };
@@ -520,42 +552,84 @@ export const RoutinesView: React.FC = () => {
                 <MoreVertical className="w-4 h-4" />
               </button>
 
-            {activeMenuRoutineId === r.id && (
-              <div className={`absolute right-0 top-8 z-30 w-44 rounded-xl shadow-2xl py-1 text-xs animate-in fade-in duration-100 border ${
-                isLight ? 'bg-white border-zinc-200 text-black' : 'bg-[#1c1c1f] border-[#3f3f46] text-zinc-200'
-              }`}>
-                <button
-                  onClick={() => {
-                    setEditingRoutine(r);
-                    setIsEditorOpen(true);
-                    setActiveMenuRoutineId(null);
-                  }}
-                  className={`w-full px-3 py-2 text-left flex items-center gap-2 ${
-                    isLight ? 'hover:bg-zinc-100' : 'hover:bg-zinc-800'
-                  }`}
-                >
-                  <Edit2 className="w-3.5 h-3.5" /> Editar Plano
-                </button>
-                <button
-                  onClick={() => handleDuplicateRoutine(r)}
-                  className={`w-full px-3 py-2 text-left flex items-center gap-2 ${
-                    isLight ? 'hover:bg-zinc-100' : 'hover:bg-zinc-800'
-                  }`}
-                >
-                  <Copy className="w-3.5 h-3.5" /> Duplicar Plano
-                </button>
-                <div className={`h-px my-1 ${isLight ? 'bg-zinc-200' : 'bg-[#27272a]'}`} />
-                <button
-                  onClick={() => {
-                    setRoutineToDelete(r);
-                    setActiveMenuRoutineId(null);
-                  }}
-                  className="w-full px-3 py-2 text-left text-red-500 hover:bg-red-50 flex items-center gap-2"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Excluir Plano
-                </button>
-              </div>
-            )}
+            {activeMenuRoutineId === r.id && (() => {
+              const cardIdx = groupQueue.findIndex((item) => item.routine.id === r.id);
+              const canMoveUp = cardIdx > 0;
+              const canMoveDown = cardIdx !== -1 && cardIdx < groupQueue.length - 1;
+
+              return (
+                <div className={`absolute right-0 top-8 z-30 w-48 rounded-xl shadow-2xl py-1 text-xs animate-in fade-in duration-100 border ${
+                  isLight ? 'bg-white border-zinc-200 text-black' : 'bg-[#1c1c1f] border-[#3f3f46] text-zinc-200'
+                }`}>
+                  <button
+                    onClick={() => {
+                      setEditingRoutine(r);
+                      setIsEditorOpen(true);
+                      setActiveMenuRoutineId(null);
+                    }}
+                    className={`w-full px-3 py-2 text-left flex items-center gap-2 ${
+                      isLight ? 'hover:bg-zinc-100' : 'hover:bg-zinc-800'
+                    }`}
+                  >
+                    <Edit2 className="w-3.5 h-3.5" /> Editar Plano
+                  </button>
+                  <button
+                    onClick={() => handleDuplicateRoutine(r)}
+                    className={`w-full px-3 py-2 text-left flex items-center gap-2 ${
+                      isLight ? 'hover:bg-zinc-100' : 'hover:bg-zinc-800'
+                    }`}
+                  >
+                    <Copy className="w-3.5 h-3.5" /> Duplicar Plano
+                  </button>
+
+                  {/* Reordenar Posição do Treino */}
+                  {(canMoveUp || canMoveDown) && (
+                    <>
+                      <div className={`h-px my-1 ${isLight ? 'bg-zinc-200' : 'bg-[#27272a]'}`} />
+                      {canMoveUp && (
+                        <button
+                          onClick={() => {
+                            moveRoutine(r.id, 'up');
+                            setActiveMenuRoutineId(null);
+                            showToast(`"${r.title}" movido para cima`);
+                          }}
+                          className={`w-full px-3 py-2 text-left flex items-center gap-2 ${
+                            isLight ? 'hover:bg-zinc-100' : 'hover:bg-zinc-800'
+                          }`}
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" /> Mover para Cima
+                        </button>
+                      )}
+                      {canMoveDown && (
+                        <button
+                          onClick={() => {
+                            moveRoutine(r.id, 'down');
+                            setActiveMenuRoutineId(null);
+                            showToast(`"${r.title}" movido para baixo`);
+                          }}
+                          className={`w-full px-3 py-2 text-left flex items-center gap-2 ${
+                            isLight ? 'hover:bg-zinc-100' : 'hover:bg-zinc-800'
+                          }`}
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" /> Mover para Baixo
+                        </button>
+                      )}
+                    </>
+                  )}
+
+                  <div className={`h-px my-1 ${isLight ? 'bg-zinc-200' : 'bg-[#27272a]'}`} />
+                  <button
+                    onClick={() => {
+                      setRoutineToDelete(r);
+                      setActiveMenuRoutineId(null);
+                    }}
+                    className="w-full px-3 py-2 text-left text-red-500 hover:bg-red-50 flex items-center gap-2"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Excluir Plano
+                  </button>
+                </div>
+              );
+            })()}
             </div>
           </div>
         </div>
@@ -873,7 +947,7 @@ export const RoutinesView: React.FC = () => {
 
       {/* Divisões e Planos do Usuário com Fila de Prioridade Inteligente */}
       <div className="space-y-4 pt-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
             <span className={`text-xs font-black uppercase tracking-wider block ${
               isLight ? 'text-zinc-600' : 'text-zinc-400'
@@ -882,19 +956,53 @@ export const RoutinesView: React.FC = () => {
             </span>
             {routines.length > 1 && (
               <span className={`text-[10px] ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                Ordenados automaticamente por fila de prioridade (próximo treino no topo)
+                {routineSortMode === 'manual'
+                  ? 'Exibindo na sua ordem personalizada (reorganize quando quiser)'
+                  : 'Ordenados por fila de prioridade inteligente'}
               </span>
             )}
           </div>
-          <button
-            onClick={() => setIsCreatingFolder(!isCreatingFolder)}
-            className={`text-xs font-bold hover:underline flex items-center gap-1 shrink-0 ${
-              isLight ? 'text-black' : 'text-white'
-            }`}
-          >
-            <FolderPlus className={`w-3.5 h-3.5 ${isLight ? 'text-black' : 'text-white'}`} />
-            <span>+ Nova Pasta</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {routines.length > 1 && (
+              <div className={`p-0.5 rounded-lg border flex items-center gap-0.5 text-[10px] font-bold ${
+                isLight ? 'bg-zinc-100 border-zinc-300' : 'bg-[#18181b] border-[#27272a]'
+              }`}>
+                <button
+                  type="button"
+                  onClick={() => handleToggleSortMode('manual')}
+                  className={`px-2 py-0.5 rounded-md transition ${
+                    routineSortMode === 'manual'
+                      ? isLight ? 'bg-white text-black shadow-xs' : 'bg-white text-black'
+                      : isLight ? 'text-zinc-500 hover:text-black' : 'text-zinc-400 hover:text-white'
+                  }`}
+                  title="Manter sua ordem definida manualmente"
+                >
+                  Minha Ordem
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleToggleSortMode('priority')}
+                  className={`px-2 py-0.5 rounded-md transition ${
+                    routineSortMode === 'priority'
+                      ? isLight ? 'bg-white text-black shadow-xs' : 'bg-white text-black'
+                      : isLight ? 'text-zinc-500 hover:text-black' : 'text-zinc-400 hover:text-white'
+                  }`}
+                  title="Ordenar automaticamente pelo próximo treino do ciclo"
+                >
+                  Fila
+                </button>
+              </div>
+            )}
+            <button
+              onClick={() => setIsCreatingFolder(!isCreatingFolder)}
+              className={`text-xs font-bold hover:underline flex items-center gap-1 shrink-0 ${
+                isLight ? 'text-black' : 'text-white'
+              }`}
+            >
+              <FolderPlus className={`w-3.5 h-3.5 ${isLight ? 'text-black' : 'text-white'}`} />
+              <span>+ Nova Pasta</span>
+            </button>
+          </div>
         </div>
 
         {/* Formulário de Nova Pasta */}
@@ -1066,7 +1174,7 @@ export const RoutinesView: React.FC = () => {
         )}
 
         {/* Pastas (Com Fila de Prioridade interna para A, B, C...) */}
-        {folders.map((f) => {
+        {folders.map((f, fIdx) => {
           const rawList = routinesByFolder[f.id] || [];
           const folderQueue = buildPriorityQueueForList(rawList);
           return (
@@ -1078,6 +1186,51 @@ export const RoutinesView: React.FC = () => {
                   <span className={`text-xs font-normal ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>({folderQueue.length})</span>
                 </div>
                 <div className="flex items-center gap-1.5">
+                  {folderQueue.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setReorderModalConfig({
+                        folderId: f.id,
+                        folderTitle: f.title,
+                        routines: rawList
+                      })}
+                      className={`px-2 py-1 rounded-lg transition flex items-center gap-1 text-[11px] font-bold border ${
+                        isLight
+                          ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-300 text-zinc-800 shadow-xs'
+                          : 'bg-[#1e1e22] hover:bg-[#27272c] border-[#2e2e34] text-zinc-300'
+                      }`}
+                      title="Organizar Ordem dos Treinos nesta Pasta"
+                    >
+                      <ArrowUpDown className="w-3 h-3" />
+                      <span>Organizar</span>
+                    </button>
+                  )}
+                  {folders.length > 1 && (
+                    <div className="flex items-center gap-0.5">
+                      <button
+                        type="button"
+                        disabled={fIdx === 0}
+                        onClick={() => moveFolder(f.id, 'up')}
+                        className={`p-1 rounded-md transition ${
+                          isLight ? 'text-zinc-400 hover:text-black hover:bg-zinc-100' : 'text-zinc-500 hover:text-white hover:bg-zinc-800'
+                        } disabled:opacity-20`}
+                        title="Mover pasta para cima"
+                      >
+                        <ChevronUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={fIdx === folders.length - 1}
+                        onClick={() => moveFolder(f.id, 'down')}
+                        className={`p-1 rounded-md transition ${
+                          isLight ? 'text-zinc-400 hover:text-black hover:bg-zinc-100' : 'text-zinc-500 hover:text-white hover:bg-zinc-800'
+                        } disabled:opacity-20`}
+                        title="Mover pasta para baixo"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                   <button
                     onClick={() => setFolderToDelete({ id: f.id, title: f.title, count: folderQueue.length })}
                     className={`p-1.5 rounded-lg transition ${
@@ -1149,14 +1302,35 @@ export const RoutinesView: React.FC = () => {
         {uncategorizedQueue.length > 0 && (
           <div className="space-y-2.5">
             {folders.length > 0 && (
-              <div className={`flex items-center gap-2 text-sm font-bold ${
-                isLight ? 'text-black' : 'text-white'
-              }`}>
-                <Dumbbell className={`w-4 h-4 ${isLight ? 'text-black' : 'text-white'}`} />
-                <span>Planos Principais</span>
-                <span className={`text-xs font-normal ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
-                  ({uncategorizedQueue.length})
-                </span>
+              <div className="flex items-center justify-between text-xs font-bold">
+                <div className={`flex items-center gap-2 text-sm font-bold ${
+                  isLight ? 'text-black' : 'text-white'
+                }`}>
+                  <Dumbbell className={`w-4 h-4 ${isLight ? 'text-black' : 'text-white'}`} />
+                  <span>Planos Principais</span>
+                  <span className={`text-xs font-normal ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
+                    ({uncategorizedQueue.length})
+                  </span>
+                </div>
+                {uncategorizedQueue.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setReorderModalConfig({
+                      folderId: null,
+                      folderTitle: 'Planos Principais',
+                      routines: uncategorized
+                    })}
+                    className={`px-2 py-1 rounded-lg transition flex items-center gap-1 text-[11px] font-bold border ${
+                      isLight
+                        ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-300 text-zinc-800 shadow-xs'
+                        : 'bg-[#1e1e22] hover:bg-[#27272c] border-[#2e2e34] text-zinc-300'
+                    }`}
+                    title="Organizar Ordem dos Treinos Principais"
+                  >
+                    <ArrowUpDown className="w-3 h-3" />
+                    <span>Organizar</span>
+                  </button>
+                )}
               </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1165,6 +1339,150 @@ export const RoutinesView: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Modal para Organizar Ordem dos Treinos na Pasta ou Seção */}
+      {reorderModalConfig && (
+        <div
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setReorderModalConfig(null);
+          }}
+        >
+          <div className={`w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl space-y-4 border modal-safe-sheet ${
+            isLight ? 'bg-white border-zinc-200 text-black' : 'bg-[#141416] border-[#27272a] text-white'
+          }`}>
+            <div className={`flex items-center justify-between pb-3 border-b ${
+              isLight ? 'border-zinc-200' : 'border-[#27272a]'
+            }`}>
+              <div className="flex items-center gap-2.5">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                  isLight ? 'bg-black stay-white text-white' : 'bg-white text-black'
+                }`}>
+                  <ArrowUpDown className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className={`text-sm font-black ${isLight ? 'text-black' : 'text-white'}`}>
+                    Organizar Ordem dos Treinos
+                  </h3>
+                  <span className={`text-[11px] font-semibold block ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                    {reorderModalConfig.folderTitle} • {reorderModalConfig.routines.length} {reorderModalConfig.routines.length === 1 ? 'treino' : 'treinos'}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReorderModalConfig(null)}
+                className={`p-1.5 rounded-full transition ${
+                  isLight ? 'text-zinc-400 hover:text-black hover:bg-zinc-100' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                }`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className={`text-xs leading-relaxed ${isLight ? 'text-zinc-600' : 'text-zinc-400'}`}>
+              Altere a ordem dos treinos usando as setas para definir a sequência que você prefere. Essa ordem será mantida para você sempre.
+            </p>
+
+            {/* Lista com botões de subir e descer */}
+            <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+              {reorderModalConfig.routines.map((r, idx) => {
+                const totalSets = r.exercises.reduce((acc, ex) => acc + (ex.sets?.length || 0), 0);
+                const isFirst = idx === 0;
+                const isLast = idx === reorderModalConfig.routines.length - 1;
+
+                return (
+                  <div
+                    key={r.id}
+                    className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition ${
+                      isLight
+                        ? 'bg-zinc-50 border-zinc-200 hover:border-zinc-300'
+                        : 'bg-[#18181b] border-[#27272a] hover:border-zinc-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className={`w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center shrink-0 border ${
+                        isLight
+                          ? 'bg-white border-zinc-300 text-black'
+                          : 'bg-[#121214] border-[#2e2e34] text-zinc-300'
+                      }`}>
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <h4 className={`text-xs font-black truncate ${isLight ? 'text-black' : 'text-white'}`}>
+                          {r.title}
+                        </h4>
+                        <span className={`text-[10px] block truncate ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                          {r.exercises.length} {r.exercises.length === 1 ? 'exercício' : 'exercícios'} • {totalSets} séries
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        disabled={isFirst}
+                        onClick={() => {
+                          moveRoutine(r.id, 'up');
+                          const next = [...reorderModalConfig.routines];
+                          const temp = next[idx];
+                          next[idx] = next[idx - 1];
+                          next[idx - 1] = temp;
+                          setReorderModalConfig({ ...reorderModalConfig, routines: next });
+                        }}
+                        className={`p-1.5 rounded-lg border transition ${
+                          isLight
+                            ? 'bg-white hover:bg-zinc-100 border-zinc-200 text-black disabled:opacity-25'
+                            : 'bg-[#222226] hover:bg-zinc-700 border-[#2e2e34] text-white disabled:opacity-25'
+                        }`}
+                        title="Subir posição"
+                      >
+                        <ArrowUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isLast}
+                        onClick={() => {
+                          moveRoutine(r.id, 'down');
+                          const next = [...reorderModalConfig.routines];
+                          const temp = next[idx];
+                          next[idx] = next[idx + 1];
+                          next[idx + 1] = temp;
+                          setReorderModalConfig({ ...reorderModalConfig, routines: next });
+                        }}
+                        className={`p-1.5 rounded-lg border transition ${
+                          isLight
+                            ? 'bg-white hover:bg-zinc-100 border-zinc-200 text-black disabled:opacity-25'
+                            : 'bg-[#222226] hover:bg-zinc-700 border-[#2e2e34] text-white disabled:opacity-25'
+                        }`}
+                        title="Descer posição"
+                      >
+                        <ArrowDown className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setReorderModalConfig(null);
+                showToast('Ordem dos treinos atualizada com sucesso!');
+              }}
+              className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-wider transition active:scale-95 shadow-md flex items-center justify-center gap-2 ${
+                isLight
+                  ? 'bg-black stay-white text-white hover:bg-zinc-800'
+                  : 'bg-white text-black hover:bg-zinc-200'
+              }`}
+            >
+              <Check className="w-4 h-4" />
+              <span>Concluir Ordem</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Confirmação quando o usuário tenta repetir um treino já realizado na semana */}
       {repeatConfirmRoutine && (

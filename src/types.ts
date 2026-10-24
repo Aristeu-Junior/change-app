@@ -95,6 +95,7 @@ export interface Routine {
   exercises: WorkoutExercise[];
   created_at: string;
   updated_at: string;
+  order?: number;
 }
 
 export interface RoutineFolder {

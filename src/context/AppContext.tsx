@@ -134,8 +134,11 @@ interface AppContextType {
   folders: RoutineFolder[];
   saveRoutine: (routine: Routine) => void;
   deleteRoutine: (routineId: string) => void;
+  moveRoutine: (routineId: string, direction: 'up' | 'down') => void;
+  reorderRoutinesList: (folderId: number | null, orderedRoutineIds: string[]) => void;
   createFolder: (title: string) => void;
   deleteFolder: (folderId: number) => void;
+  moveFolder: (folderId: number, direction: 'up' | 'down') => void;
   addFolderWithPreset: (folderTitle: string, routinePresets: RoutinePreset[]) => void;
 
   // Exercícios
@@ -1859,8 +1862,90 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       nextRoutines = [...routines];
       nextRoutines[idx] = { ...routine, updated_at: new Date().toISOString() };
     } else {
-      nextRoutines = [routine, ...routines];
+      nextRoutines = [...routines, routine];
     }
+    setRoutines(nextRoutines);
+    localStorage.setItem(userKey('routines'), JSON.stringify(nextRoutines));
+
+    if (isCloudConfigured() && isAuthenticated) {
+      pushUserToCloud(currentUser, {
+        workouts,
+        routines: nextRoutines,
+        folders,
+        exercises,
+        personalRecords,
+        measurements,
+        settings
+      });
+    }
+  };
+
+  const moveRoutine = (routineId: string, direction: 'up' | 'down') => {
+    const routine = routines.find((r) => r.id === routineId);
+    if (!routine) return;
+
+    // Obtém todas as rotinas irmãs (mesma pasta ou ambas soltas)
+    const siblings = routines.filter((r) => r.folder_id === routine.folder_id);
+    const siblingIdx = siblings.findIndex((r) => r.id === routineId);
+    if (siblingIdx === -1) return;
+
+    const targetIdx = direction === 'up' ? siblingIdx - 1 : siblingIdx + 1;
+    if (targetIdx < 0 || targetIdx >= siblings.length) return;
+
+    const targetSibling = siblings[targetIdx];
+
+    // Troca de posição no array mestre routines
+    const masterIdxA = routines.findIndex((r) => r.id === routine.id);
+    const masterIdxB = routines.findIndex((r) => r.id === targetSibling.id);
+    if (masterIdxA === -1 || masterIdxB === -1) return;
+
+    const nextRoutines = [...routines];
+    const temp = nextRoutines[masterIdxA];
+    nextRoutines[masterIdxA] = nextRoutines[masterIdxB];
+    nextRoutines[masterIdxB] = temp;
+
+    setRoutines(nextRoutines);
+    localStorage.setItem(userKey('routines'), JSON.stringify(nextRoutines));
+
+    if (isCloudConfigured() && isAuthenticated) {
+      pushUserToCloud(currentUser, {
+        workouts,
+        routines: nextRoutines,
+        folders,
+        exercises,
+        personalRecords,
+        measurements,
+        settings
+      });
+    }
+  };
+
+  const reorderRoutinesList = (folderId: number | null, orderedRoutineIds: string[]) => {
+    const routineMap = new Map<string, Routine>();
+    routines.forEach((r) => {
+      if (r.folder_id === folderId) {
+        routineMap.set(r.id, r);
+      }
+    });
+
+    const orderedSiblings: Routine[] = [];
+    orderedRoutineIds.forEach((id) => {
+      const r = routineMap.get(id);
+      if (r) {
+        orderedSiblings.push(r);
+        routineMap.delete(id);
+      }
+    });
+    routineMap.forEach((r) => orderedSiblings.push(r));
+
+    let siblingInsertIdx = 0;
+    const nextRoutines = routines.map((r) => {
+      if (r.folder_id === folderId && siblingInsertIdx < orderedSiblings.length) {
+        return orderedSiblings[siblingInsertIdx++];
+      }
+      return r;
+    });
+
     setRoutines(nextRoutines);
     localStorage.setItem(userKey('routines'), JSON.stringify(nextRoutines));
 
@@ -1936,6 +2021,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       pushUserToCloud(currentUser, {
         workouts,
         routines: nextRoutines,
+        folders: nextFolders,
+        exercises,
+        personalRecords,
+        measurements,
+        settings
+      });
+    }
+  };
+
+  const moveFolder = (folderId: number, direction: 'up' | 'down') => {
+    const idx = folders.findIndex((f) => f.id === folderId);
+    if (idx === -1) return;
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= folders.length) return;
+
+    const nextFolders = [...folders];
+    const temp = nextFolders[idx];
+    nextFolders[idx] = nextFolders[targetIdx];
+    nextFolders[targetIdx] = temp;
+    nextFolders.forEach((f, i) => {
+      f.index = i;
+    });
+
+    setFolders(nextFolders);
+    localStorage.setItem(userKey('folders'), JSON.stringify(nextFolders));
+
+    if (isCloudConfigured() && isAuthenticated) {
+      pushUserToCloud(currentUser, {
+        workouts,
+        routines,
         folders: nextFolders,
         exercises,
         personalRecords,
@@ -2117,8 +2232,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       folders,
       saveRoutine,
       deleteRoutine,
+      moveRoutine,
+      reorderRoutinesList,
       createFolder,
       deleteFolder,
+      moveFolder,
       addFolderWithPreset,
       exercises,
       addCustomExercise,

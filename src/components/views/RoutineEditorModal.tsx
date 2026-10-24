@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, FolderPlus, Sparkles, ChevronRight, RotateCcw, Dumbbell, Eye, Check } from 'lucide-react';
+import { X, Plus, Trash2, FolderPlus, Sparkles, ChevronRight, RotateCcw, Dumbbell, Eye, Check, ChevronUp, ChevronDown } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Routine, WorkoutExercise, ExerciseTemplate } from '../../types';
 import { ExerciseSearchModal } from '../ExerciseSearchModal';
@@ -96,6 +96,18 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
 
   const handleRemoveExercise = (idx: number) => {
     setExercises((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleMoveExercise = (idx: number, direction: 'up' | 'down') => {
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= exercises.length) return;
+    setExercises((prev) => {
+      const next = [...prev];
+      const temp = next[idx];
+      next[idx] = next[targetIdx];
+      next[targetIdx] = temp;
+      return next;
+    });
   };
 
   const handleAddSet = (exIdx: number) => {
@@ -452,14 +464,34 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                           </button>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveExercise(exIdx)}
-                        className="p-1 text-zinc-500 hover:text-red-400 transition shrink-0"
-                        title="Remover do plano"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          disabled={exIdx === 0}
+                          onClick={() => handleMoveExercise(exIdx, 'up')}
+                          className="p-1 text-zinc-400 hover:text-white disabled:opacity-20 disabled:hover:text-zinc-400 transition"
+                          title="Mover exercício para cima"
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={exIdx === exercises.length - 1}
+                          onClick={() => handleMoveExercise(exIdx, 'down')}
+                          className="p-1 text-zinc-400 hover:text-white disabled:opacity-20 disabled:hover:text-zinc-400 transition"
+                          title="Mover exercício para baixo"
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExercise(exIdx)}
+                          className="p-1 text-zinc-500 hover:text-red-400 transition"
+                          title="Remover do plano"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
 
                     {isPreviewing3D && tpl && (
