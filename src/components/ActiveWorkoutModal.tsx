@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   ChevronDown,
   Check,
@@ -12,11 +12,22 @@ import {
   ChevronRight,
   BookmarkPlus,
   CheckCircle2,
-  X
+  X,
+  Smartphone,
+  Info
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { WorkoutSet, SetType, ExerciseTemplate, Routine } from '../types';
-import { formatDuration } from '../utils/calc';
+import {
+  formatDuration,
+  formatSecondsClock,
+  getExerciseTrackingType,
+  startBackgroundWorkoutAudio,
+  stopBackgroundWorkoutAudio,
+  updateLockScreenMediaSession,
+  playGymTone,
+  triggerHaptic
+} from '../utils/calc';
 import { ExerciseSearchModal } from './ExerciseSearchModal';
 import { PlateCalculatorModal } from './PlateCalculatorModal';
 import { ExerciseVisualDemo } from './ExerciseVisualDemo';
@@ -50,6 +61,11 @@ export const ActiveWorkoutModal: React.FC = () => {
   const [focusedExIdx, setFocusedExIdx] = useState<number>(0);
   const [showLive3D, setShowLive3D] = useState<boolean>(true);
   const [routineSaveFeedback, setRoutineSaveFeedback] = useState<string | null>(null);
+  const [isLockScreenEnabled, setIsLockScreenEnabled] = useState<boolean>(true);
+  const [isLockScreenHelpOpen, setIsLockScreenHelpOpen] = useState<boolean>(false);
+  const [activeTimerSetId, setActiveTimerSetId] = useState<string | null>(null);
+  const [activeTimerSecondsLeft, setActiveTimerSecondsLeft] = useState<number>(0);
+  const activeTimerRef = useRef<{ exIdx: number; setIdx: number } | null>(null);
 
   const handleSaveAsRoutine = () => {
     if (!activeWorkout || activeWorkout.exercises.length === 0) {
@@ -72,8 +88,10 @@ export const ActiveWorkoutModal: React.FC = () => {
           id: `rs-${Date.now()}-${exIdx}-${sIdx}`,
           index: sIdx,
           type: s.type || 'normal',
-          weight_kg: s.weight_kg !== null && s.weight_kg !== undefined ? Number(s.weight_kg) : 20,
-          reps: s.reps !== null && s.reps !== undefined ? Number(s.reps) : 10,
+          weight_kg: s.weight_kg !== null && s.weight_kg !== undefined ? Number(s.weight_kg) : null,
+          reps: s.reps !== null && s.reps !== undefined ? Number(s.reps) : null,
+          duration_seconds: s.duration_seconds ?? null,
+          distance_meters: s.distance_meters ?? null,
           completed: false
         }))
       })),
@@ -88,6 +106,45 @@ export const ActiveWorkoutModal: React.FC = () => {
     setRoutineSaveFeedback(`✓ Salvo como Plano "${routine.title}"!`);
     setTimeout(() => setRoutineSaveFeedback(null), 3500);
   };
+
+  const toggleInlineTimer = (setId: string, durationSec: number, exIdx: number, setIdx: number) => {
+    if (activeTimerSetId === setId) {
+      setActiveTimerSetId(null);
+      activeTimerRef.current = null;
+      return;
+    }
+
+    setActiveTimerSetId(setId);
+    setActiveTimerSecondsLeft(durationSec);
+    activeTimerRef.current = { exIdx, setIdx };
+    if (settings.haptics_enabled) triggerHaptic('light');
+  };
+
+  useEffect(() => {
+    if (!activeTimerSetId) return;
+
+    const interval = setInterval(() => {
+      setActiveTimerSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          if (settings.sound_enabled) playGymTone('complete');
+          if (settings.haptics_enabled) triggerHaptic('success');
+          if (activeTimerRef.current) {
+            handleToggleSetAndAutoAdvance(activeTimerRef.current.exIdx, activeTimerRef.current.setIdx);
+          }
+          setActiveTimerSetId(null);
+          activeTimerRef.current = null;
+          return 0;
+        }
+        if (prev <= 4 && prev > 1 && settings.sound_enabled) {
+          playGymTone('countdown');
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [activeTimerSetId, settings.sound_enabled, settings.haptics_enabled]);
 
   useEffect(() => {
     if (!activeWorkout) return;
@@ -125,16 +182,111 @@ export const ActiveWorkoutModal: React.FC = () => {
         map[wEx.id] = {
           id: wEx.exercise_template_id,
           title: wEx.title,
-          type: 'weight_reps',
+          type: getExerciseTrackingType(null, wEx.title),
           primary_muscle_group: 'peito',
           secondary_muscle_groups: [],
-          equipment: 'halter',
+          equipment: 'outro',
           is_custom: false
         };
       }
     });
     return map;
   }, [activeWorkout, allTemplates]);
+
+  // Sincronização em tempo real com a tela de bloqueio do celular e botões de fone de ouvido (MediaSession API)
+  useEffect(() => {
+    if (!activeWorkout) {
+      stopBackgroundWorkoutAudio();
+      updateLockScreenMediaSession(null);
+      return;
+    }
+
+    if (!isLockScreenEnabled) {
+      stopBackgroundWorkoutAudio();
+      updateLockScreenMediaSession(null);
+      return;
+    }
+
+    startBackgroundWorkoutAudio();
+
+    // Localiza a série ativa atual
+    let targetExIdx = focusedExIdx;
+    if (targetExIdx < 0 || targetExIdx >= activeWorkout.exercises.length) targetExIdx = 0;
+
+    let targetSetIdx = activeWorkout.exercises[targetExIdx]?.sets.findIndex((s) => !s.completed);
+    if (targetSetIdx === -1 || targetSetIdx === undefined) {
+      for (let i = 0; i < activeWorkout.exercises.length; i++) {
+        const idx = activeWorkout.exercises[i].sets.findIndex((s) => !s.completed);
+        if (idx !== -1) {
+          targetExIdx = i;
+          targetSetIdx = idx;
+          break;
+        }
+      }
+    }
+
+    const currentEx = activeWorkout.exercises[targetExIdx];
+    const currentSet = currentEx?.sets[targetSetIdx];
+    const template = currentEx ? templateByExerciseId[currentEx.id] : null;
+    const trackingType = getExerciseTrackingType(template, currentEx?.title);
+
+    if (restTimer.isActive) {
+      const nextTitle = restTimer.exerciseTitle || 'Próxima Série';
+      updateLockScreenMediaSession({
+        title: `⏱️ Descanso: ${formatSecondsClock(restTimer.remainingSeconds)} • Próx: ${nextTitle}`,
+        artist: 'CHANGE Treino • Toque Play p/ pular descanso e iniciar',
+        album: activeWorkout.title,
+        onCheckOrSkip: () => {
+          skipRestTimer();
+        }
+      });
+    } else if (currentEx && currentSet) {
+      let setSummary = '';
+      if (trackingType === 'duration') {
+        setSummary = `${currentSet.duration_seconds ?? 60} seg de Isometria`;
+      } else if (trackingType === 'distance_duration') {
+        const km = ((currentSet.distance_meters ?? 1000) / 1000).toFixed(1);
+        const min = Math.round((currentSet.duration_seconds ?? 600) / 60);
+        setSummary = `${km} km • ${min} min`;
+      } else {
+        setSummary = `${currentSet.weight_kg ?? 0} ${settings.weight_unit} × ${currentSet.reps ?? 0} reps`;
+      }
+
+      updateLockScreenMediaSession({
+        title: `🏋️ [Série ${targetSetIdx + 1}/${currentEx.sets.length}] ${currentEx.title}`,
+        artist: `${setSummary} • Toque Play/Pause p/ dar CHECK ✓`,
+        album: activeWorkout.title,
+        onCheckOrSkip: () => {
+          handleToggleSetAndAutoAdvance(targetExIdx, targetSetIdx);
+        },
+        onNext: () => {
+          handleToggleSetAndAutoAdvance(targetExIdx, targetSetIdx);
+        }
+      });
+    } else {
+      updateLockScreenMediaSession({
+        title: `✓ Todas as séries concluídas!`,
+        artist: `${activeWorkout.title} • Pronto para finalizar`,
+        album: 'CHANGE Treino',
+        onCheckOrSkip: () => {}
+      });
+    }
+  }, [
+    activeWorkout,
+    focusedExIdx,
+    restTimer.isActive,
+    restTimer.remainingSeconds,
+    isLockScreenEnabled,
+    settings.weight_unit,
+    templateByExerciseId
+  ]);
+
+  useEffect(() => {
+    return () => {
+      stopBackgroundWorkoutAudio();
+      updateLockScreenMediaSession(null);
+    };
+  }, []);
 
   if (!activeWorkout || !isWorkoutModalOpen) return null;
 
@@ -303,7 +455,7 @@ export const ActiveWorkoutModal: React.FC = () => {
 
         {/* Área Principal do Treino */}
         <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3.5 space-y-3 pb-36">
-          {/* Título Editável Compacto + Botão Ocultar/Mostrar 3D */}
+          {/* Título Editável Compacto + Controles de Tela Bloqueada & 3D */}
           <div className="flex items-center justify-between gap-2">
             <input
               type="text"
@@ -312,15 +464,66 @@ export const ActiveWorkoutModal: React.FC = () => {
               placeholder="Nome do Treino"
               className="flex-1 bg-transparent text-base font-black text-white placeholder-zinc-600 focus:outline-none border-b border-transparent focus:border-white pb-0.5 truncate"
             />
-            <button
-              type="button"
-              onClick={() => setShowLive3D(!showLive3D)}
-              className="px-2.5 py-1 rounded-xl bg-[#141416] hover:bg-[#1c1c1f] border border-[#27272a] text-[10px] font-black text-zinc-300 flex items-center gap-1.5 shrink-0 transition"
-            >
-              {showLive3D ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              <span>{showLive3D ? '3D Ativo' : 'Mostrar 3D'}</span>
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsLockScreenEnabled(!isLockScreenEnabled)}
+                title="Ativar/Desativar controle do treino pela tela de bloqueio e fone"
+                className={`px-2.5 py-1 rounded-xl border text-[10px] font-black flex items-center gap-1 transition ${
+                  isLockScreenEnabled
+                    ? 'bg-white text-black border-white shadow-sm'
+                    : 'bg-[#141416] text-zinc-400 border-[#27272a] hover:text-white'
+                }`}
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span className="hidden xs:inline">Bloqueio:</span>
+                <span>{isLockScreenEnabled ? 'ON' : 'OFF'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsLockScreenHelpOpen(!isLockScreenHelpOpen)}
+                className="p-1.5 rounded-xl bg-[#141416] border border-[#27272a] text-zinc-400 hover:text-white"
+                title="Como funciona o controle na tela de bloqueio"
+              >
+                <Info className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowLive3D(!showLive3D)}
+                className="px-2.5 py-1 rounded-xl bg-[#141416] hover:bg-[#1c1c1f] border border-[#27272a] text-[10px] font-black text-zinc-300 flex items-center gap-1.5 shrink-0 transition"
+              >
+                {showLive3D ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                <span>{showLive3D ? '3D' : 'Sem 3D'}</span>
+              </button>
+            </div>
           </div>
+
+          {/* Card explicativo do Controle na Tela de Bloqueio */}
+          {isLockScreenHelpOpen && (
+            <div className="p-3 bg-[#18181b] border border-[#27272a] rounded-2xl text-xs space-y-1.5 animate-in fade-in">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-black text-white">
+                  <Smartphone className="w-4 h-4 text-white" />
+                  <span>Controle na Tela de Bloqueio & Fone</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsLockScreenHelpOpen(false)}
+                  className="text-zinc-500 hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-[11px] text-zinc-300 leading-relaxed">
+                Quando a tela do celular apagar ou você estiver com fone de ouvido, o CHANGE mantém o widget do treino ativo na tela de bloqueio (iOS e Android).
+              </p>
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                Basta tocar no botão <strong className="text-white">Play / Pause</strong> ou no botão do seu fone para dar <strong className="text-white">CHECK na série</strong> e iniciar o descanso imediatamente, sem precisar desbloquear o celular!
+              </p>
+            </div>
+          )}
 
           {/* Lista de Exercícios: O Exercício Atual abre em Modo Guiado 3D Minimalista; os demais ficam compactos */}
           {activeWorkout.exercises.map((exercise, exIdx) => {
@@ -371,7 +574,11 @@ export const ActiveWorkoutModal: React.FC = () => {
                       </div>
                       <p className="text-[11px] text-zinc-400 mt-0.5">
                         {exercise.sets.length} {exercise.sets.length === 1 ? 'série' : 'séries'} •{' '}
-                        {lastWeight} {settings.weight_unit} × {lastReps} reps
+                        {getExerciseTrackingType(template, exercise.title) === 'duration'
+                          ? `${exercise.sets[0]?.duration_seconds ?? 60} seg`
+                          : getExerciseTrackingType(template, exercise.title) === 'distance_duration'
+                          ? `${((exercise.sets[0]?.distance_meters ?? 1000) / 1000).toFixed(1)} km (${Math.round((exercise.sets[0]?.duration_seconds ?? 600) / 60)} min)`
+                          : `${lastWeight} ${settings.weight_unit} × ${lastReps} reps`}
                       </p>
                     </div>
                   </div>
@@ -429,89 +636,182 @@ export const ActiveWorkoutModal: React.FC = () => {
 
                 {/* Lista Minimalista de Séries (Sem poluição visual) */}
                 <div className="space-y-2">
-                  {exercise.sets.map((set, setIdx) => (
-                    <div
-                      key={set.id}
-                      className={`flex items-center justify-between gap-2 p-2 rounded-2xl transition ${
-                        set.completed
-                          ? 'bg-zinc-900/90 border border-white/50 shadow-sm'
-                          : 'bg-[#18181b] border border-[#27272a]'
-                      }`}
-                    >
-                      {/* Número da Série (Toque para Aquecimento / Drop / Falha) */}
-                      <button
-                        type="button"
-                        onClick={() => cycleSetType(exIdx, setIdx, set.type)}
-                        title="Toque para alternar: Normal / Aquecimento / Drop / Falha"
-                        className="shrink-0 active:scale-90 transition"
-                      >
-                        {renderSetBadge(set, setIdx)}
-                      </button>
+                  {exercise.sets.map((set, setIdx) => {
+                    const trackingType = getExerciseTrackingType(template, exercise.title);
 
-                      {/* Inputs Minimalistas: Carga (kg) × Repetições */}
-                      <div className="flex items-center gap-1.5 flex-1 justify-center">
-                        <div className="relative flex items-center">
-                          <input
-                            type="number"
-                            step="0.5"
-                            min="0"
-                            value={set.weight_kg ?? ''}
-                            onChange={(e) =>
-                              updateSet(exIdx, setIdx, {
-                                weight_kg:
-                                  e.target.value === '' ? null : parseFloat(e.target.value)
-                              })
-                            }
-                            placeholder="0"
-                            className="w-16 sm:w-20 bg-[#121214] border border-[#27272a] focus:border-white rounded-xl py-1.5 px-2 text-center text-xs font-black text-white focus:outline-none"
-                          />
-                          {set.weight_kg && set.weight_kg >= 20 ? (
-                            <button
-                              type="button"
-                              onClick={() => setPlateCalcWeight(set.weight_kg)}
-                              className=" -ml-5 mr-1.5 text-zinc-500 hover:text-white"
-                              title="Calculadora de Anilhas"
-                            >
-                              <Disc className="w-3 h-3" />
-                            </button>
-                          ) : null}
-                        </div>
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase">
-                          {settings.weight_unit}
-                        </span>
-
-                        <span className="text-zinc-600 font-bold px-0.5">×</span>
-
-                        <input
-                          type="number"
-                          min="0"
-                          value={set.reps ?? ''}
-                          onChange={(e) =>
-                            updateSet(exIdx, setIdx, {
-                              reps: e.target.value === '' ? null : parseInt(e.target.value, 10)
-                            })
-                          }
-                          placeholder="0"
-                          className="w-14 sm:w-16 bg-[#121214] border border-[#27272a] focus:border-white rounded-xl py-1.5 px-1.5 text-center text-xs font-black text-white focus:outline-none"
-                        />
-                        <span className="text-[10px] font-bold text-zinc-400">reps</span>
-                      </div>
-
-                      {/* Botão Minimalista de Check */}
-                      <button
-                        type="button"
-                        onClick={() => handleToggleSetAndAutoAdvance(exIdx, setIdx)}
-                        className={`px-3 h-8 rounded-xl flex items-center justify-center gap-1 font-black text-[11px] transition active:scale-90 shrink-0 ${
+                    return (
+                      <div
+                        key={set.id}
+                        className={`flex items-center justify-between gap-2 p-2 rounded-2xl transition ${
                           set.completed
-                            ? 'bg-white text-black shadow-md'
-                            : 'bg-[#27272a] text-zinc-300 hover:text-white'
+                            ? 'bg-zinc-900/90 border border-white/50 shadow-sm'
+                            : 'bg-[#18181b] border border-[#27272a]'
                         }`}
                       >
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                        <span className="hidden xs:inline">{set.completed ? 'Feito' : 'OK'}</span>
-                      </button>
-                    </div>
-                  ))}
+                        {/* Número da Série (Toque para Aquecimento / Drop / Falha) */}
+                        <button
+                          type="button"
+                          onClick={() => cycleSetType(exIdx, setIdx, set.type)}
+                          title="Toque para alternar: Normal / Aquecimento / Drop / Falha"
+                          className="shrink-0 active:scale-90 transition"
+                        >
+                          {renderSetBadge(set, setIdx)}
+                        </button>
+
+                        {/* Inputs: Duração (seg) OU Distância/Tempo OU Peso × Reps */}
+                        {trackingType === 'duration' ? (
+                          <div className="flex items-center gap-1.5 flex-1 justify-center flex-wrap">
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                min="1"
+                                value={set.duration_seconds ?? 60}
+                                onChange={(e) =>
+                                  updateSet(exIdx, setIdx, {
+                                    duration_seconds: e.target.value === '' ? null : parseInt(e.target.value, 10)
+                                  })
+                                }
+                                className="w-16 sm:w-20 bg-[#121214] border border-[#27272a] focus:border-white rounded-xl py-1.5 px-2 text-center text-xs font-black text-white focus:outline-none"
+                              />
+                              <span className="text-[10px] font-bold text-zinc-400">seg</span>
+                            </div>
+
+                            <div className="flex items-center gap-1">
+                              {[30, 45, 60].map((sec) => (
+                                <button
+                                  key={sec}
+                                  type="button"
+                                  onClick={() => updateSet(exIdx, setIdx, { duration_seconds: sec })}
+                                  className={`px-1.5 py-1 rounded-lg text-[10px] font-bold transition ${
+                                    set.duration_seconds === sec
+                                      ? 'bg-white text-black'
+                                      : 'bg-[#121214] border border-[#27272a] text-zinc-400 hover:text-white'
+                                  }`}
+                                >
+                                  {sec}s
+                                </button>
+                              ))}
+
+                              <button
+                                type="button"
+                                onClick={() => toggleInlineTimer(set.id, set.duration_seconds ?? 60, exIdx, setIdx)}
+                                className={`px-2 py-1 rounded-lg text-[10px] font-black flex items-center gap-1 transition ${
+                                  activeTimerSetId === set.id
+                                    ? 'bg-amber-400 text-black animate-pulse'
+                                    : 'bg-[#27272a] text-zinc-300 hover:text-white'
+                                }`}
+                                title="Iniciar cronômetro para esta série"
+                              >
+                                <Clock className="w-3 h-3" />
+                                <span>
+                                  {activeTimerSetId === set.id ? `${activeTimerSecondsLeft}s` : 'Timer'}
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        ) : trackingType === 'distance_duration' ? (
+                          <div className="flex items-center gap-1.5 flex-1 justify-center">
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                value={set.distance_meters ? Number((set.distance_meters / 1000).toFixed(2)) : ''}
+                                placeholder="1.0"
+                                onChange={(e) =>
+                                  updateSet(exIdx, setIdx, {
+                                    distance_meters: e.target.value === '' ? null : Math.round(parseFloat(e.target.value) * 1000)
+                                  })
+                                }
+                                className="w-16 sm:w-20 bg-[#121214] border border-[#27272a] focus:border-white rounded-xl py-1.5 px-2 text-center text-xs font-black text-white focus:outline-none"
+                              />
+                              <span className="text-[10px] font-bold text-zinc-400">km</span>
+                            </div>
+
+                            <span className="text-zinc-600 font-bold px-0.5">em</span>
+
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                min="1"
+                                value={set.duration_seconds ? Math.round(set.duration_seconds / 60) : ''}
+                                placeholder="10"
+                                onChange={(e) =>
+                                  updateSet(exIdx, setIdx, {
+                                    duration_seconds: e.target.value === '' ? null : parseInt(e.target.value, 10) * 60
+                                  })
+                                }
+                                className="w-14 sm:w-16 bg-[#121214] border border-[#27272a] focus:border-white rounded-xl py-1.5 px-1.5 text-center text-xs font-black text-white focus:outline-none"
+                              />
+                              <span className="text-[10px] font-bold text-zinc-400">min</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 flex-1 justify-center">
+                            <div className="relative flex items-center">
+                              <input
+                                type="number"
+                                step="0.5"
+                                min="0"
+                                value={set.weight_kg ?? ''}
+                                onChange={(e) =>
+                                  updateSet(exIdx, setIdx, {
+                                    weight_kg:
+                                      e.target.value === '' ? null : parseFloat(e.target.value)
+                                  })
+                                }
+                                placeholder="0"
+                                className="w-16 sm:w-20 bg-[#121214] border border-[#27272a] focus:border-white rounded-xl py-1.5 px-2 text-center text-xs font-black text-white focus:outline-none"
+                              />
+                              {set.weight_kg && set.weight_kg >= 20 ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setPlateCalcWeight(set.weight_kg)}
+                                  className=" -ml-5 mr-1.5 text-zinc-500 hover:text-white"
+                                  title="Calculadora de Anilhas"
+                                >
+                                  <Disc className="w-3 h-3" />
+                                </button>
+                              ) : null}
+                            </div>
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                              {settings.weight_unit}
+                            </span>
+
+                            <span className="text-zinc-600 font-bold px-0.5">×</span>
+
+                            <input
+                              type="number"
+                              min="0"
+                              value={set.reps ?? ''}
+                              onChange={(e) =>
+                                updateSet(exIdx, setIdx, {
+                                  reps: e.target.value === '' ? null : parseInt(e.target.value, 10)
+                                })
+                              }
+                              placeholder="0"
+                              className="w-14 sm:w-16 bg-[#121214] border border-[#27272a] focus:border-white rounded-xl py-1.5 px-1.5 text-center text-xs font-black text-white focus:outline-none"
+                            />
+                            <span className="text-[10px] font-bold text-zinc-400">reps</span>
+                          </div>
+                        )}
+
+                        {/* Botão Minimalista de Check */}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleSetAndAutoAdvance(exIdx, setIdx)}
+                          className={`px-3 h-8 rounded-xl flex items-center justify-center gap-1 font-black text-[11px] transition active:scale-90 shrink-0 ${
+                            set.completed
+                              ? 'bg-white text-black shadow-md'
+                              : 'bg-[#27272a] text-zinc-300 hover:text-white'
+                          }`}
+                        >
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          <span className="hidden xs:inline">{set.completed ? 'Feito' : 'OK'}</span>
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Ações Rápidas da Série */}

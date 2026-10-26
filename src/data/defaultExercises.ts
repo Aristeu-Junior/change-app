@@ -2116,7 +2116,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "type": "weight_reps",
     "animation_type": "squat",
     "gif_id": "0585",
-    "muscles_pt": "Reto Femoral, Vasto Lateral, Vasto Medial e Vasto Intermédio",
+    "muscles_pt": "Pernas, Quadríceps, Extensão de Coxa, Reto Femoral, Vasto Lateral, Vasto Medial",
     "instructions": "Exercício de isolamento puro para quadríceps. Estenda os joelhos até o alinhamento completo.",
     "steps": [
       "Ajuste o encosto para que a dobra do joelho fique alinhada com o eixo da máquina.",
@@ -2527,6 +2527,853 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     ],
     "tips": [
       "Excelente como aquecimento pré-treino (5 a 10 min) ou cardio pós-treino."
+    ]
+  },
+  {
+    "id": "leg-adductor",
+    "title": "Cadeira Adutora (Máquina)",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0573",
+    "muscles_pt": "Adutor Longo, Adutor Magno, Adutor Curto, Grácil, Pernas",
+    "instructions": "Exercício fundamental para fortalecimento e hipertrofia da parte interna das coxas (adutores).",
+    "steps": [
+      "Ajuste a abertura das almofadas na amplitude máxima confortável.",
+      "Sente-se com as costas apoiadas e pés nos suportes.",
+      "Aperte as pernas aproximando os joelhos até o fechamento completo.",
+      "Retorne de forma lenta e controlada sem deixar os pesos baterem."
+    ],
+    "tips": [
+      "Mantenha a postura ereta e evite dar trancos na fase concêntrica."
+    ]
+  },
+  {
+    "id": "standing-abductor",
+    "title": "Cadeira Abdutora (Tronco Inclinado / Em Pé)",
+    "primary_muscle_group": "gluteos",
+    "secondary_muscle_groups": [],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0575",
+    "muscles_pt": "Glúteo Médio, Glúteo Mínimo, Glúteo Máximo, Pernas",
+    "instructions": "Variação inclinada da abdutora para maior ativação e recrutamento das fibras superiores do glúteo médio.",
+    "steps": [
+      "Ajuste as almofadas na parte externa dos joelhos.",
+      "Incline o tronco para a frente a cerca de 45 graus com abdômen contraído.",
+      "Empurre os joelhos para fora na maior amplitude possível.",
+      "Segure 1 segundo no pico de contração e volte devagar."
+    ],
+    "tips": [
+      "Não use impulso do quadril; concentre toda a força na lateral do glúteo."
+    ]
+  },
+  {
+    "id": "unilateral-leg-curl",
+    "title": "Cadeira Flexora Unilateral",
+    "primary_muscle_group": "isquiotibiais",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0583",
+    "muscles_pt": "Bíceps Femoral, Semitendíneo, Semimembranoso, Posterior de Coxa, Pernas",
+    "instructions": "Excelente para corrigir assimetrias de força e volume entre as pernas nos isquiotibiais.",
+    "steps": [
+      "Ajuste o rolo de apoio na parte posterior do tornozelo de uma das pernas.",
+      "Flexione o joelho puxando o calcanhar em direção ao glúteo.",
+      "Retorne controlando a extensão sem permitir que as placas se toquem.",
+      "Complete as repetições e alterne a perna."
+    ],
+    "tips": [
+      "Mantenha o quadril firme no assento sem girar o tronco."
+    ]
+  },
+  {
+    "id": "lying-leg-curl-unilateral",
+    "title": "Mesa Flexora Unilateral",
+    "primary_muscle_group": "isquiotibiais",
+    "secondary_muscle_groups": [
+      "gluteos",
+      "panturrilha"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0584",
+    "muscles_pt": "Bíceps Femoral, Semitendíneo, Posterior de Coxa, Pernas",
+    "instructions": "Execução unilateral na mesa flexora deitada, isolando a contração de cada perna individualmente.",
+    "steps": [
+      "Deite de bruços na máquina com o rolo atrás do tornozelo da perna trabalhada.",
+      "Flexione o joelho elevando o calcanhar ao máximo.",
+      "Controle a descida até quase estender por completo.",
+      "Alterne as pernas após a série."
+    ],
+    "tips": [
+      "Mantenha a pelve colada no banco durante toda a trajetória."
+    ]
+  },
+  {
+    "id": "standing-leg-curl",
+    "title": "Flexora em Pé na Máquina",
+    "primary_muscle_group": "isquiotibiais",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0586",
+    "muscles_pt": "Bíceps Femoral, Semitendíneo, Posterior de Coxa, Pernas",
+    "instructions": "Trabalho unilateral de flexão de joelho em pé com foco no pico de contração dos posteriores.",
+    "steps": [
+      "Apoie o tronco e a coxa na estrutura da máquina.",
+      "Posicione o rolo atrás do calcanhar.",
+      "Puxe a perna para cima flexionando o joelho.",
+      "Desça de forma suave e controlada."
+    ],
+    "tips": [
+      "Evite balançar a coluna lombar durante a puxada."
+    ]
+  },
+  {
+    "id": "smith-squat",
+    "title": "Agachamento no Smith (Smith Machine Squat)",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [
+      "gluteos",
+      "isquiotibiais"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0757",
+    "muscles_pt": "Quadríceps, Glúteo Máximo, Pernas, Coxas",
+    "instructions": "Agachamento guiado na máquina Smith proporcionando estabilidade para alta sobrecarga no quadríceps e glúteos.",
+    "steps": [
+      "Posicione a barra sobre os trapézios e destrave com os pés ligeiramente à frente.",
+      "Agache flexionando quadril e joelhos até pelo menos 90 graus.",
+      "Empurre o solo através dos calcanhares para retornar ao topo."
+    ],
+    "tips": [
+      "Ajuste sempre as travas de segurança na altura ideal antes de começar."
+    ]
+  },
+  {
+    "id": "smith-bulgarian-split-squat",
+    "title": "Agachamento Búlgaro no Smith",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [
+      "gluteos",
+      "isquiotibiais"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0758",
+    "muscles_pt": "Quadríceps, Glúteo Máximo, Glúteo Médio, Pernas",
+    "instructions": "Variação do búlgaro na barra guiada eliminando o desequilíbrio e maximizando a sobrecarga na coxa dianteira.",
+    "steps": [
+      "Apoie o pé traseiro em um banco e a perna dianteira firme no chão sob a barra.",
+      "Desça até o joelho dianteiro formar 90 graus.",
+      "Suba estendendo a perna da frente contraindo forte o quadríceps e glúteo."
+    ],
+    "tips": [
+      "Mantenha o calcanhar da frente 100% plantado no chão."
+    ]
+  },
+  {
+    "id": "smith-lunge",
+    "title": "Afundo no Smith (Passada Estática)",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [
+      "gluteos",
+      "isquiotibiais"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0759",
+    "muscles_pt": "Quadríceps, Glúteos, Posterior, Pernas",
+    "instructions": "Afundo estático com trajetória vertical fixa, seguro e potente para desenvolvimento de pernas.",
+    "steps": [
+      "Barra apoiada nos ombros, dê um passo à frente com uma perna.",
+      "Desça o joelho traseiro quase até encostar no colchonete.",
+      "Empurre para cima com a coxa da frente."
+    ],
+    "tips": [
+      "Foque 80% do esforço na perna dianteira."
+    ]
+  },
+  {
+    "id": "horizontal-leg-press",
+    "title": "Leg Press Horizontal",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [
+      "gluteos",
+      "isquiotibiais"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0587",
+    "muscles_pt": "Quadríceps, Glúteo Máximo, Pernas",
+    "instructions": "Empurrada de pernas em plano horizontal, muito confortável para a lombar e eficiente para quadríceps.",
+    "steps": [
+      "Sente-se com pés na plataforma na largura dos ombros.",
+      "Empurre a plataforma estendendo as pernas sem travar joelhos.",
+      "Flexione de volta controlando a carga."
+    ],
+    "tips": [
+      "Não deixe a lombar arredondar no final da descida."
+    ]
+  },
+  {
+    "id": "hip-thrust-machine",
+    "title": "Elevação Pélvica na Máquina (Hip Thrust Machine)",
+    "primary_muscle_group": "gluteos",
+    "secondary_muscle_groups": [
+      "isquiotibiais"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0760",
+    "muscles_pt": "Glúteo Máximo, Glúteo Médio, Pernas, Posterior",
+    "instructions": "Aparelho específico para elevação de quadril, garantindo conforto nas cristas ilíacas e carga máxima no glúteo.",
+    "steps": [
+      "Ajuste o cinto/almofada acolchoada sobre a linha do quadril.",
+      "Apoie as costas no encosto e pés firmes na plataforma.",
+      "Estenda o quadril elevando o peso até o alinhamento com o tronco.",
+      "Aperte o glúteo no topo por 1 a 2 segundos."
+    ],
+    "tips": [
+      "Não force a lombar; a amplitude termina quando o glúteo está totalmente contraído."
+    ]
+  },
+  {
+    "id": "glute-kickback-cable",
+    "title": "Glúteo Coice na Polia Baixa",
+    "primary_muscle_group": "gluteos",
+    "secondary_muscle_groups": [
+      "isquiotibiais"
+    ],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0576",
+    "muscles_pt": "Glúteo Máximo, Glúteo Médio, Pernas",
+    "instructions": "Extensão de quadril no cabo com caneleira ou alça no tornozelo para isolamento de glúteo.",
+    "steps": [
+      "Prenda a tornozeleira na polia baixa e posicione-se segurando o aparelho.",
+      "Incline levemente o tronco para frente.",
+      "Chute a perna para trás e para cima contraindo forte o glúteo.",
+      "Volte devagar controlando o cabo."
+    ],
+    "tips": [
+      "Mantenha o core rígido para não curvar a coluna lombar."
+    ]
+  },
+  {
+    "id": "glute-cable-kickback-straight",
+    "title": "Glúteo 4 Apoios no Colchonete (Caneleira)",
+    "primary_muscle_group": "gluteos",
+    "secondary_muscle_groups": [
+      "isquiotibiais"
+    ],
+    "equipment": "peso_corporal",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0577",
+    "muscles_pt": "Glúteo Máximo, Glúteo Médio, Pernas",
+    "instructions": "Exercício clássico de quatro apoios no colchonete com caneleira para elevação de perna.",
+    "steps": [
+      "Apoie joelhos e antebraços no colchonete alinhados.",
+      "Eleve a perna para trás e para cima apertando o glúteo.",
+      "Desça controlando sem encostar o joelho no solo."
+    ],
+    "tips": [
+      "Evite oscilar o quadril para os lados."
+    ]
+  },
+  {
+    "id": "smith-calf-raise",
+    "title": "Panturrilha no Smith (Gêmeos em Pé)",
+    "primary_muscle_group": "panturrilha",
+    "secondary_muscle_groups": [],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0761",
+    "muscles_pt": "Gastrocnêmio, Sóleo, Panturrilhas, Pernas",
+    "instructions": "Elevação plantar com a barra do Smith nos ombros e a ponta dos pés apoiada em um step.",
+    "steps": [
+      "Apoie a meia ponta dos pés na borda do step e a barra nos ombros.",
+      "Desça os calcanhares alongando ao máximo a panturrilha.",
+      "Suba na ponta dos pés contraindo no ponto mais alto."
+    ],
+    "tips": [
+      "Segure 1 segundo no topo e embaixo para anular o reflexo miotático."
+    ]
+  },
+  {
+    "id": "hack-calf-raise",
+    "title": "Panturrilha no Hack Machine",
+    "primary_muscle_group": "panturrilha",
+    "secondary_muscle_groups": [],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "squat",
+    "gif_id": "0762",
+    "muscles_pt": "Gastrocnêmio, Sóleo, Panturrilhas, Pernas",
+    "instructions": "Elevação de calcanhares no aparelho de agachamento Hack com ombros apoiados.",
+    "steps": [
+      "Apoie a ponta dos pés na borda inferior da plataforma do Hack.",
+      "Desça os calcanhares para alongar a panturrilha.",
+      "Empurre na ponta dos pés até a contração máxima."
+    ],
+    "tips": [
+      "Mantenha joelhos quase estendidos com leve flexão de segurança."
+    ]
+  },
+  {
+    "id": "tibialis-raise",
+    "title": "Elevação Tibial Anterior",
+    "primary_muscle_group": "panturrilha",
+    "secondary_muscle_groups": [],
+    "equipment": "peso_corporal",
+    "type": "reps_only",
+    "animation_type": "squat",
+    "gif_id": "0763",
+    "muscles_pt": "Tibial Anterior, Frente da Canela, Pernas",
+    "instructions": "Fortalecimento do tibial anterior, prevenindo canelite e protegendo os joelhos.",
+    "steps": [
+      "Encoste as costas em uma parede com pés 30 cm à frente.",
+      "Puxe as pontas dos pés para cima em direção às canelas.",
+      "Segure 1 segundo e desça devagar."
+    ],
+    "tips": [
+      "Mantenha os calcanhares firmes no solo o tempo todo."
+    ]
+  },
+  {
+    "id": "exercise-bike",
+    "title": "Bicicleta Ergométrica (Spinning / Vertical)",
+    "primary_muscle_group": "cardio",
+    "secondary_muscle_groups": [
+      "quadriceps",
+      "panturrilha"
+    ],
+    "equipment": "maquina",
+    "type": "distance_duration",
+    "animation_type": "squat",
+    "gif_id": "0685",
+    "muscles_pt": "Cardiovascular, Quadríceps, Glúteos, Panturrilhas",
+    "instructions": "Cardio de baixo impacto para condicionamento cardiorrespiratório e aquecimento.",
+    "steps": [
+      "Ajuste o selim na altura do quadril.",
+      "Pedale mantendo o tronco estável e cadência uniforme.",
+      "Ajuste a carga ou velocidade conforme seu objetivo de treino."
+    ],
+    "tips": [
+      "Registre a distância em km e o tempo em minutos."
+    ]
+  },
+  {
+    "id": "recumbent-bike",
+    "title": "Bicicleta Ergométrica Horizontal",
+    "primary_muscle_group": "cardio",
+    "secondary_muscle_groups": [
+      "quadriceps",
+      "panturrilha"
+    ],
+    "equipment": "maquina",
+    "type": "distance_duration",
+    "animation_type": "squat",
+    "gif_id": "0686",
+    "muscles_pt": "Cardiovascular, Membros Inferiores, Lombar Protegida",
+    "instructions": "Bicicleta com encosto ergonômico, ideal para treinos longos com total suporte para a coluna.",
+    "steps": [
+      "Ajuste a distância do assento para os pedais.",
+      "Apoie completamente a coluna no encosto.",
+      "Pedale em ritmo contínuo na intensidade desejada."
+    ],
+    "tips": [
+      "Excelente para queima calórica sem sobrecarga lombar."
+    ]
+  },
+  {
+    "id": "elliptical-trainer",
+    "title": "Elíptico / Transport (Cross Trainer)",
+    "primary_muscle_group": "cardio",
+    "secondary_muscle_groups": [
+      "quadriceps",
+      "gluteos"
+    ],
+    "equipment": "maquina",
+    "type": "distance_duration",
+    "animation_type": "squat",
+    "gif_id": "0687",
+    "muscles_pt": "Cardiovascular, Glúteos, Pernas, Braços",
+    "instructions": "Exercício aeróbico sem impacto articular unindo movimento de pernas e braços em harmonia.",
+    "steps": [
+      "Suba nos pedais e segure nas manoplas móveis.",
+      "Mova pés e braços em ritmo sincronizado contínuo.",
+      "Mantenha o tronco alinhado e o abdômen acionado."
+    ],
+    "tips": [
+      "Ideal para quem busca queimar calorias sem impacto nos joelhos."
+    ]
+  },
+  {
+    "id": "stairmaster",
+    "title": "Simulador de Escada (Stairmaster / Stepper)",
+    "primary_muscle_group": "cardio",
+    "secondary_muscle_groups": [
+      "gluteos",
+      "quadriceps",
+      "panturrilha"
+    ],
+    "equipment": "maquina",
+    "type": "duration",
+    "animation_type": "squat",
+    "gif_id": "0688",
+    "muscles_pt": "Cardiovascular, Glúteos, Quadríceps, Panturrilhas",
+    "instructions": "Subida contínua de degraus de alta queima calórica e grande solicitação de glúteos e pernas.",
+    "steps": [
+      "Suba na escada e selecione o nível de velocidade.",
+      "Pise com a planta inteira do pé em cada degrau.",
+      "Evite debruçar os braços no painel para manter o gasto calórico alto."
+    ],
+    "tips": [
+      "Incline o tronco levemente à frente para focar ainda mais nos glúteos."
+    ]
+  },
+  {
+    "id": "rowing-machine",
+    "title": "Remo Seco (Rowing Machine / Concept2)",
+    "primary_muscle_group": "cardio",
+    "secondary_muscle_groups": [
+      "costas",
+      "quadriceps",
+      "lats"
+    ],
+    "equipment": "maquina",
+    "type": "distance_duration",
+    "animation_type": "pull_up",
+    "gif_id": "0689",
+    "muscles_pt": "Cardiovascular, Dorsais, Pernas, Core, Braços",
+    "instructions": "Cardio completo para o corpo inteiro combinando empurrão de pernas e puxada de tronco.",
+    "steps": [
+      "Prenda os pés e segure o puxador com braços retos.",
+      "Empurre forte com as pernas, incline o tronco e puxe na altura do abdômen.",
+      "Retorne na ordem inversa de forma fluida."
+    ],
+    "tips": [
+      "Mantenha o ritmo de remadas por minuto constante."
+    ]
+  },
+  {
+    "id": "jump-rope",
+    "title": "Pular Corda (Jump Rope)",
+    "primary_muscle_group": "cardio",
+    "secondary_muscle_groups": [
+      "panturrilha",
+      "ombros"
+    ],
+    "equipment": "outro",
+    "type": "duration",
+    "animation_type": "squat",
+    "gif_id": "0690",
+    "muscles_pt": "Cardiovascular, Panturrilhas, Agilidade, Ombros",
+    "instructions": "Treino cardiovascular dinâmico que melhora ritmo, agilidade e condicionamento.",
+    "steps": [
+      "Segure as manoplas na altura da cintura.",
+      "Gire a corda pelos punhos e salte na ponta dos pés.",
+      "Mantenha os saltos baixos e amortecidos."
+    ],
+    "tips": [
+      "Conte o tempo em segundos/minutos por round."
+    ]
+  },
+  {
+    "id": "air-bike",
+    "title": "Assault Bike / Air Bike",
+    "primary_muscle_group": "cardio",
+    "secondary_muscle_groups": [
+      "corpo_inteiro"
+    ],
+    "equipment": "maquina",
+    "type": "distance_duration",
+    "animation_type": "squat",
+    "gif_id": "0691",
+    "muscles_pt": "Cardiovascular Intenso, Pernas, Peitoral, Dorsal",
+    "instructions": "Bicicleta com resistência a ar para treinos de condicionamento de alta potência.",
+    "steps": [
+      "Suba e empurre/puxe as alavancas enquanto pedala com energia.",
+      "Respire fundo mantendo cadência forte."
+    ],
+    "tips": [
+      "Perfeita para treinos intervalados HIIT."
+    ]
+  },
+  {
+    "id": "incline-treadmill-walk",
+    "title": "Caminhada na Esteira Inclinada",
+    "primary_muscle_group": "cardio",
+    "secondary_muscle_groups": [
+      "gluteos",
+      "panturrilha"
+    ],
+    "equipment": "maquina",
+    "type": "distance_duration",
+    "animation_type": "squat",
+    "gif_id": "0684",
+    "muscles_pt": "Cardiovascular, Glúteos, Posterior, Panturrilhas",
+    "instructions": "Caminhada em esteira com inclinação entre 8% e 15% para queima calórica sem impacto articular.",
+    "steps": [
+      "Ajuste a inclinação e velocidade (4 a 6 km/h).",
+      "Caminhe com passadas firmes sem segurar no painel.",
+      "Mantenha a postura ereta e abdômen contraído."
+    ],
+    "tips": [
+      "Não se segurar nas barras aumenta a queima em mais de 20%."
+    ]
+  },
+  {
+    "id": "side-plank",
+    "title": "Prancha Lateral Isométrica (Side Plank)",
+    "primary_muscle_group": "abdomen",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "peso_corporal",
+    "type": "duration",
+    "animation_type": "bench_press",
+    "gif_id": "2136",
+    "muscles_pt": "Oblíquos, Quadrado Lombar, Glúteo Médio, Core",
+    "instructions": "Isometria lateral para sustentação e fortalecimento dos oblíquos e estabilizadores da pelve.",
+    "steps": [
+      "Deite-se de lado com o antebraço apoiado no chão sob o ombro.",
+      "Eleve o quadril formando uma linha reta dos pés à cabeça.",
+      "Sustente a posição estática contraindo o abdômen pelo tempo programado.",
+      "Repita do outro lado."
+    ],
+    "tips": [
+      "Não deixe o quadril descer em direção ao solo."
+    ]
+  },
+  {
+    "id": "stomach-vacuum",
+    "title": "Stomach Vacuum (Vacuum Abdominal)",
+    "primary_muscle_group": "abdomen",
+    "secondary_muscle_groups": [],
+    "equipment": "peso_corporal",
+    "type": "duration",
+    "animation_type": "bench_press",
+    "gif_id": "2137",
+    "muscles_pt": "Transverso do Abdômen, Linha de Cintura, Core Profundo",
+    "instructions": "Exercício isométrico clássico para afinar a linha de cintura e fortalecer o transverso abdominal.",
+    "steps": [
+      "Expire todo o ar dos pulmões esvaziando o abdômen.",
+      "Puxe o umbigo o máximo para dentro e para cima em direção às costas.",
+      "Sustente o vácuo estático pelo tempo estipulado sem respirar.",
+      "Relaxe suavemente e retome o ar."
+    ],
+    "tips": [
+      "Melhor executado pela manhã em jejum ou antes das refeições."
+    ]
+  },
+  {
+    "id": "dead-hang",
+    "title": "Dead Hang (Isometria na Barra Fixa / Descompressão)",
+    "primary_muscle_group": "costas",
+    "secondary_muscle_groups": [
+      "antebraco",
+      "ombros"
+    ],
+    "equipment": "peso_corporal",
+    "type": "duration",
+    "animation_type": "pull_up",
+    "gif_id": "2138",
+    "muscles_pt": "Dorsais, Descompressão da Coluna, Antebraços, Pegada",
+    "instructions": "Ficar pendurado na barra fixa pelo tempo determinado para descomprimir as vértebras e reforçar a pegada.",
+    "steps": [
+      "Segure na barra com pegada pronada na largura dos ombros.",
+      "Tire os pés do chão e relaxe as pernas deixando o peso alongar a coluna.",
+      "Sustente a pegada firme respirando profundamente."
+    ],
+    "tips": [
+      "Excelente no fim do treino para aliviar a carga espinhal."
+    ]
+  },
+  {
+    "id": "wall-sit",
+    "title": "Wall Sit (Cadeira Isométrica na Parede)",
+    "primary_muscle_group": "quadriceps",
+    "secondary_muscle_groups": [
+      "gluteos"
+    ],
+    "equipment": "peso_corporal",
+    "type": "duration",
+    "animation_type": "squat",
+    "gif_id": "2139",
+    "muscles_pt": "Quadríceps, Glúteos, Resistência de Pernas",
+    "instructions": "Agachamento estático encostado na parede com joelhos a 90 graus sustentando o tempo estipulado.",
+    "steps": [
+      "Apoie as costas retas em uma parede.",
+      "Desça até as coxas ficarem paralelas ao chão formando 90 graus.",
+      "Mantenha as mãos cruzadas no peito sem apoiar nas coxas.",
+      "Sustente a posição estática."
+    ],
+    "tips": [
+      "Empurre os calcanhares contra o chão para queimar o quadríceps."
+    ]
+  },
+  {
+    "id": "l-sit",
+    "title": "L-Sit Isométrico no Solo ou Paralelas",
+    "primary_muscle_group": "abdomen",
+    "secondary_muscle_groups": [
+      "triceps",
+      "quadriceps"
+    ],
+    "equipment": "peso_corporal",
+    "type": "duration",
+    "animation_type": "bench_press",
+    "gif_id": "2140",
+    "muscles_pt": "Reto Abdominal, Iliopsoas, Tríceps, Ombros",
+    "instructions": "Sustentação isométrica do corpo com pernas estendidas à frente formando um ângulo reto 'L'.",
+    "steps": [
+      "Apoie as palmas das mãos no solo ou barras paralelas.",
+      "Empurre o solo estendendo os braços.",
+      "Eleve as pernas estendidas à frente e sustente a posição."
+    ],
+    "tips": [
+      "Se necessário, comece com joelhos flexionados (Tuck L-Sit)."
+    ]
+  },
+  {
+    "id": "glute-bridge-isometric",
+    "title": "Ponte de Glúteo Isométrica",
+    "primary_muscle_group": "gluteos",
+    "secondary_muscle_groups": [
+      "isquiotibiais"
+    ],
+    "equipment": "peso_corporal",
+    "type": "duration",
+    "animation_type": "squat",
+    "gif_id": "2141",
+    "muscles_pt": "Glúteo Máximo, Isquiotibiais, Lombar",
+    "instructions": "Sustentação estática no topo da elevação de quadril para ativação e força dos glúteos.",
+    "steps": [
+      "Deite no solo com joelhos dobrados e pés apoiados.",
+      "Eleve o quadril até a linha reta tronco-coxa.",
+      "Aperte os glúteos e sustente a posição pelo tempo programado."
+    ],
+    "tips": [
+      "Mantenha os calcanhares pressionados contra o chão."
+    ]
+  },
+  {
+    "id": "hollow-body-hold",
+    "title": "Hollow Body (Canoa Isométrica)",
+    "primary_muscle_group": "abdomen",
+    "secondary_muscle_groups": [],
+    "equipment": "peso_corporal",
+    "type": "duration",
+    "animation_type": "bench_press",
+    "gif_id": "2142",
+    "muscles_pt": "Reto Abdominal, Transverso, Core",
+    "instructions": "Sustentação ginástica em formato de canoa com lombar colada ao chão.",
+    "steps": [
+      "Deite de costas com braços esticados acima da cabeça.",
+      "Cole a lombar no solo e tire pernas e ombros ligeiramente do chão.",
+      "Sustente a tensão no abdômen sem deixar a lombar descolar."
+    ],
+    "tips": [
+      "A lombar NUNCA deve sair do chão durante a série."
+    ]
+  },
+  {
+    "id": "floor-crunch",
+    "title": "Abdominal Tradicional no Solo (Crunch)",
+    "primary_muscle_group": "abdomen",
+    "secondary_muscle_groups": [],
+    "equipment": "peso_corporal",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0001",
+    "muscles_pt": "Reto Abdominal Superior, Abdômen",
+    "instructions": "Abdominal básico no solo com elevação das escápulas e contração intensa do reto abdominal.",
+    "steps": [
+      "Deite com joelhos flexionados e pés no chão.",
+      "Coloque mãos atrás da orelha sem forçar a cervical.",
+      "Enrole o tronco aproximando as costelas do quadril.",
+      "Desça com controle."
+    ],
+    "tips": [
+      "Solte todo o ar no ponto de contração máxima."
+    ]
+  },
+  {
+    "id": "reverse-crunch",
+    "title": "Abdominal Infra no Solo",
+    "primary_muscle_group": "abdomen",
+    "secondary_muscle_groups": [],
+    "equipment": "peso_corporal",
+    "type": "reps_only",
+    "animation_type": "bench_press",
+    "gif_id": "0002",
+    "muscles_pt": "Reto Abdominal Inferior, Pelve",
+    "instructions": "Enrolamento da pelve em direção ao peito com foco na porção inferior do abdômen.",
+    "steps": [
+      "Deite com braços ao longo do corpo.",
+      "Flexione os joelhos e eleve a pelve enrolando o quadril para cima.",
+      "Desça devagar sem bater os pés no chão."
+    ],
+    "tips": [
+      "Evite usar o embalo das pernas; foque na flexão do abdômen."
+    ]
+  },
+  {
+    "id": "chest-press-machine",
+    "title": "Supino Reto na Máquina Articulada (Convergente)",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [
+      "triceps",
+      "ombros"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0298",
+    "muscles_pt": "Peitoral Maior, Tríceps, Deltoide Anterior",
+    "instructions": "Supino guiado convergente acompanhando a mecânica articular do peitoral.",
+    "steps": [
+      "Ajuste a altura do banco com pegadas na linha do peito.",
+      "Empurre estendendo os braços sem travar cotovelos.",
+      "Retorne sentindo o peitoral alongar."
+    ],
+    "tips": [
+      "Mantenha as escápulas aduzidas contra o encosto."
+    ]
+  },
+  {
+    "id": "incline-chest-press-machine",
+    "title": "Supino Inclinado na Máquina Articulada",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [
+      "ombros",
+      "triceps"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0299",
+    "muscles_pt": "Peitoral Superior, Deltoide Anterior, Tríceps",
+    "instructions": "Supino inclinado na máquina articulada para foco na porção clavicular do peito.",
+    "steps": [
+      "Sente-se com as alavancas na linha superior do peito.",
+      "Empurre para cima e para frente.",
+      "Desça de forma suave."
+    ],
+    "tips": [
+      "Segurança total para ir até a falha sem parceiro."
+    ]
+  },
+  {
+    "id": "machine-row",
+    "title": "Remada Articulada na Máquina (Pegada Neutra)",
+    "primary_muscle_group": "costas",
+    "secondary_muscle_groups": [
+      "biceps",
+      "lats"
+    ],
+    "equipment": "maquina",
+    "type": "weight_reps",
+    "animation_type": "pull_up",
+    "gif_id": "0300",
+    "muscles_pt": "Grande Dorsal, Rombóides, Trapézio, Bíceps",
+    "instructions": "Remada com peito apoiado no banco, poupando a lombar e focando no miolo das costas.",
+    "steps": [
+      "Ajuste o assento e apoie o peito na almofada frontal.",
+      "Puxe os cotovelos para trás apertando as escápulas.",
+      "Retorne alongando a dorsal."
+    ],
+    "tips": [
+      "Mantenha o peito sempre colado ao apoio."
+    ]
+  },
+  {
+    "id": "cable-incline-fly",
+    "title": "Crossover Polia Média / Inclinada",
+    "primary_muscle_group": "peito",
+    "secondary_muscle_groups": [
+      "ombros"
+    ],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0301",
+    "muscles_pt": "Peitoral Maior, Peitoral Superior",
+    "instructions": "Crucifixo nos cabos com polias na altura média gerando tensão contínua no peitoral.",
+    "steps": [
+      "Posicione as polias na altura do peito e dê um passo à frente.",
+      "Junte as mãos à frente contraindo com força.",
+      "Abra os braços controlando o movimento."
+    ],
+    "tips": [
+      "Mantenha uma leve flexão nos cotovelos durante todo o arco."
+    ]
+  },
+  {
+    "id": "cable-overhead-triceps-extension",
+    "title": "Tríceps Francês na Polia com Corda (Overhead)",
+    "primary_muscle_group": "triceps",
+    "secondary_muscle_groups": [],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "bench_press",
+    "gif_id": "0302",
+    "muscles_pt": "Tríceps Cabeça Longa, Tríceps Braquial",
+    "instructions": "Extensão acima da cabeça na polia média com corda para máximo alongamento da cabeça longa do tríceps.",
+    "steps": [
+      "Fique de costas para a máquina com a corda atrás da cabeça.",
+      "Estenda os cotovelos para frente e para cima abrindo a corda no final.",
+      "Retorne flexionando os cotovelos devagar."
+    ],
+    "tips": [
+      "Mantenha os cotovelos apontados para frente."
+    ]
+  },
+  {
+    "id": "seated-cable-rear-delt-fly",
+    "title": "Crucifixo Inverso na Polia Dupla",
+    "primary_muscle_group": "ombros",
+    "secondary_muscle_groups": [
+      "costas"
+    ],
+    "equipment": "polia",
+    "type": "weight_reps",
+    "animation_type": "pull_up",
+    "gif_id": "0303",
+    "muscles_pt": "Deltoide Posterior, Rombóides, Trapézio",
+    "instructions": "Crucifixo inverso nos cabos cruzados para foco no deltoide posterior.",
+    "steps": [
+      "Segure o cabo esquerdo com a mão direita e vice-versa na altura dos ombros.",
+      "Abra os braços para fora e para trás apertando a parte de trás dos ombros.",
+      "Retorne cruzando os braços com controle."
+    ],
+    "tips": [
+      "Puxe com os cotovelos guiando o movimento."
     ]
   }
 ];

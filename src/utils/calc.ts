@@ -1,3 +1,5 @@
+import { ExerciseType } from '../types';
+
 // 1RM Calculation using the Brzycki Formula: 1RM = Weight × (36 / (37 - Reps))
 export function calculate1RM(weightKg: number, reps: number): number {
   if (reps <= 0 || weightKg <= 0) return 0;
@@ -229,5 +231,150 @@ export function releaseWakeLock(): void {
   if (wakeLockSentinel) {
     wakeLockSentinel.release().catch(() => {});
     wakeLockSentinel = null;
+  }
+}
+
+// Normalização de texto para busca sem acentos e case-insensitive
+export function normalizeSearchText(str: string): string {
+  return (str || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+// Detecção inteligente do tipo de tracking do exercício (tempo / distância / peso e reps)
+export function getExerciseTrackingType(
+  template?: { type?: ExerciseType } | null,
+  title?: string
+): ExerciseType {
+  if (template?.type) return template.type;
+  const t = normalizeSearchText(title || '');
+  if (
+    t.includes('esteira') ||
+    t.includes('bicicleta') ||
+    t.includes('bike') ||
+    t.includes('eliptico') ||
+    t.includes('transport') ||
+    t.includes('remo') ||
+    t.includes('rowing') ||
+    t.includes('corrida') ||
+    t.includes('caminhada') ||
+    t.includes('air bike') ||
+    t.includes('assault bike')
+  ) {
+    return 'distance_duration';
+  }
+  if (
+    t.includes('prancha') ||
+    t.includes('plank') ||
+    t.includes('vacuum') ||
+    t.includes('vacuo') ||
+    t.includes('dead hang') ||
+    t.includes('isometria') ||
+    t.includes('isometrica') ||
+    t.includes('alongamento') ||
+    t.includes('pular corda') ||
+    t.includes('corda') ||
+    t.includes('jump rope') ||
+    t.includes('wall sit') ||
+    t.includes('l-sit') ||
+    t.includes('escada') ||
+    t.includes('stairmaster') ||
+    t.includes('canoa') ||
+    t.includes('hollow')
+  ) {
+    return 'duration';
+  }
+  return 'weight_reps';
+}
+
+// Áudio silencioso em loop para manter a MediaSession e background vivos no celular bloqueado
+let silentAudioEl: HTMLAudioElement | null = null;
+const SILENT_WAV = 'data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ4AAAAAAP8A/wD/AP8A/wD/AP8A';
+
+export function startBackgroundWorkoutAudio(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    if (!silentAudioEl) {
+      silentAudioEl = new Audio(SILENT_WAV);
+      silentAudioEl.loop = true;
+      silentAudioEl.volume = 0.01;
+    }
+    silentAudioEl.play().catch(() => {
+      // Browsers podem precisar de gesto do usuário
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function stopBackgroundWorkoutAudio(): void {
+  try {
+    if (silentAudioEl) {
+      silentAudioEl.pause();
+      silentAudioEl.currentTime = 0;
+      silentAudioEl = null;
+    }
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      navigator.mediaSession.metadata = null;
+      navigator.mediaSession.playbackState = 'none';
+    }
+  } catch {
+    // Silencia erros
+  }
+}
+
+export interface LockScreenState {
+  title: string;
+  artist: string;
+  album?: string;
+  onCheckOrSkip: () => void;
+  onNext?: () => void;
+  onPrev?: () => void;
+}
+
+export function updateLockScreenMediaSession(state: LockScreenState | null): void {
+  if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+
+  if (!state) {
+    try {
+      navigator.mediaSession.metadata = null;
+      navigator.mediaSession.playbackState = 'none';
+    } catch {
+      // Ignora
+    }
+    return;
+  }
+
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: state.title,
+      artist: state.artist,
+      album: state.album || 'CHANGE Treino',
+      artwork: [
+        { src: './icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { src: './icons/icon-512.png', sizes: '512x512', type: 'image/png' }
+      ]
+    });
+
+    navigator.mediaSession.playbackState = 'playing';
+
+    const actionHandler = () => {
+      state.onCheckOrSkip();
+    };
+
+    navigator.mediaSession.setActionHandler('play', actionHandler);
+    navigator.mediaSession.setActionHandler('pause', actionHandler);
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      if (state.onNext) state.onNext();
+      else state.onCheckOrSkip();
+    });
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      if (state.onPrev) state.onPrev();
+    });
+  } catch {
+    // Ignora restrições do navegador
   }
 }

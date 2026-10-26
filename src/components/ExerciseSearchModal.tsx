@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { X, Search, Plus, Dumbbell } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { ExerciseTemplate, MuscleGroup, EquipmentCategory, ExerciseType } from '../types';
+import { normalizeSearchText } from '../utils/calc';
 
 interface ExerciseSearchModalProps {
   isOpen: boolean;
@@ -9,8 +10,9 @@ interface ExerciseSearchModalProps {
   onSelectExercise: (exercise: ExerciseTemplate) => void;
 }
 
-const MUSCLE_FILTERS: { label: string; value: MuscleGroup | 'all' }[] = [
+const MUSCLE_FILTERS: { label: string; value: MuscleGroup | 'pernas' | 'all' }[] = [
   { label: 'Todos', value: 'all' },
+  { label: 'Pernas', value: 'pernas' },
   { label: 'Peito', value: 'peito' },
   { label: 'Costas', value: 'costas' },
   { label: 'Dorsal (Asas)', value: 'lats' },
@@ -49,7 +51,7 @@ export const ExerciseSearchModal: React.FC<ExerciseSearchModalProps> = ({
 }) => {
   const { exercises, addCustomExercise } = useApp();
   const [query, setQuery] = useState('');
-  const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
+  const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'pernas' | 'all'>('all');
   const [isCreatingCustom, setIsCreatingCustom] = useState(false);
 
   // Formulário de exercício customizado
@@ -59,15 +61,39 @@ export const ExerciseSearchModal: React.FC<ExerciseSearchModalProps> = ({
   const [customType, setCustomType] = useState<ExerciseType>('weight_reps');
 
   const filteredExercises = useMemo(() => {
+    const q = normalizeSearchText(query);
+    const queryTokens = q.split(/\s+/).filter(Boolean);
+
     return exercises.filter((ex) => {
-      const matchesQuery =
-        ex.title.toLowerCase().includes(query.toLowerCase()) ||
-        ex.primary_muscle_group.toLowerCase().includes(query.toLowerCase()) ||
-        (ex.muscles_pt && ex.muscles_pt.toLowerCase().includes(query.toLowerCase()));
-      const matchesMuscle =
-        selectedMuscle === 'all' ||
-        ex.primary_muscle_group === selectedMuscle ||
-        ex.secondary_muscle_groups?.includes(selectedMuscle as MuscleGroup);
+      // 1. Busca textual inteligente (multi-termo, sem acento, com sinônimos de pernas/cardio/abs)
+      let matchesQuery = true;
+      if (queryTokens.length > 0) {
+        const isLeg = ['quadriceps', 'isquiotibiais', 'gluteos', 'panturrilha'].includes(ex.primary_muscle_group);
+        const searchable = normalizeSearchText(
+          `${ex.title} ${ex.primary_muscle_group} ${ex.secondary_muscle_groups?.join(' ') || ''} ${
+            ex.muscles_pt || ''
+          } ${ex.equipment} ${isLeg ? 'perna pernas coxa inferiores mmii' : ''} ${
+            ex.primary_muscle_group === 'cardio' ? 'aerobico esteira corrida bike bike spinning escada remo cardio' : ''
+          } ${ex.primary_muscle_group === 'abdomen' ? 'core abs prancha abd' : ''}`
+        );
+
+        matchesQuery = queryTokens.every((token) => searchable.includes(token));
+      }
+
+      // 2. Filtro de grupo muscular
+      let matchesMuscle = true;
+      if (selectedMuscle !== 'all') {
+        if (selectedMuscle === 'pernas') {
+          matchesMuscle =
+            ['quadriceps', 'isquiotibiais', 'gluteos', 'panturrilha'].includes(ex.primary_muscle_group) ||
+            Boolean(ex.secondary_muscle_groups?.some((m) => ['quadriceps', 'isquiotibiais', 'gluteos', 'panturrilha'].includes(m)));
+        } else {
+          matchesMuscle =
+            ex.primary_muscle_group === selectedMuscle ||
+            Boolean(ex.secondary_muscle_groups?.includes(selectedMuscle as MuscleGroup));
+        }
+      }
+
       return matchesQuery && matchesMuscle;
     });
   }, [exercises, query, selectedMuscle]);

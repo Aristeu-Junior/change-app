@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, FolderPlus, Sparkles, ChevronRight, RotateCcw, Dumbbell, Eye, Check, ChevronUp, ChevronDown } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { Routine, WorkoutExercise, ExerciseTemplate } from '../../types';
+import { Routine, WorkoutExercise, ExerciseTemplate, WorkoutSet } from '../../types';
 import { ExerciseSearchModal } from '../ExerciseSearchModal';
 import { ExerciseVisualDemo } from '../ExerciseVisualDemo';
 import { POPULAR_ROUTINE_PRESETS, RoutinePreset } from '../../data/defaultRoutines';
+import { getExerciseTrackingType } from '../../utils/calc';
 
 interface RoutineEditorModalProps {
   routineToEdit?: Routine | null;
@@ -80,16 +81,49 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
   };
 
   const handleAddExercise = (template: ExerciseTemplate) => {
+    const trackingType = getExerciseTrackingType(template, template.title);
+    const isDuration = trackingType === 'duration';
+    const isDistance = trackingType === 'distance_duration';
+
+    const defaultSets: WorkoutSet[] = [
+      {
+        id: `rs-${Date.now()}-0`,
+        index: 0,
+        type: 'normal',
+        weight_kg: isDuration || isDistance ? null : 20,
+        reps: isDuration || isDistance ? null : 10,
+        duration_seconds: isDuration ? 60 : (isDistance ? 600 : null),
+        distance_meters: isDistance ? 1000 : null,
+        completed: false
+      },
+      {
+        id: `rs-${Date.now()}-1`,
+        index: 1,
+        type: 'normal',
+        weight_kg: isDuration || isDistance ? null : 20,
+        reps: isDuration || isDistance ? null : 10,
+        duration_seconds: isDuration ? 60 : (isDistance ? 600 : null),
+        distance_meters: isDistance ? 1000 : null,
+        completed: false
+      },
+      {
+        id: `rs-${Date.now()}-2`,
+        index: 2,
+        type: 'normal',
+        weight_kg: isDuration || isDistance ? null : 20,
+        reps: isDuration || isDistance ? null : 10,
+        duration_seconds: isDuration ? 60 : (isDistance ? 600 : null),
+        distance_meters: isDistance ? 1000 : null,
+        completed: false
+      }
+    ];
+
     const newEx: WorkoutExercise = {
       id: `re-${Date.now()}`,
       exercise_template_id: template.id,
       title: template.title,
-      rest_seconds: 90,
-      sets: [
-        { id: `rs-${Date.now()}-0`, index: 0, type: 'normal', weight_kg: 20, reps: 10, completed: false },
-        { id: `rs-${Date.now()}-1`, index: 1, type: 'normal', weight_kg: 20, reps: 10, completed: false },
-        { id: `rs-${Date.now()}-2`, index: 2, type: 'normal', weight_kg: 20, reps: 10, completed: false }
-      ]
+      rest_seconds: isDistance ? 120 : (isDuration ? 60 : 90),
+      sets: defaultSets
     };
     setExercises((prev) => [...prev, newEx]);
   };
@@ -115,12 +149,19 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
       const next = [...prev];
       const target = next[exIdx];
       const prevSet = target.sets[target.sets.length - 1];
+      const template = allTemplates.find((t) => t.id === target.exercise_template_id);
+      const trackingType = getExerciseTrackingType(template, target.title);
+      const isDuration = trackingType === 'duration';
+      const isDistance = trackingType === 'distance_duration';
+
       target.sets.push({
         id: `rs-${Date.now()}-${target.sets.length}`,
         index: target.sets.length,
         type: 'normal',
-        weight_kg: prevSet ? prevSet.weight_kg : 20,
-        reps: prevSet ? prevSet.reps : 10,
+        weight_kg: prevSet?.weight_kg ?? (isDuration || isDistance ? null : 20),
+        reps: prevSet?.reps ?? (isDuration || isDistance ? null : 10),
+        duration_seconds: prevSet?.duration_seconds ?? (isDuration ? 60 : (isDistance ? 600 : null)),
+        distance_meters: prevSet?.distance_meters ?? (isDistance ? 1000 : null),
         completed: false
       });
       return next;
@@ -502,57 +543,150 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
 
                   {/* Séries do exercício no plano */}
                   <div className="space-y-1.5">
-                    {ex.sets.map((set, setIdx) => (
-                      <div
-                        key={set.id}
-                        className="flex items-center gap-2 text-xs bg-[#121214] p-2 rounded-lg"
-                      >
-                        <span className="w-5 text-center font-bold text-zinc-400">{setIdx + 1}</span>
-                        <div className="flex items-center gap-1">
-                          <input
-                            type="number"
-                            value={set.weight_kg ?? ''}
-                            onChange={(e) => {
-                              const val = e.target.value === '' ? null : parseFloat(e.target.value);
-                              setExercises((prev) => {
-                                const next = [...prev];
-                                next[exIdx].sets[setIdx].weight_kg = val;
-                                return next;
-                              });
-                            }}
-                            className="w-14 bg-[#18181b] border border-[#27272a] rounded px-1.5 py-1 text-center font-bold text-white"
-                          />
-                          <span className="text-zinc-500 text-[10px]">kg</span>
-                        </div>
+                    {ex.sets.map((set, setIdx) => {
+                      const template = allTemplates.find((t) => t.id === ex.exercise_template_id);
+                      const trackingType = getExerciseTrackingType(template, ex.title);
 
-                        <div className="flex items-center gap-1">
-                          <input
-                            type="number"
-                            value={set.reps ?? ''}
-                            onChange={(e) => {
-                              const val = e.target.value === '' ? null : parseInt(e.target.value, 10);
-                              setExercises((prev) => {
-                                const next = [...prev];
-                                next[exIdx].sets[setIdx].reps = val;
-                                return next;
-                              });
-                            }}
-                            className="w-12 bg-[#18181b] border border-[#27272a] rounded px-1.5 py-1 text-center font-bold text-white"
-                          />
-                          <span className="text-zinc-500 text-[10px]">reps</span>
-                        </div>
+                      return (
+                        <div
+                          key={set.id}
+                          className="flex items-center gap-2 text-xs bg-[#121214] p-2 rounded-lg"
+                        >
+                          <span className="w-5 text-center font-bold text-zinc-400">{setIdx + 1}</span>
 
-                        {ex.sets.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveSet(exIdx, setIdx)}
-                            className="ml-auto text-zinc-600 hover:text-red-400 p-1"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                          {trackingType === 'duration' ? (
+                            <div className="flex items-center gap-2 flex-wrap flex-1">
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={set.duration_seconds ?? 60}
+                                  onChange={(e) => {
+                                    const val = e.target.value === '' ? null : parseInt(e.target.value, 10);
+                                    setExercises((prev) => {
+                                      const next = [...prev];
+                                      next[exIdx].sets[setIdx].duration_seconds = val;
+                                      return next;
+                                    });
+                                  }}
+                                  className="w-16 bg-[#18181b] border border-[#27272a] rounded px-1.5 py-1 text-center font-bold text-white"
+                                />
+                                <span className="text-zinc-500 text-[10px]">seg</span>
+                              </div>
+                              <div className="flex gap-1">
+                                {[30, 45, 60, 90].map((sec) => (
+                                  <button
+                                    key={sec}
+                                    type="button"
+                                    onClick={() => {
+                                      setExercises((prev) => {
+                                        const next = [...prev];
+                                        next[exIdx].sets[setIdx].duration_seconds = sec;
+                                        return next;
+                                      });
+                                    }}
+                                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition ${
+                                      set.duration_seconds === sec
+                                        ? 'bg-white text-black'
+                                        : 'bg-[#18181b] border border-[#27272a] text-zinc-400 hover:text-white'
+                                    }`}
+                                  >
+                                    {sec}s
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ) : trackingType === 'distance_duration' ? (
+                            <div className="flex items-center gap-2 flex-1">
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  value={set.distance_meters ? Number((set.distance_meters / 1000).toFixed(2)) : ''}
+                                  placeholder="1.0"
+                                  onChange={(e) => {
+                                    const val = e.target.value === '' ? null : parseFloat(e.target.value);
+                                    setExercises((prev) => {
+                                      const next = [...prev];
+                                      next[exIdx].sets[setIdx].distance_meters = val !== null ? Math.round(val * 1000) : null;
+                                      return next;
+                                    });
+                                  }}
+                                  className="w-16 bg-[#18181b] border border-[#27272a] rounded px-1.5 py-1 text-center font-bold text-white"
+                                />
+                                <span className="text-zinc-500 text-[10px]">km</span>
+                              </div>
+                              <span className="text-zinc-600 font-bold">em</span>
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={set.duration_seconds ? Math.round(set.duration_seconds / 60) : ''}
+                                  placeholder="10"
+                                  onChange={(e) => {
+                                    const val = e.target.value === '' ? null : parseInt(e.target.value, 10);
+                                    setExercises((prev) => {
+                                      const next = [...prev];
+                                      next[exIdx].sets[setIdx].duration_seconds = val !== null ? val * 60 : null;
+                                      return next;
+                                    });
+                                  }}
+                                  className="w-14 bg-[#18181b] border border-[#27272a] rounded px-1.5 py-1 text-center font-bold text-white"
+                                />
+                                <span className="text-zinc-500 text-[10px]">min</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  value={set.weight_kg ?? ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value === '' ? null : parseFloat(e.target.value);
+                                    setExercises((prev) => {
+                                      const next = [...prev];
+                                      next[exIdx].sets[setIdx].weight_kg = val;
+                                      return next;
+                                    });
+                                  }}
+                                  className="w-14 bg-[#18181b] border border-[#27272a] rounded px-1.5 py-1 text-center font-bold text-white"
+                                />
+                                <span className="text-zinc-500 text-[10px]">kg</span>
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  value={set.reps ?? ''}
+                                  onChange={(e) => {
+                                    const val = e.target.value === '' ? null : parseInt(e.target.value, 10);
+                                    setExercises((prev) => {
+                                      const next = [...prev];
+                                      next[exIdx].sets[setIdx].reps = val;
+                                      return next;
+                                    });
+                                  }}
+                                  className="w-12 bg-[#18181b] border border-[#27272a] rounded px-1.5 py-1 text-center font-bold text-white"
+                                />
+                                <span className="text-zinc-500 text-[10px]">reps</span>
+                              </div>
+                            </>
+                          )}
+
+                          {ex.sets.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSet(exIdx, setIdx)}
+                              className="ml-auto text-zinc-600 hover:text-red-400 p-1"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
 
                     <button

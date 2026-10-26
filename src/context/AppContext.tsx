@@ -19,7 +19,8 @@ import {
   playGymTone,
   triggerHaptic,
   requestWakeLock,
-  releaseWakeLock
+  releaseWakeLock,
+  getExerciseTrackingType
 } from '../utils/calc';
 import {
   isCloudConfigured,
@@ -1732,18 +1733,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const prevExercise = prevWorkout?.exercises.find((e) => e.exercise_template_id === template.id);
     const completedPrevSet = prevExercise?.sets.find((s) => s.completed);
 
+    const trackingType = getExerciseTrackingType(template, template.title);
+    const isDuration = trackingType === 'duration';
+    const isDistance = trackingType === 'distance_duration';
+
     const newExercise: WorkoutExercise = {
       id: `we-${Date.now()}`,
       exercise_template_id: template.id,
       title: template.title,
-      rest_seconds: settings.default_rest_seconds,
+      rest_seconds: isDistance ? 120 : (isDuration ? 60 : settings.default_rest_seconds),
       sets: [
         {
           id: `ws-${Date.now()}-0`,
           index: 0,
           type: 'normal',
-          weight_kg: completedPrevSet?.weight_kg ?? (template.type === 'bodyweight_reps' ? 0 : 20),
-          reps: completedPrevSet?.reps ?? 10,
+          weight_kg: isDuration || isDistance ? null : (completedPrevSet?.weight_kg ?? (template.type === 'bodyweight_reps' ? 0 : 20)),
+          reps: isDuration || isDistance ? null : (completedPrevSet?.reps ?? 10),
+          duration_seconds: isDuration ? 60 : (isDistance ? 600 : null),
+          distance_meters: isDistance ? 1000 : null,
           completed: false,
           previousGhost: completedPrevSet?.weight_kg
             ? `${completedPrevSet.weight_kg} kg × ${completedPrevSet.reps}`
@@ -1771,12 +1778,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const targetExercise = nextExercises[exerciseIndex];
     const prevSet = targetExercise.sets[targetExercise.sets.length - 1];
 
+    const template = exercises.find((e) => e.id === targetExercise.exercise_template_id);
+    const trackingType = getExerciseTrackingType(template, targetExercise.title);
+    const isDuration = trackingType === 'duration';
+    const isDistance = trackingType === 'distance_duration';
+
     const newSet: WorkoutSet = {
       id: `ws-${Date.now()}-${targetExercise.sets.length}`,
       index: targetExercise.sets.length,
       type: 'normal',
-      weight_kg: prevSet ? prevSet.weight_kg : 20,
-      reps: prevSet ? prevSet.reps : 10,
+      weight_kg: prevSet ? prevSet.weight_kg : (isDuration || isDistance ? null : 20),
+      reps: prevSet ? prevSet.reps : (isDuration || isDistance ? null : 10),
+      duration_seconds: prevSet?.duration_seconds ?? (isDuration ? 60 : (isDistance ? 600 : null)),
+      distance_meters: prevSet?.distance_meters ?? (isDistance ? 1000 : null),
       completed: false,
       previousGhost: prevSet?.previousGhost
     };

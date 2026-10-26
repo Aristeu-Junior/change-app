@@ -14,13 +14,14 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ExerciseTemplate, MuscleGroup, Routine, WorkoutExercise } from '../../types';
-import { displayWeight } from '../../utils/calc';
+import { displayWeight, normalizeSearchText } from '../../utils/calc';
 import { ExerciseSearchModal } from '../ExerciseSearchModal';
 import { ExerciseVisualDemo } from '../ExerciseVisualDemo';
 import { RoutineEditorModal } from './RoutineEditorModal';
 
-const MUSCLE_FILTERS: { label: string; value: MuscleGroup | 'all' }[] = [
+const MUSCLE_FILTERS: { label: string; value: MuscleGroup | 'pernas' | 'all' }[] = [
   { label: 'Todos', value: 'all' },
+  { label: 'Pernas', value: 'pernas' },
   { label: 'Peito', value: 'peito' },
   { label: 'Costas', value: 'costas' },
   { label: 'Dorsal (Asas)', value: 'lats' },
@@ -67,7 +68,7 @@ export const ExercisesView: React.FC = () => {
   const isLight = theme === 'light';
 
   const [query, setQuery] = useState('');
-  const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'all'>('all');
+  const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'pernas' | 'all'>('all');
   const [selectedDetailExercise, setSelectedDetailExercise] = useState<ExerciseTemplate | null>(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
@@ -85,15 +86,39 @@ export const ExercisesView: React.FC = () => {
   };
 
   const filteredExercises = useMemo(() => {
+    const q = normalizeSearchText(query);
+    const queryTokens = q.split(/\s+/).filter(Boolean);
+
     return exercises.filter((ex) => {
-      const matchesQuery =
-        ex.title.toLowerCase().includes(query.toLowerCase()) ||
-        ex.primary_muscle_group.toLowerCase().includes(query.toLowerCase()) ||
-        (ex.muscles_pt && ex.muscles_pt.toLowerCase().includes(query.toLowerCase()));
-      const matchesMuscle =
-        selectedMuscle === 'all' ||
-        ex.primary_muscle_group === selectedMuscle ||
-        ex.secondary_muscle_groups?.includes(selectedMuscle as MuscleGroup);
+      // 1. Busca textual inteligente (multi-termo, sem acento, com sinônimos de pernas/cardio/abs)
+      let matchesQuery = true;
+      if (queryTokens.length > 0) {
+        const isLeg = ['quadriceps', 'isquiotibiais', 'gluteos', 'panturrilha'].includes(ex.primary_muscle_group);
+        const searchable = normalizeSearchText(
+          `${ex.title} ${ex.primary_muscle_group} ${ex.secondary_muscle_groups?.join(' ') || ''} ${
+            ex.muscles_pt || ''
+          } ${ex.equipment} ${isLeg ? 'perna pernas coxa inferiores mmii' : ''} ${
+            ex.primary_muscle_group === 'cardio' ? 'aerobico esteira corrida bike bike spinning escada remo cardio' : ''
+          } ${ex.primary_muscle_group === 'abdomen' ? 'core abs prancha abd' : ''}`
+        );
+
+        matchesQuery = queryTokens.every((token) => searchable.includes(token));
+      }
+
+      // 2. Filtro de grupo muscular
+      let matchesMuscle = true;
+      if (selectedMuscle !== 'all') {
+        if (selectedMuscle === 'pernas') {
+          matchesMuscle =
+            ['quadriceps', 'isquiotibiais', 'gluteos', 'panturrilha'].includes(ex.primary_muscle_group) ||
+            Boolean(ex.secondary_muscle_groups?.some((m) => ['quadriceps', 'isquiotibiais', 'gluteos', 'panturrilha'].includes(m)));
+        } else {
+          matchesMuscle =
+            ex.primary_muscle_group === selectedMuscle ||
+            Boolean(ex.secondary_muscle_groups?.includes(selectedMuscle as MuscleGroup));
+        }
+      }
+
       return matchesQuery && matchesMuscle;
     });
   }, [exercises, query, selectedMuscle]);
@@ -268,7 +293,7 @@ export const ExercisesView: React.FC = () => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar entre os 112 exercícios ou músculos..."
+          placeholder={`Buscar entre os ${exercises.length} exercícios ou músculos...`}
           className={`w-full rounded-xl pl-10 pr-4 py-2.5 text-xs transition focus:outline-none border ${
             isLight
               ? 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400 focus:border-black'

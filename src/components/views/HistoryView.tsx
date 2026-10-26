@@ -11,7 +11,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { formatDuration, displayWeight } from '../../utils/calc';
+import { formatDuration, displayWeight, getExerciseTrackingType } from '../../utils/calc';
 import { Workout } from '../../types';
 
 const WEEKDAYS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -410,6 +410,8 @@ export const HistoryView: React.FC = () => {
                       if (completedSets.length === 0) return null;
                       const maxW = Math.max(...completedSets.map((s) => Number(s.weight_kg) || 0));
                       const repsExample = completedSets[0]?.reps || 0;
+                      const trackingType = getExerciseTrackingType(null, ex.title);
+
                       return (
                         <div
                           key={idx}
@@ -419,7 +421,11 @@ export const HistoryView: React.FC = () => {
                             {completedSets.length}× {ex.title}
                           </span>
                           <span className="font-black text-white shrink-0">
-                            {displayWeight(maxW, settings.weight_unit)} ({repsExample} reps)
+                            {trackingType === 'duration'
+                              ? `${completedSets[0]?.duration_seconds || 60} seg`
+                              : trackingType === 'distance_duration'
+                              ? `${((completedSets[0]?.distance_meters || 1000) / 1000).toFixed(1)} km`
+                              : `${displayWeight(maxW, settings.weight_unit)} (${repsExample} reps)`}
                           </span>
                         </div>
                       );
@@ -440,6 +446,8 @@ export const HistoryView: React.FC = () => {
                       {w.exercises.map((ex, exIdx) => {
                         const completedSets = ex.sets.filter((s) => s.completed);
                         if (completedSets.length === 0) return null;
+                        const trackingType = getExerciseTrackingType(null, ex.title);
+
                         return (
                           <div
                             key={exIdx}
@@ -453,8 +461,11 @@ export const HistoryView: React.FC = () => {
                                     Série {sIdx + 1}
                                   </span>
                                   <span className="font-black text-white">
-                                    {displayWeight(Number(s.weight_kg) || 0, settings.weight_unit)}{' '}
-                                    × {s.reps} reps
+                                    {trackingType === 'duration'
+                                      ? `${s.duration_seconds || 60} seg (isometria)`
+                                      : trackingType === 'distance_duration'
+                                      ? `${((s.distance_meters || 1000) / 1000).toFixed(1)} km • ${Math.round((s.duration_seconds || 600) / 60)} min`
+                                      : `${displayWeight(Number(s.weight_kg) || 0, settings.weight_unit)} × ${s.reps} reps`}
                                   </span>
                                 </div>
                               ))}

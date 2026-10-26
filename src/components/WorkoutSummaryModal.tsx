@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Trophy, Clock, Dumbbell, CheckCircle2, Flame, X, BookmarkPlus } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { formatDuration, displayWeight } from '../utils/calc';
+import { formatDuration, displayWeight, getExerciseTrackingType } from '../utils/calc';
 import { Routine } from '../types';
 
 export const WorkoutSummaryModal: React.FC = () => {
@@ -102,17 +102,31 @@ export const WorkoutSummaryModal: React.FC = () => {
           </div>
         </div>
 
-        {/* Lista resumida de exercícios com a carga exata */}
+        {/* Lista resumida de exercícios com a carga ou tempo exatos */}
         <div className="w-full mt-4 max-h-40 overflow-y-auto space-y-1.5 text-left border-t border-[#27272a] pt-3">
           {completedWorkoutSummary.exercises.map((ex, idx) => {
             const completedSets = ex.sets.filter((s) => s.completed);
             if (completedSets.length === 0) return null;
-            const maxW = Math.max(...completedSets.map((s) => Number(s.weight_kg) || 0));
+            const trackingType = getExerciseTrackingType(null, ex.title);
+
+            let detailStr = '';
+            if (trackingType === 'duration') {
+              const totalSec = completedSets.reduce((acc, s) => acc + (s.duration_seconds || 60), 0);
+              detailStr = `${totalSec}s (${completedSets.length} séries)`;
+            } else if (trackingType === 'distance_duration') {
+              const totalDist = completedSets.reduce((acc, s) => acc + (s.distance_meters || 0), 0);
+              const totalSec = completedSets.reduce((acc, s) => acc + (s.duration_seconds || 0), 0);
+              detailStr = `${(totalDist / 1000).toFixed(1)} km • ${Math.round(totalSec / 60)} min`;
+            } else {
+              const maxW = Math.max(...completedSets.map((s) => Number(s.weight_kg) || 0));
+              detailStr = `${displayWeight(maxW, settings.weight_unit)} • ${completedSets.length} séries`;
+            }
+
             return (
               <div key={idx} className="flex justify-between text-xs py-1">
                 <span className="font-semibold text-zinc-300 truncate pr-2">{ex.title}</span>
                 <span className="text-white shrink-0 font-black">
-                  {displayWeight(maxW, settings.weight_unit)} • {completedSets.length} séries
+                  {detailStr}
                 </span>
               </div>
             );
