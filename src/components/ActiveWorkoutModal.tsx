@@ -14,7 +14,8 @@ import {
   CheckCircle2,
   X,
   Smartphone,
-  Info
+  Info,
+  SlidersHorizontal
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { WorkoutSet, SetType, ExerciseTemplate, Routine } from '../types';
@@ -31,6 +32,7 @@ import {
 import { ExerciseSearchModal } from './ExerciseSearchModal';
 import { PlateCalculatorModal } from './PlateCalculatorModal';
 import { ExerciseVisualDemo } from './ExerciseVisualDemo';
+import { MachineAdjustmentModal } from './MachineAdjustmentModal';
 
 export const ActiveWorkoutModal: React.FC = () => {
   const {
@@ -47,6 +49,7 @@ export const ActiveWorkoutModal: React.FC = () => {
     removeSet,
     updateSet,
     toggleSetCompleted,
+    updateExerciseNotes,
     settings,
     restTimer,
     adjustRestTimer,
@@ -66,6 +69,11 @@ export const ActiveWorkoutModal: React.FC = () => {
   const [activeTimerSetId, setActiveTimerSetId] = useState<string | null>(null);
   const [activeTimerSecondsLeft, setActiveTimerSecondsLeft] = useState<number>(0);
   const activeTimerRef = useRef<{ exIdx: number; setIdx: number } | null>(null);
+  const [adjustmentModalTarget, setAdjustmentModalTarget] = useState<{
+    exIdx: number;
+    title: string;
+    note: string;
+  } | null>(null);
 
   const handleSaveAsRoutine = () => {
     if (!activeWorkout || activeWorkout.exercises.length === 0) {
@@ -252,9 +260,11 @@ export const ActiveWorkoutModal: React.FC = () => {
         setSummary = `${currentSet.weight_kg ?? 0} ${settings.weight_unit} × ${currentSet.reps ?? 0} reps`;
       }
 
+      const noteSuffix = currentEx.notes ? ` • Reg: ${currentEx.notes}` : '';
+
       updateLockScreenMediaSession({
         title: `🏋️ [Série ${targetSetIdx + 1}/${currentEx.sets.length}] ${currentEx.title}`,
-        artist: `${setSummary} • Toque Play/Pause p/ dar CHECK ✓`,
+        artist: `${setSummary}${noteSuffix} • Toque Play/Pause p/ dar CHECK ✓`,
         album: activeWorkout.title,
         onCheckOrSkip: () => {
           handleToggleSetAndAutoAdvance(targetExIdx, targetSetIdx);
@@ -572,13 +582,14 @@ export const ActiveWorkoutModal: React.FC = () => {
                         <span className="text-[10px] font-black text-zinc-500">#{exIdx + 1}</span>
                         <h3 className="text-xs font-black text-white truncate">{exercise.title}</h3>
                       </div>
-                      <p className="text-[11px] text-zinc-400 mt-0.5">
+                      <p className="text-[11px] text-zinc-400 mt-0.5 truncate">
                         {exercise.sets.length} {exercise.sets.length === 1 ? 'série' : 'séries'} •{' '}
                         {getExerciseTrackingType(template, exercise.title) === 'duration'
                           ? `${exercise.sets[0]?.duration_seconds ?? 60} seg`
                           : getExerciseTrackingType(template, exercise.title) === 'distance_duration'
                           ? `${((exercise.sets[0]?.distance_meters ?? 1000) / 1000).toFixed(1)} km (${Math.round((exercise.sets[0]?.duration_seconds ?? 600) / 60)} min)`
                           : `${lastWeight} ${settings.weight_unit} × ${lastReps} reps`}
+                        {exercise.notes ? ` • ⚙️ ${exercise.notes}` : ''}
                       </p>
                     </div>
                   </div>
@@ -619,6 +630,32 @@ export const ActiveWorkoutModal: React.FC = () => {
                     <h3 className="text-base font-black text-white mt-1 leading-snug">
                       {exercise.title}
                     </h3>
+
+                    {/* Botão de Regulagem do Aparelho */}
+                    <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAdjustmentModalTarget({
+                            exIdx,
+                            title: exercise.title,
+                            note: exercise.notes || ''
+                          });
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold transition active:scale-95 border ${
+                          exercise.notes
+                            ? 'bg-zinc-800 text-white border-zinc-600 shadow-sm'
+                            : 'bg-[#18181b] text-zinc-400 border-[#27272a] hover:text-white hover:border-zinc-500'
+                        }`}
+                        title="Configurar regulagem do aparelho (furos, bancos, polias, apoios)"
+                      >
+                        <SlidersHorizontal className="w-3 h-3 stroke-[2.2] text-zinc-300" />
+                        <span className="truncate max-w-[240px]">
+                          {exercise.notes ? `Regulagem: ${exercise.notes}` : '+ Regulagem do Aparelho'}
+                        </span>
+                      </button>
+                    </div>
                   </div>
 
                   <button
@@ -981,6 +1018,19 @@ export const ActiveWorkoutModal: React.FC = () => {
           isOpen={plateCalcWeight !== null}
           onClose={() => setPlateCalcWeight(null)}
           weightUnit={settings.weight_unit}
+        />
+      )}
+
+      {/* Modal de Regulagem do Aparelho */}
+      {adjustmentModalTarget && (
+        <MachineAdjustmentModal
+          isOpen={!!adjustmentModalTarget}
+          onClose={() => setAdjustmentModalTarget(null)}
+          exerciseTitle={adjustmentModalTarget.title}
+          initialNote={adjustmentModalTarget.note}
+          onSave={(newNote) => {
+            updateExerciseNotes(adjustmentModalTarget.exIdx, newNote);
+          }}
         />
       )}
     </div>

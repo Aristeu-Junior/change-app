@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, FolderPlus, Sparkles, ChevronRight, RotateCcw, Dumbbell, Eye, Check, ChevronUp, ChevronDown } from 'lucide-react';
+import { X, Plus, Trash2, FolderPlus, Sparkles, ChevronRight, RotateCcw, Dumbbell, Eye, Check, ChevronUp, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Routine, WorkoutExercise, ExerciseTemplate, WorkoutSet } from '../../types';
 import { ExerciseSearchModal } from '../ExerciseSearchModal';
 import { ExerciseVisualDemo } from '../ExerciseVisualDemo';
+import { MachineAdjustmentModal } from '../MachineAdjustmentModal';
 import { POPULAR_ROUTINE_PRESETS, RoutinePreset } from '../../data/defaultRoutines';
 import { getExerciseTrackingType } from '../../utils/calc';
 
@@ -22,7 +23,14 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
   onClose,
   onSaved
 }) => {
-  const { folders, createFolder, saveRoutine, exercises: allTemplates } = useApp();
+  const {
+    folders,
+    createFolder,
+    saveRoutine,
+    exercises: allTemplates,
+    getMachineAdjustment,
+    saveMachineAdjustment
+  } = useApp();
 
   const [title, setTitle] = useState('');
   const [folderId, setFolderId] = useState<number | null>(null);
@@ -34,6 +42,11 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
   const [showPresets, setShowPresets] = useState(false);
   const [preview3DExId, setPreview3DExId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [adjustmentModalTarget, setAdjustmentModalTarget] = useState<{
+    exIdx: number;
+    title: string;
+    note: string;
+  } | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -122,6 +135,7 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
       id: `re-${Date.now()}`,
       exercise_template_id: template.id,
       title: template.title,
+      notes: getMachineAdjustment(template.id, template.title) || undefined,
       rest_seconds: isDistance ? 120 : (isDuration ? 60 : 90),
       sets: defaultSets
     };
@@ -495,14 +509,38 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
                         </button>
                         <div className="min-w-0">
                           <h4 className="text-xs font-bold text-white truncate">{ex.title}</h4>
-                          <button
-                            type="button"
-                            onClick={() => setPreview3DExId(isPreviewing3D ? null : ex.id)}
-                            className="text-[10px] text-zinc-400 hover:text-white flex items-center gap-1 mt-0.5 font-semibold"
-                          >
-                            <Eye className="w-3 h-3" />
-                            <span>{isPreviewing3D ? 'Ocultar 3D' : 'Ver Execução 3D'}</span>
-                          </button>
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <button
+                              type="button"
+                              onClick={() => setPreview3DExId(isPreviewing3D ? null : ex.id)}
+                              className="text-[10px] text-zinc-400 hover:text-white flex items-center gap-1 font-semibold"
+                            >
+                              <Eye className="w-3 h-3" />
+                              <span>{isPreviewing3D ? 'Ocultar 3D' : 'Ver Execução 3D'}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setAdjustmentModalTarget({
+                                  exIdx,
+                                  title: ex.title,
+                                  note: ex.notes || getMachineAdjustment(ex.exercise_template_id, ex.title) || ''
+                                })
+                              }
+                              className={`text-[10px] flex items-center gap-1 font-semibold transition px-2 py-0.5 rounded-lg border ${
+                                ex.notes
+                                  ? 'bg-zinc-800 text-zinc-200 border-zinc-700'
+                                  : 'text-zinc-400 hover:text-white bg-[#121214] border-[#27272a]'
+                              }`}
+                              title="Configurar regulagem do aparelho"
+                            >
+                              <SlidersHorizontal className="w-2.5 h-2.5 text-zinc-400" />
+                              <span className="truncate max-w-[160px]">
+                                {ex.notes ? `Reg: ${ex.notes}` : '+ Regulagem'}
+                              </span>
+                            </button>
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
@@ -744,6 +782,34 @@ export const RoutineEditorModal: React.FC<RoutineEditorModalProps> = ({
         onClose={() => setIsSearchOpen(false)}
         onSelectExercise={handleAddExercise}
       />
+
+      {/* Modal de Regulagem do Aparelho */}
+      {adjustmentModalTarget && (
+        <MachineAdjustmentModal
+          isOpen={!!adjustmentModalTarget}
+          onClose={() => setAdjustmentModalTarget(null)}
+          exerciseTitle={adjustmentModalTarget.title}
+          initialNote={adjustmentModalTarget.note}
+          onSave={(newNote) => {
+            const targetIdx = adjustmentModalTarget.exIdx;
+            setExercises((prev) => {
+              const next = [...prev];
+              if (next[targetIdx]) {
+                next[targetIdx] = {
+                  ...next[targetIdx],
+                  notes: newNote || undefined
+                };
+              }
+              return next;
+            });
+            const targetEx = exercises[targetIdx];
+            if (targetEx) {
+              if (targetEx.exercise_template_id) saveMachineAdjustment(targetEx.exercise_template_id, newNote);
+              if (targetEx.title) saveMachineAdjustment(targetEx.title, newNote);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

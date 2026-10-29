@@ -10,7 +10,8 @@ import {
   Sparkles,
   ChevronRight,
   Check,
-  BookmarkPlus
+  BookmarkPlus,
+  SlidersHorizontal
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ExerciseTemplate, MuscleGroup, Routine, WorkoutExercise } from '../../types';
@@ -18,6 +19,7 @@ import { displayWeight, normalizeSearchText } from '../../utils/calc';
 import { ExerciseSearchModal } from '../ExerciseSearchModal';
 import { ExerciseVisualDemo } from '../ExerciseVisualDemo';
 import { RoutineEditorModal } from './RoutineEditorModal';
+import { MachineAdjustmentModal } from '../MachineAdjustmentModal';
 
 const MUSCLE_FILTERS: { label: string; value: MuscleGroup | 'pernas' | 'all' }[] = [
   { label: 'Todos', value: 'all' },
@@ -62,7 +64,9 @@ export const ExercisesView: React.FC = () => {
     deleteCustomExercise,
     routines,
     saveRoutine,
-    theme
+    theme,
+    getMachineAdjustment,
+    saveMachineAdjustment
   } = useApp();
 
   const isLight = theme === 'light';
@@ -71,6 +75,7 @@ export const ExercisesView: React.FC = () => {
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'pernas' | 'all'>('all');
   const [selectedDetailExercise, setSelectedDetailExercise] = useState<ExerciseTemplate | null>(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false);
 
   // Estados de Montagem de Treino
   const [isRoutineEditorOpen, setIsRoutineEditorOpen] = useState(false);
@@ -510,6 +515,34 @@ export const ExercisesView: React.FC = () => {
                 )}
               </div>
 
+              {/* Regulagem Salva do Aparelho */}
+              <div className="bg-[#18181b] p-3.5 rounded-xl border border-[#27272a] space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs uppercase text-zinc-400 font-bold flex items-center gap-1.5">
+                    <SlidersHorizontal className="w-4 h-4 text-white" />
+                    Regulagem Salva do Aparelho
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsAdjustmentModalOpen(true)}
+                    className="text-xs font-bold text-white bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded-lg transition"
+                  >
+                    {getMachineAdjustment(selectedDetailExercise.id, selectedDetailExercise.title)
+                      ? 'Editar'
+                      : '+ Adicionar'}
+                  </button>
+                </div>
+                {getMachineAdjustment(selectedDetailExercise.id, selectedDetailExercise.title) ? (
+                  <div className="p-2.5 bg-[#121214] rounded-lg border border-[#27272a] text-xs font-semibold text-zinc-200">
+                    ⚙️ {getMachineAdjustment(selectedDetailExercise.id, selectedDetailExercise.title)}
+                  </div>
+                ) : (
+                  <p className="text-xs text-zinc-500 italic">
+                    Nenhuma regulagem registrada para este aparelho ainda.
+                  </p>
+                )}
+              </div>
+
               {/* Histórico Recente */}
               {exerciseHistory.length > 0 && (
                 <div className="space-y-1.5">
@@ -648,6 +681,21 @@ export const ExercisesView: React.FC = () => {
         onClose={() => setIsSearchModalOpen(false)}
         onSelectExercise={(ex) => setSelectedDetailExercise(ex)}
       />
+
+      {/* Modal de Regulagem do Aparelho */}
+      {selectedDetailExercise && isAdjustmentModalOpen && (
+        <MachineAdjustmentModal
+          isOpen={isAdjustmentModalOpen}
+          onClose={() => setIsAdjustmentModalOpen(false)}
+          exerciseTitle={selectedDetailExercise.title}
+          initialNote={getMachineAdjustment(selectedDetailExercise.id, selectedDetailExercise.title)}
+          onSave={(newNote) => {
+            saveMachineAdjustment(selectedDetailExercise.id, newNote);
+            saveMachineAdjustment(selectedDetailExercise.title, newNote);
+            showToast('✓ Regulagem do aparelho salva com sucesso!');
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -144,6 +144,7 @@ export interface UserSettings {
   height_cm?: number | null;
   body_weight_kg?: number | null;
   water_tracker?: WaterTrackerConfig;
+  machine_adjustments?: Record<string, string>;
 }
 
 export interface PersonalRecord {

@@ -123,6 +123,9 @@ interface AppContextType {
   removeSet: (exerciseIndex: number, setIndex: number) => void;
   updateSet: (exerciseIndex: number, setIndex: number, updates: Partial<WorkoutSet>) => void;
   toggleSetCompleted: (exerciseIndex: number, setIndex: number) => void;
+  updateExerciseNotes: (exerciseIndex: number, notes: string) => void;
+  saveMachineAdjustment: (exerciseIdOrTitle: string, note: string) => void;
+  getMachineAdjustment: (exerciseId?: string, title?: string) => string;
 
   // Temporizador de Descanso
   restTimer: RestTimerState;
@@ -209,7 +212,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   wake_lock_enabled: true,
   theme: 'dark',
   user_name: 'Aristeu',
-  water_tracker: DEFAULT_WATER_CONFIG
+  water_tracker: DEFAULT_WATER_CONFIG,
+  machine_adjustments: {}
 };
 
 const INITIAL_USERS: UserProfile[] = [
@@ -1555,7 +1559,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => clearInterval(interval);
   }, [restTimer.isActive, settings.sound_enabled, settings.haptics_enabled]);
 
-  // Ações de Treino
+  // Ações de Treino & Notas de Ajuste de Aparelho
+  const normalizeAdjustmentKey = (key: string): string => {
+    return key.toLowerCase().trim().replace(/\s+/g, '-');
+  };
+
+  const getMachineAdjustment = useCallback(
+    (exerciseId?: string, title?: string): string => {
+      const adjustments = settings.machine_adjustments || {};
+      if (exerciseId && adjustments[exerciseId]) {
+        return adjustments[exerciseId];
+      }
+      if (exerciseId && adjustments[normalizeAdjustmentKey(exerciseId)]) {
+        return adjustments[normalizeAdjustmentKey(exerciseId)];
+      }
+      if (title && adjustments[normalizeAdjustmentKey(title)]) {
+        return adjustments[normalizeAdjustmentKey(title)];
+      }
+      return '';
+    },
+    [settings.machine_adjustments]
+  );
+
+  const saveMachineAdjustment = useCallback(
+    (exerciseIdOrTitle: string, note: string) => {
+      const normKey = normalizeAdjustmentKey(exerciseIdOrTitle);
+      setSettings((prev) => {
+        const current = { ...(prev.machine_adjustments || {}) };
+        if (note.trim()) {
+          current[normKey] = note.trim();
+          if (exerciseIdOrTitle !== normKey) {
+            current[exerciseIdOrTitle] = note.trim();
+          }
+        } else {
+          delete current[normKey];
+          delete current[exerciseIdOrTitle];
+        }
+        return { ...prev, machine_adjustments: current };
+      });
+    },
+    []
+  );
+
   const startWorkout = (routineId?: string, customTitle?: string) => {
     let title = customTitle || 'Treino Livre';
     let exercisesToStart: WorkoutExercise[] = [];
@@ -1567,6 +1612,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         exercisesToStart = routine.exercises.map((e, eIdx) => ({
           ...e,
           id: `we-${Date.now()}-${eIdx}`,
+          notes: e.notes || getMachineAdjustment(e.exercise_template_id, e.title) || undefined,
           sets: e.sets.map((s, sIdx) => ({
             ...s,
             id: `ws-${Date.now()}-${eIdx}-${sIdx}`,
@@ -1741,6 +1787,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: `we-${Date.now()}`,
       exercise_template_id: template.id,
       title: template.title,
+      notes: getMachineAdjustment(template.id, template.title) || undefined,
       rest_seconds: isDistance ? 120 : (isDuration ? 60 : settings.default_rest_seconds),
       sets: [
         {
@@ -1837,6 +1884,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     setActiveWorkout({ ...activeWorkout, exercises: nextExercises });
+  };
+
+  const updateExerciseNotes = (exerciseIndex: number, notes: string) => {
+    if (!activeWorkout) return;
+    const nextExercises = [...activeWorkout.exercises];
+    if (!nextExercises[exerciseIndex]) return;
+
+    const cleanedNote = notes.trim();
+    nextExercises[exerciseIndex] = {
+      ...nextExercises[exerciseIndex],
+      notes: cleanedNote || undefined
+    };
+
+    setActiveWorkout({ ...activeWorkout, exercises: nextExercises });
+
+    const target = nextExercises[exerciseIndex];
+    if (target.exercise_template_id) {
+      saveMachineAdjustment(target.exercise_template_id, cleanedNote);
+    }
+    if (target.title) {
+      saveMachineAdjustment(target.title, cleanedNote);
+    }
   };
 
   const startRestTimer = (seconds: number, exerciseTitle = '') => {
@@ -2238,6 +2307,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       removeSet,
       updateSet,
       toggleSetCompleted,
+      updateExerciseNotes,
+      saveMachineAdjustment,
+      getMachineAdjustment,
       restTimer,
       startRestTimer,
       adjustRestTimer,
