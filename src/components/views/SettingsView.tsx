@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   Scale,
   Droplets,
-  Play
+  Play,
+  Activity
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { playGymTone, triggerHaptic } from '../../utils/calc';
@@ -27,7 +28,9 @@ export const SettingsView: React.FC = () => {
     theme,
     toggleTheme,
     currentUser,
+    users,
     isCurrentUserAdmin,
+    adminTogglePhysioAccess,
     waterTrackerConfig,
     updateWaterGoal,
     measurements,
@@ -207,6 +210,93 @@ export const SettingsView: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* SEÇÃO DO ADMINISTRADOR: LIBERAÇÃO DA ÁREA DE FISIOTERAPIA */}
+      {isCurrentUserAdmin && (
+        <div className={`${cardStyle} space-y-3.5 border-emerald-500/20`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                <Activity className="w-4 h-4 stroke-[2.5]" />
+              </div>
+              <div>
+                <span className="text-xs uppercase font-black text-white block">
+                  Liberação da Área de Fisioterapia
+                </span>
+                <span className="text-[10px] text-zinc-400 block font-semibold">
+                  Aba 100% oculta para usuários comuns. Apenas o administrador libera o acesso.
+                </span>
+              </div>
+            </div>
+            <span className="text-[9px] uppercase font-black px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+              Admin Only
+            </span>
+          </div>
+
+          <div className="space-y-2 pt-1">
+            {users
+              .filter(
+                (u) =>
+                  u.email !== 'aristeu2304@gmail.com' &&
+                  u.email !== 'aristeu@change.app' &&
+                  u.id !== 'user-aristeu'
+              )
+              .map((u) => {
+                const hasAccess = !!u.has_physio_access;
+                return (
+                  <div
+                    key={u.id}
+                    className={`p-3 rounded-2xl border transition flex items-center justify-between gap-3 ${
+                      isLight
+                        ? 'bg-zinc-50 border-zinc-200'
+                        : 'bg-[#18181b] border-[#27272a]'
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-black text-white truncate">{u.name}</span>
+                        {hasAccess ? (
+                          <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-500/40">
+                            Liberada ✓
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">
+                            Oculta
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-zinc-500 truncate block">{u.email}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => adminTogglePhysioAccess(u.email, !hasAccess)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black transition active:scale-95 border flex items-center gap-1.5 ${
+                        hasAccess
+                          ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400 shadow-sm'
+                          : 'bg-[#27272a] hover:bg-zinc-700 text-zinc-300 border-zinc-600'
+                      }`}
+                    >
+                      <Activity className="w-3 h-3" />
+                      <span>{hasAccess ? 'Acesso Ativo' : 'Liberar Acesso'}</span>
+                    </button>
+                  </div>
+                );
+              })}
+
+            {users.filter(
+              (u) =>
+                u.email !== 'aristeu2304@gmail.com' &&
+                u.email !== 'aristeu@change.app' &&
+                u.id !== 'user-aristeu'
+            ).length === 0 && (
+              <p className="text-xs text-zinc-500 italic py-1">
+                Nenhum usuário convidado cadastrado no momento. Ao cadastrar um amigo, você poderá liberar a fisioterapia para ele aqui.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* MÉTRICAS CORPORAIS & HIDRATAÇÃO */}
       <div className={`${cardStyle} space-y-4`}>

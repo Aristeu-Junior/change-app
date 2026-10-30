@@ -114,6 +114,7 @@ export interface UserProfile {
   totp_secret?: string | null;
   avatar_color: string;
   created_at: string;
+  has_physio_access?: boolean;
 }
 
 export interface WaterLogEntry {
@@ -145,6 +146,43 @@ export interface UserSettings {
   body_weight_kg?: number | null;
   water_tracker?: WaterTrackerConfig;
   machine_adjustments?: Record<string, string>;
+  has_physio_access?: boolean;
+}
+
+export type PhysioRegion = 'lombar' | 'quadril' | 'joelho' | 'ombro' | 'cervical' | 'geral';
+
+export interface PhysiotherapyExercise {
+  id: string;
+  title: string;
+  region: PhysioRegion;
+  region_label: string;
+  clinical_objective: string;
+  execution_type: 'duration' | 'reps';
+  default_duration_seconds?: number;
+  default_reps?: number;
+  default_sets: number;
+  unilateral?: boolean;
+  position: string;
+  steps: string[];
+  feel_cue: string;
+  caution: string;
+  breathing: string;
+}
+
+export interface PhysiotherapyProtocol {
+  id: string;
+  title: string;
+  subtitle: string;
+  estimated_minutes: number;
+  target_region: string;
+  description: string;
+  exercises: {
+    exercise_id: string;
+    sets: number;
+    duration_seconds?: number;
+    reps?: number;
+    notes?: string;
+  }[];
 }
 
 export interface PersonalRecord {

@@ -8,6 +8,7 @@ import { ExercisesView } from './components/views/ExercisesView';
 import { HistoryView } from './components/views/HistoryView';
 import { AnalyticsView } from './components/views/AnalyticsView';
 import { SettingsView } from './components/views/SettingsView';
+import { PhysiotherapyView } from './components/views/PhysiotherapyView';
 import { ActiveWorkoutModal } from './components/ActiveWorkoutModal';
 import { WorkoutSummaryModal } from './components/WorkoutSummaryModal';
 
@@ -20,7 +21,8 @@ const AppContent: React.FC = () => {
     adminDecideAccessRequest,
     recoveryPasswordNotice,
     clearRecoveryPasswordNotice,
-    changeMyPassword
+    changeMyPassword,
+    canAccessPhysio
   } = useApp();
   const [currentTab, setCurrentTab] = useState<TabType>('routines');
   const [copiedNewPass, setCopiedNewPass] = useState(false);
@@ -38,6 +40,13 @@ const AppContent: React.FC = () => {
       }
     }
   }, []);
+
+  // Garante que se o usuário perder permissão enquanto na aba de fisioterapia, retorna para rotinas
+  useEffect(() => {
+    if (currentTab === 'physiotherapy' && !canAccessPhysio) {
+      setCurrentTab('routines');
+    }
+  }, [currentTab, canAccessPhysio]);
 
   // Exige autenticação na tela de login estilo Hevy antes de exibir os treinos
   if (!isAuthenticated) {
@@ -155,6 +164,7 @@ const AppContent: React.FC = () => {
         <main className="flex-1 w-full max-w-4xl mx-auto overflow-x-hidden">
           {currentTab === 'routines' && <RoutinesView />}
           {currentTab === 'exercises' && <ExercisesView />}
+          {currentTab === 'physiotherapy' && canAccessPhysio && <PhysiotherapyView />}
           {currentTab === 'history' && <HistoryView />}
           {currentTab === 'analytics' && <AnalyticsView />}
           {currentTab === 'settings' && <SettingsView />}

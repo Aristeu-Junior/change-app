@@ -37,6 +37,7 @@ import {
   configureCloudUserTotp,
   completeEmailRecoveryOrMagicLogin,
   deleteCloudUserByAdmin,
+  toggleUserPhysioAccessInCloud,
   fetchAccessRequestsFromCloud,
   decideAccessRequestInCloud,
   requestOrCheckGoogleAccess,
@@ -88,6 +89,8 @@ interface AppContextType {
   ) => Promise<{ ok: boolean; error?: string }>;
   adminDeleteUser: (email: string, userId?: string) => Promise<boolean>;
   refreshCloudUsers: () => Promise<void>;
+  adminTogglePhysioAccess: (userEmail: string, hasAccess: boolean) => Promise<boolean>;
+  canAccessPhysio: boolean;
   changeMyPassword: (newPassword: string) => Promise<boolean>;
   updateMyProfile: (
     newName: string,
@@ -213,7 +216,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   theme: 'dark',
   user_name: 'Aristeu',
   water_tracker: DEFAULT_WATER_CONFIG,
-  machine_adjustments: {}
+  machine_adjustments: {},
+  has_physio_access: false
 };
 
 const INITIAL_USERS: UserProfile[] = [
@@ -224,7 +228,8 @@ const INITIAL_USERS: UserProfile[] = [
     password: '123456',
     is_admin: true,
     avatar_color: '#ffffff',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    has_physio_access: true
   },
   {
     id: 'user-vitoria',
@@ -233,7 +238,8 @@ const INITIAL_USERS: UserProfile[] = [
     password: '123456',
     is_admin: true,
     avatar_color: '#ffffff',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    has_physio_access: true
   }
 ];
 
@@ -578,6 +584,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { ...DEFAULT_SETTINGS, user_name: currentUser.name };
     }
   });
+
+  const canAccessPhysio = useMemo(() => {
+    if (isCurrentUserAdmin) return true;
+    return !!currentUser.has_physio_access || !!settings.has_physio_access;
+  }, [isCurrentUserAdmin, currentUser.has_physio_access, settings.has_physio_access]);
 
   // Estados de Hidratação & Consumo Diário de Água
   const [waterLogs, setWaterLogs] = useState<WaterLogEntry[]>(() => {
@@ -1068,6 +1079,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             byId.set(admin.id, localAdmin);
           }
         });
+
+        // Se houver alteração de permissão de fisioterapia para o usuário logado, atualiza
+        const myProfile = cloudUsers.find(
+          (cu) => cu.id === currentUser.id || cu.email.toLowerCase() === currentUser.email.toLowerCase()
+        );
+        if (myProfile && myProfile.has_physio_access !== undefined && myProfile.has_physio_access !== currentUser.has_physio_access) {
+          setCurrentUser((curr) => ({ ...curr, has_physio_access: myProfile.has_physio_access }));
+          setSettings((curr) => ({ ...curr, has_physio_access: myProfile.has_physio_access }));
+        }
+
         return Array.from(byId.values());
       });
     }
@@ -1254,6 +1275,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       )
     );
     setAccessRequests((prev) => prev.filter((r) => r.email.toLowerCase() !== cleanEmail));
+    return true;
+  };
+
+  // Exclusivo para Administrador: Ativa ou revoga o acesso à área oculta de Fisioterapia para qualquer usuário
+  const adminTogglePhysioAccess = async (
+    userEmail: string,
+    hasAccess: boolean
+  ): Promise<boolean> => {
+    if (!isAdminProfile(currentUser)) return false;
+    const cleanEmail = userEmail.trim().toLowerCase();
+
+    setUsers((prev) =>
+      prev.map((u) => {
+        if (u.email.toLowerCase() === cleanEmail) {
+          return { ...u, has_physio_access: hasAccess };
+        }
+        return u;
+      })
+    );
+
+    if (currentUser.email.toLowerCase() === cleanEmail) {
+      setCurrentUser((prev) => ({ ...prev, has_physio_access: hasAccess }));
+      setSettings((prev) => ({ ...prev, has_physio_access: hasAccess }));
+    }
+
+    if (isCloudConfigured()) {
+      await toggleUserPhysioAccessInCloud(cleanEmail, hasAccess);
+    }
     return true;
   };
 
@@ -2282,6 +2331,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       adminCreateUser,
       adminDeleteUser,
       refreshCloudUsers,
+      adminTogglePhysioAccess,
+      canAccessPhysio,
       changeMyPassword,
       updateMyProfile,
       configureMyTotp,
@@ -2374,6 +2425,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isWaterModalOpen,
       waterRhythmStatus,
       settings,
+      canAccessPhysio,
       completedWorkoutSummary,
       recoveryPasswordNotice
     ]

@@ -435,7 +435,7 @@ export const pullAllUserProfilesFromCloud = async (): Promise<UserProfile[]> => 
 
   try {
     const res = await fetch(
-      `${config.url}/rest/v1/change_user_data?select=user_id,email,name,avatar_color,updated_at`,
+      `${config.url}/rest/v1/change_user_data?select=user_id,email,name,avatar_color,settings,updated_at`,
       {
         method: 'GET',
         cache: 'no-store',
@@ -449,6 +449,7 @@ export const pullAllUserProfilesFromCloud = async (): Promise<UserProfile[]> => 
       email: string;
       name: string;
       avatar_color?: string;
+      settings?: any;
       updated_at?: string;
     }[];
     return entries.map((r) => {
@@ -457,13 +458,49 @@ export const pullAllUserProfilesFromCloud = async (): Promise<UserProfile[]> => 
         name: r.name,
         email: r.email,
         avatar_color: r.avatar_color || '#ffffff',
-        created_at: r.updated_at || new Date().toISOString()
+        created_at: r.updated_at || new Date().toISOString(),
+        has_physio_access: !!r.settings?.has_physio_access
       };
       profile.is_admin = isAdminProfile(profile);
       return profile;
     });
   } catch {
     return [];
+  }
+};
+
+/**
+ * Concede ou revoga acesso exclusivo à área de Fisioterapia para um usuário na nuvem
+ */
+export const toggleUserPhysioAccessInCloud = async (
+  email: string,
+  hasAccess: boolean
+): Promise<boolean> => {
+  const config = getSupabaseConfig();
+  if (!config) return false;
+
+  try {
+    const cleanEmail = email.trim().toLowerCase();
+    const current = await pullUserFromCloudByEmail(cleanEmail);
+    const updatedSettings = {
+      ...(current?.settings || {}),
+      has_physio_access: hasAccess
+    };
+
+    const res = await fetch(
+      `${config.url}/rest/v1/change_user_data?email=eq.${encodeURIComponent(cleanEmail)}`,
+      {
+        method: 'PATCH',
+        headers: buildHeaders(config, { Prefer: 'return=minimal' }),
+        body: JSON.stringify({
+          settings: updatedSettings,
+          updated_at: new Date().toISOString()
+        })
+      }
+    );
+    return res.ok;
+  } catch {
+    return false;
   }
 };
 

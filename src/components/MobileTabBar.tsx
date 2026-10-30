@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Dumbbell,
   List,
@@ -11,13 +11,14 @@ import {
   Sun,
   Moon,
   Cloud,
+  Activity,
   Users
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { formatDuration, triggerHaptic } from '../utils/calc';
 import { UserAccountModal } from './UserAccountModal';
 
-export type TabType = 'routines' | 'exercises' | 'history' | 'analytics' | 'settings';
+export type TabType = 'routines' | 'exercises' | 'physiotherapy' | 'history' | 'analytics' | 'settings';
 
 interface NavigationProps {
   currentTab: TabType;
@@ -41,6 +42,7 @@ export const DesktopSidebar: React.FC<NavigationProps> = ({ currentTab, onSelect
     toggleTheme,
     currentUser,
     isCurrentUserAdmin,
+    canAccessPhysio,
     cloudStatus
   } = useApp();
   const [elapsed, setElapsed] = useState(0);
@@ -56,6 +58,26 @@ export const DesktopSidebar: React.FC<NavigationProps> = ({ currentTab, onSelect
   }, [activeWorkout]);
 
   const isLight = theme === 'light';
+
+  const sidebarNavItems = useMemo(() => {
+    return [
+      { id: 'routines' as TabType, label: 'Planos', desktopLabel: 'Planos de Treino', icon: Dumbbell },
+      { id: 'exercises' as TabType, label: 'Exercícios', desktopLabel: 'Biblioteca de Exercícios', icon: List },
+      ...(canAccessPhysio
+        ? [
+            {
+              id: 'physiotherapy' as TabType,
+              label: 'Fisio',
+              desktopLabel: 'Fisioterapia & Reabilitação',
+              icon: Activity
+            }
+          ]
+        : []),
+      { id: 'history' as TabType, label: 'Histórico', desktopLabel: 'Histórico de Treinos', icon: History },
+      { id: 'analytics' as TabType, label: 'Rank', desktopLabel: 'Rank & Competição', icon: Trophy },
+      { id: 'settings' as TabType, label: 'Perfil', desktopLabel: 'Perfil & Ajustes', icon: User }
+    ];
+  }, [canAccessPhysio]);
 
 
 
@@ -102,7 +124,7 @@ export const DesktopSidebar: React.FC<NavigationProps> = ({ currentTab, onSelect
 
           {/* Menu Principal Desktop */}
           <nav className="space-y-1.5">
-            {NAV_ITEMS.map((item) => {
+            {sidebarNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentTab === item.id;
               return (
@@ -235,7 +257,7 @@ export const DesktopSidebar: React.FC<NavigationProps> = ({ currentTab, onSelect
 };
 
 export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTab }) => {
-  const { activeWorkout, isWorkoutModalOpen, setWorkoutModalOpen, theme } = useApp();
+  const { activeWorkout, isWorkoutModalOpen, setWorkoutModalOpen, theme, canAccessPhysio } = useApp();
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
@@ -249,7 +271,28 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
 
   const isLight = theme === 'light';
 
-  const activeIndex = NAV_ITEMS.findIndex((item) => item.id === currentTab);
+  const sidebarNavItems = useMemo(() => {
+    return [
+      { id: 'routines' as TabType, label: 'Planos', desktopLabel: 'Planos de Treino', icon: Dumbbell },
+      { id: 'exercises' as TabType, label: 'Exercícios', desktopLabel: 'Biblioteca de Exercícios', icon: List },
+      ...(canAccessPhysio
+        ? [
+            {
+              id: 'physiotherapy' as TabType,
+              label: 'Fisio',
+              desktopLabel: 'Fisioterapia & Reabilitação',
+              icon: Activity
+            }
+          ]
+        : []),
+      { id: 'history' as TabType, label: 'Histórico', desktopLabel: 'Histórico de Treinos', icon: History },
+      { id: 'analytics' as TabType, label: 'Rank', desktopLabel: 'Rank & Competição', icon: Trophy },
+      { id: 'settings' as TabType, label: 'Perfil', desktopLabel: 'Perfil & Ajustes', icon: User }
+    ];
+  }, [canAccessPhysio]);
+
+  const numTabs = sidebarNavItems.length;
+  const activeIndex = sidebarNavItems.findIndex((item) => item.id === currentTab);
   const safeActiveIndex = activeIndex >= 0 ? activeIndex : 0;
 
   const handleTabClick = (e: React.SyntheticEvent, tab: TabType) => {
@@ -333,13 +376,14 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
         }}
       >
         <nav
-          className={`relative w-full p-1.5 rounded-[28px] transition-colors duration-300 grid grid-cols-5 gap-1 items-center pointer-events-auto ${
+          className={`relative w-full p-1.5 rounded-[28px] transition-colors duration-300 grid gap-1 items-center pointer-events-auto ${
             isLight
               ? 'bg-white/75 border border-black/[0.08] text-black shadow-[0_14px_36px_-6px_rgba(0,0,0,0.12),inset_0_1px_1.5px_0_rgba(255,255,255,0.95)]'
               : 'bg-[#0c0d12]/75 border border-white/[0.12] text-white shadow-[0_16px_40px_-6px_rgba(0,0,0,0.75),inset_0_1px_1.5px_0_rgba(255,255,255,0.18)]'
           } backdrop-blur-2xl backdrop-saturate-200`}
           style={{
-            WebkitBackdropFilter: 'blur(24px) saturate(200%)'
+            WebkitBackdropFilter: 'blur(24px) saturate(200%)',
+            gridTemplateColumns: `repeat(${numTabs}, minmax(0, 1fr))`
           }}
         >
           {/* Pílula Deslizante Física de Vidro Líquido (glides smoothly across tabs) */}
@@ -350,12 +394,12 @@ export const MobileTabBar: React.FC<NavigationProps> = ({ currentTab, onSelectTa
                 : 'bg-white/[0.14] shadow-[inset_0_1px_1.5px_rgba(255,255,255,0.25),0_2px_12px_rgba(255,255,255,0.06)] ring-1 ring-white/15'
             }`}
             style={{
-              width: 'calc((100% - 12px - 16px) / 5)',
-              left: `calc(6px + ${safeActiveIndex} * ((100% - 12px - 16px) / 5 + 4px))`
+              width: `calc((100% - ${(numTabs - 1) * 4}px - 12px) / ${numTabs})`,
+              left: `calc(6px + ${safeActiveIndex} * ((100% - ${(numTabs - 1) * 4}px - 12px) / ${numTabs} + 4px))`
             }}
           />
 
-          {NAV_ITEMS.map((item) => {
+          {sidebarNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentTab === item.id;
             return (

@@ -13,7 +13,8 @@ import {
   Smartphone,
   Copy,
   ExternalLink,
-  Mail
+  Mail,
+  Activity
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { isAdminProfile } from '../services/cloudSync';
@@ -41,6 +42,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
     adminDecideAccessRequest,
     adminCreateUser,
     adminDeleteUser,
+    adminTogglePhysioAccess,
     refreshCloudUsers,
     updateMyProfile,
     configureMyTotp,
@@ -513,9 +515,38 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
                           <span className="text-[10px] text-zinc-500 truncate block">{u.email}</span>
                         </div>
 
-                        {!isAdmin && (
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            {isConfirming ? (
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {!isAdmin && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                resetMessages();
+                                const nextState = !u.has_physio_access;
+                                await adminTogglePhysioAccess(u.email, nextState);
+                                setSuccessMsg(
+                                  nextState
+                                    ? `✓ Acesso à Fisioterapia LIBERADO para ${u.name}!`
+                                    : `Acesso à Fisioterapia revogado para ${u.name}.`
+                                );
+                              }}
+                              className={`px-2 py-1.5 rounded-lg text-[10px] font-black transition flex items-center gap-1 border ${
+                                u.has_physio_access
+                                  ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300'
+                                  : 'bg-[#222226] border-[#27272a] text-zinc-400 hover:text-white'
+                              }`}
+                              title={
+                                u.has_physio_access
+                                  ? 'Clique para revogar acesso à Fisioterapia'
+                                  : 'Clique para liberar acesso à Fisioterapia'
+                              }
+                            >
+                              <Activity className="w-3 h-3" />
+                              <span>{u.has_physio_access ? 'Fisio ✓' : '+ Fisio'}</span>
+                            </button>
+                          )}
+
+                          {!isAdmin && (
+                            isConfirming ? (
                               <>
                                 <button
                                   type="button"
@@ -559,9 +590,9 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({ isOpen, onCl
                                 <Trash2 className="w-3 h-3" />
                                 <span>Remover</span>
                               </button>
-                            )}
-                          </div>
-                        )}
+                            )
+                          )}
+                        </div>
                       </div>
                     );
                   })}
