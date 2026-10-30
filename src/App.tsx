@@ -262,8 +262,20 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     console.error('ErrorBoundary caught:', error, errorInfo);
   }
 
-  handleReload = () => {
-    window.location.reload();
+  handleReload = async () => {
+    try {
+      if ('caches' in window) {
+        const keys = await window.caches.keys();
+        await Promise.all(keys.map((k) => window.caches.delete(k)));
+      }
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+    } catch {
+      // Ignora erro em navegadores que bloqueiem acesso ao cache
+    }
+    window.location.href = window.location.pathname + '?_v=' + Date.now();
   };
 
   handleReset = () => {
