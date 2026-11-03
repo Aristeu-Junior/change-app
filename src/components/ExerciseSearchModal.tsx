@@ -65,6 +65,9 @@ export const ExerciseSearchModal: React.FC<ExerciseSearchModalProps> = ({
     const queryTokens = q.split(/\s+/).filter(Boolean);
 
     return exercises.filter((ex) => {
+      // Exercícios de fisioterapia ficam reservados à aba de Fisio a menos que o usuário busque por "fisio"
+      if (ex.is_physio && !q.includes('fisio')) return false;
+
       // 1. Busca textual inteligente (multi-termo, sem acento, com sinônimos de pernas/cardio/abs)
       let matchesQuery = true;
       if (queryTokens.length > 0) {

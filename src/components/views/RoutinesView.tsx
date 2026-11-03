@@ -346,10 +346,13 @@ export const RoutinesView: React.FC = () => {
     });
   };
 
+  // Apenas rotinas de musculação (rotinas de fisioterapia ficam na aba de Fisioterapia)
+  const gymRoutines = useMemo(() => routines.filter((r) => !r.is_physio), [routines]);
+
   // Fila global de todos os treinos do usuário (para sugerir o próximo treino mesmo entre pastas diferentes)
   const globalQueue = useMemo(
-    () => buildPriorityQueueForList(routines),
-    [routines, workouts, templateMap]
+    () => buildPriorityQueueForList(gymRoutines),
+    [gymRoutines, workouts, templateMap]
   );
 
   // Ao clicar em Iniciar: verifica se já treinou este plano/músculo recentemente para exibir o aviso de confirmação
@@ -419,7 +422,7 @@ export const RoutinesView: React.FC = () => {
   const uncategorized: Routine[] = [];
   const existingFolderIds = new Set(folders.map((f) => f.id));
 
-  routines.forEach((r) => {
+  gymRoutines.forEach((r) => {
     if (r.folder_id && existingFolderIds.has(r.folder_id)) {
       if (!routinesByFolder[r.folder_id]) routinesByFolder[r.folder_id] = [];
       routinesByFolder[r.folder_id].push(r);
@@ -952,9 +955,9 @@ export const RoutinesView: React.FC = () => {
             <span className={`text-xs font-black uppercase tracking-wider block ${
               isLight ? 'text-zinc-600' : 'text-zinc-400'
             }`}>
-              Seus Planos de Treino ({routines.length})
+              Seus Planos de Treino ({gymRoutines.length})
             </span>
-            {routines.length > 1 && (
+            {gymRoutines.length > 1 && (
               <span className={`text-[10px] ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
                 {routineSortMode === 'manual'
                   ? 'Exibindo na sua ordem personalizada (reorganize quando quiser)'
@@ -963,7 +966,7 @@ export const RoutinesView: React.FC = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
-            {routines.length > 1 && (
+            {gymRoutines.length > 1 && (
               <div className={`p-0.5 rounded-lg border flex items-center gap-0.5 text-[10px] font-bold ${
                 isLight ? 'bg-zinc-100 border-zinc-300' : 'bg-[#18181b] border-[#27272a]'
               }`}>
@@ -1126,7 +1129,7 @@ export const RoutinesView: React.FC = () => {
         </div>
 
         {/* Estado Vazio Limpo na Primeira Tela */}
-        {routines.length === 0 && folders.length === 0 && (
+        {gymRoutines.length === 0 && folders.length === 0 && (
           <div className={`border border-dashed rounded-2xl p-6 text-center space-y-3 ${
             isLight ? 'bg-white border-zinc-300' : 'bg-[#141416] border-[#27272a]'
           }`}>

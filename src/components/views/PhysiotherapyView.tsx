@@ -15,18 +15,33 @@ import {
   Plus,
   X,
   Volume2,
-  VolumeX
+  VolumeX,
+  Dumbbell,
+  Edit2,
+  Copy,
+  Trash2,
+  MoreVertical,
+  ChevronRight,
+  Eye,
+  AlertTriangle,
+  FolderPlus
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import {
   PHYSIOTHERAPY_EXERCISES,
-  PHYSIOTHERAPY_PROTOCOLS
+  PHYSIOTHERAPY_PROTOCOLS,
+  PHYSIOTHERAPY_TEMPLATES,
+  RECOMMENDED_PHYSIO_ROUTINES,
+  getPhysioExerciseById,
+  getPhysioTemplateById
 } from '../../data/physiotherapyExercises';
 import {
   PhysiotherapyExercise,
   PhysiotherapyProtocol,
   PhysioRegion,
-  ExerciseTemplate
+  ExerciseTemplate,
+  Routine,
+  WorkoutExercise
 } from '../../types';
 import {
   formatSecondsClock,
@@ -34,6 +49,8 @@ import {
   playGymTone,
   triggerHaptic
 } from '../../utils/calc';
+import { PhysioRoutineEditorModal } from './PhysioRoutineEditorModal';
+import { ExerciseVisualDemo } from '../ExerciseVisualDemo';
 
 const REGION_FILTERS: { label: string; value: PhysioRegion | 'all' }[] = [
   { label: 'Todos', value: 'all' },
@@ -45,16 +62,33 @@ const REGION_FILTERS: { label: string; value: PhysioRegion | 'all' }[] = [
 ];
 
 export const PhysiotherapyView: React.FC = () => {
-  const { theme, activeWorkout, addExerciseToWorkout, setWorkoutModalOpen } = useApp();
+  const {
+    theme,
+    activeWorkout,
+    addExerciseToWorkout,
+    setWorkoutModalOpen,
+    routines,
+    saveRoutine,
+    deleteRoutine,
+    startWorkout
+  } = useApp();
   const isLight = theme === 'light';
 
-  const [activeTab, setActiveTab] = useState<'protocols' | 'library'>('protocols');
+  // Sub-abas: Planos de Fisioterapia vs Biblioteca de Exercícios
+  const [activeTab, setActiveTab] = useState<'routines' | 'library'>('routines');
   const [selectedRegion, setSelectedRegion] = useState<PhysioRegion | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedExerciseForModal, setSelectedExerciseForModal] =
-    useState<PhysiotherapyExercise | null>(null);
 
-  // Estados da Sessão Terapêutica Guiada (Player Interativo)
+  // Modais de Criação / Edição de Planos
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null);
+  const [activeMenuRoutineId, setActiveMenuRoutineId] = useState<string | null>(null);
+  const [routineToDelete, setRoutineToDelete] = useState<Routine | null>(null);
+
+  // Modal de Demonstração Visual de Execução (3D / Biomecânica / Anatomia)
+  const [previewTemplate, setPreviewTemplate] = useState<ExerciseTemplate | null>(null);
+
+  // Estados da Sessão Terapêutica Guiada Rápida (Player Interno Opcional)
   const [activeSession, setActiveSession] = useState<{
     protocolTitle: string;
     exercises: {
@@ -81,6 +115,11 @@ export const PhysiotherapyView: React.FC = () => {
     setTimeout(() => setToastMsg(null), 3000);
   };
 
+  // Planos de fisioterapia criados pelo próprio usuário
+  const myPhysioRoutines = useMemo(() => {
+    return routines.filter((r) => r.is_physio);
+  }, [routines]);
+
   // Filtragem da Biblioteca de Exercícios
   const filteredExercises = useMemo(() => {
     const q = normalizeSearchText(searchQuery);
@@ -95,8 +134,72 @@ export const PhysiotherapyView: React.FC = () => {
     });
   }, [searchQuery, selectedRegion]);
 
-  // Iniciar Protocolo Completo
-  const handleStartProtocol = (proto: PhysiotherapyProtocol) => {
+  // Iniciar Treino Ativo no Engine Geral do Change
+  const handleStartPhysioRoutine = (routine: Routine) => {
+    triggerHaptic('success');
+    startWorkout(routine);
+    showToast(`✓ Iniciando "${routine.title}"!`);
+  };
+
+  // Iniciar Sessão Livre / Treino Vazio de Fisio
+  const handleStartQuickEmptyPhysio = () => {
+    triggerHaptic('success');
+    startWorkout(undefined, 'Sessão Livre de Fisioterapia');
+    showToast('✓ Sessão de fisioterapia iniciada! Adicione os exercícios que desejar.');
+  };
+
+  // Duplicar protocolo recomendado para "Meus Planos"
+  const handleCopyProtocolToMyRoutines = (protoRoutine: Routine) => {
+    triggerHaptic('success');
+    const cloned: Routine = {
+      ...protoRoutine,
+      id: `routine-physio-custom-${Date.now()}`,
+      title: `${protoRoutine.title} (Personalizado)`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      is_physio: true
+    };
+    saveRoutine(cloned);
+    showToast(`✓ Protocolo copiado para seus planos! Você já pode editá-lo.`);
+  };
+
+  // Duplicar plano próprio
+  const handleDuplicateMyRoutine = (routine: Routine) => {
+    triggerHaptic('success');
+    const cloned: Routine = {
+      ...routine,
+      id: `routine-physio-custom-${Date.now()}`,
+      title: `${routine.title} (Cópia)`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      is_physio: true
+    };
+    saveRoutine(cloned);
+    setActiveMenuRoutineId(null);
+    showToast(`✓ Plano "${cloned.title}" duplicado!`);
+  };
+
+  // Confirmar exclusão de plano próprio
+  const handleConfirmDeleteRoutine = () => {
+    if (!routineToDelete) return;
+    triggerHaptic('medium');
+    deleteRoutine(routineToDelete.id);
+    showToast(`✓ Plano "${routineToDelete.title}" excluído.`);
+    setRoutineToDelete(null);
+  };
+
+  // Abrir demonstração visual de um exercício da rotina
+  const handleOpenExercisePreview = (exTemplateId: string) => {
+    const tpl =
+      PHYSIOTHERAPY_TEMPLATES.find((t) => t.id === exTemplateId) ||
+      getPhysioTemplateById(exTemplateId);
+    if (tpl) {
+      setPreviewTemplate(tpl);
+    }
+  };
+
+  // Iniciar Sessão Guiada Rápida (Player Interno)
+  const handleStartProtocolQuickPlayer = (proto: PhysiotherapyProtocol) => {
     triggerHaptic('success');
     const mapped = proto.exercises
       .map((item) => {
@@ -135,7 +238,7 @@ export const PhysiotherapyView: React.FC = () => {
     setSessionCompleted(false);
   };
 
-  // Iniciar Exercício Único no Player
+  // Iniciar Exercício Único no Player Rápido
   const handleStartSingleExercise = (ex: PhysiotherapyExercise) => {
     triggerHaptic('light');
     const initialSec = ex.execution_type === 'duration' ? ex.default_duration_seconds || 30 : 0;
@@ -158,7 +261,7 @@ export const PhysiotherapyView: React.FC = () => {
     setSessionCompleted(false);
   };
 
-  // Timer da Sessão
+  // Timer da Sessão Rápida
   useEffect(() => {
     if (isTimerRunning && sessionTimerSeconds > 0) {
       timerIntervalRef.current = window.setInterval(() => {
@@ -185,7 +288,7 @@ export const PhysiotherapyView: React.FC = () => {
     };
   }, [isTimerRunning, sessionTimerSeconds, sessionSoundEnabled]);
 
-  // Avançar Série ou Próximo Exercício
+  // Avançar Série no Player Rápido
   const handleAdvanceSessionSet = () => {
     if (!activeSession) return;
     triggerHaptic('light');
@@ -193,7 +296,6 @@ export const PhysiotherapyView: React.FC = () => {
 
     const currentItem = activeSession.exercises[activeSession.currentIndex];
 
-    // Se ainda há séries neste exercício
     if (activeSession.currentSet < currentItem.targetSets) {
       const nextSet = activeSession.currentSet + 1;
       const initialSec =
@@ -210,7 +312,6 @@ export const PhysiotherapyView: React.FC = () => {
       return;
     }
 
-    // Se acabou este exercício, avança para o próximo
     if (activeSession.currentIndex < activeSession.exercises.length - 1) {
       const nextIdx = activeSession.currentIndex + 1;
       const nextItem = activeSession.exercises[nextIdx];
@@ -226,11 +327,10 @@ export const PhysiotherapyView: React.FC = () => {
       });
       setSessionTimerSeconds(initialSec);
       setIsTimerRunning(nextItem.exercise.execution_type === 'duration');
-      showToast(`✓ Próximo exercício: ${nextItem.exercise.title}`);
+      showToast(`✓ Próximo: ${nextItem.exercise.title}`);
       return;
     }
 
-    // Sessão Finalizada com Sucesso!
     setSessionCompleted(true);
     setIsTimerRunning(false);
     triggerHaptic('success');
@@ -248,37 +348,30 @@ export const PhysiotherapyView: React.FC = () => {
     }
   };
 
-  // Adicionar exercício de fisio ao treino ativo
+  // Adicionar exercício de fisio diretamente ao treino ativo
   const handleAddPhysioToWorkout = (ex: PhysiotherapyExercise) => {
     if (!activeWorkout) {
-      showToast('Inicie um treino na aba "Planos" para adicionar este exercício.');
+      showToast('Inicie um treino primeiro para adicionar este exercício.');
       return;
     }
 
-    const template: ExerciseTemplate = {
-      id: `physio-${ex.id}`,
-      title: ex.title,
-      primary_muscle_group: 'outro',
-      secondary_muscle_groups: [],
-      equipment: 'peso_corporal',
-      type: ex.execution_type === 'duration' ? 'duration' : 'reps_only',
-      instructions: ex.steps.join(' '),
-      steps: ex.steps,
-      tips: [ex.feel_cue, ex.caution],
-      muscles_pt: ex.region_label
-    };
+    const tpl =
+      PHYSIOTHERAPY_TEMPLATES.find((t) => t.id === `physio-${ex.id}`) ||
+      getPhysioTemplateById(ex.id);
 
-    addExerciseToWorkout(template);
-    triggerHaptic('success');
-    showToast(`✓ "${ex.title}" adicionado ao seu treino ativo!`);
-    setWorkoutModalOpen(true);
+    if (tpl) {
+      addExerciseToWorkout(tpl);
+      triggerHaptic('success');
+      showToast(`✓ "${ex.title}" adicionado ao seu treino ativo!`);
+      setWorkoutModalOpen(true);
+    }
   };
 
   return (
     <div className="w-full px-4 py-5 md:py-8 space-y-6 pb-28 animate-in fade-in duration-200">
       {/* Toast Feedback */}
       {toastMsg && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[130] px-4 py-2.5 rounded-2xl bg-white text-black font-black text-xs shadow-2xl border border-zinc-200 flex items-center gap-2 animate-in slide-in-from-top-4 duration-200">
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[150] px-4 py-2.5 rounded-2xl bg-white text-black font-black text-xs shadow-2xl border border-zinc-200 flex items-center gap-2 animate-in slide-in-from-top-4 duration-200">
           <Check className="w-4 h-4 stroke-[3]" />
           <span>{toastMsg}</span>
         </div>
@@ -323,27 +416,53 @@ export const PhysiotherapyView: React.FC = () => {
                   isLight ? 'text-zinc-600' : 'text-zinc-400'
                 }`}
               >
-                Descompressão da coluna lombar, mobilidade articular a 90° em L, alívio ciático e
-                reeducação postural com sessões guiadas passo a passo.
+                Crie seus próprios planos terapêuticos, execute protocolos recomendados pela clínica,
+                acompanhe a execução visual dos exercícios e registre sessões completas.
               </p>
             </div>
+          </div>
+
+          {/* Botões Rápidos de Ação Superior */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleStartQuickEmptyPhysio}
+              className="px-3.5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs rounded-2xl flex items-center gap-1.5 transition active:scale-95 border border-zinc-700 shadow-sm"
+              title="Iniciar sessão livre de fisioterapia agora"
+            >
+              <Play className="w-3.5 h-3.5 fill-white" />
+              <span>Sessão Livre</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEditingRoutine(null);
+                setIsEditorOpen(true);
+              }}
+              className="px-4 py-2.5 bg-white text-black hover:bg-zinc-200 font-black text-xs rounded-2xl flex items-center gap-1.5 transition active:scale-95 shadow-md"
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span>Novo Plano</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Alternador de Abas: Protocolos Guiados vs Biblioteca */}
+      {/* Alternador de Abas: Planos de Fisioterapia vs Biblioteca de Exercícios */}
       <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-[#121214] border border-[#27272a]">
         <button
           type="button"
-          onClick={() => setActiveTab('protocols')}
+          onClick={() => setActiveTab('routines')}
           className={`flex-1 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 ${
-            activeTab === 'protocols'
+            activeTab === 'routines'
               ? 'bg-white text-black shadow-md'
               : 'text-zinc-400 hover:text-white'
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Protocolos de Tratamento ({PHYSIOTHERAPY_PROTOCOLS.length})</span>
+          <Dumbbell className="w-3.5 h-3.5" />
+          <span>
+            Planos de Fisio ({myPhysioRoutines.length + RECOMMENDED_PHYSIO_ROUTINES.length})
+          </span>
         </button>
         <button
           type="button"
@@ -359,87 +478,324 @@ export const PhysiotherapyView: React.FC = () => {
         </button>
       </div>
 
-      {/* ABA 1: PROTOCOLOS GUIADOS */}
-      {activeTab === 'protocols' && (
-        <div className="space-y-4 animate-in fade-in duration-150">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {PHYSIOTHERAPY_PROTOCOLS.map((proto) => (
-              <div
-                key={proto.id}
-                className={`p-5 rounded-3xl border transition flex flex-col justify-between gap-4 ${
-                  isLight
-                    ? 'bg-white border-zinc-200 text-black hover:border-black'
-                    : 'bg-[#141416] border-[#27272a] text-white hover:border-zinc-500'
-                } shadow-lg`}
+      {/* ======================================================== */}
+      {/* ABA 1: PLANOS DE FISIOTERAPIA (MEUS PLANOS + RECOMENDADOS) */}
+      {/* ======================================================== */}
+      {activeTab === 'routines' && (
+        <div className="space-y-6 animate-in fade-in duration-150">
+          {/* SEÇÃO 1: MEUS PLANOS DE FISIOTERAPIA */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-black uppercase tracking-wider text-white flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Meus Planos de Fisioterapia ({myPhysioRoutines.length})</span>
+                </h2>
+                <span className="text-[11px] text-zinc-400">
+                  Planos clínicos personalizados criados por você
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingRoutine(null);
+                  setIsEditorOpen(true);
+                }}
+                className="px-3 py-1.5 rounded-xl bg-white text-black font-black text-xs flex items-center gap-1 shadow-sm active:scale-95 transition"
               >
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                        isLight ? 'bg-zinc-100 text-zinc-800' : 'bg-[#1c1c1f] text-zinc-300'
-                      }`}
-                    >
-                      {proto.target_region}
-                    </span>
-                    <span className="text-[11px] font-black text-zinc-400 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      ~{proto.estimated_minutes} min
-                    </span>
-                  </div>
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>Criar Plano</span>
+              </button>
+            </div>
 
-                  <h3 className="text-base font-black mt-2 leading-tight">{proto.title}</h3>
-                  <p
-                    className={`text-xs mt-1 line-clamp-2 ${
-                      isLight ? 'text-zinc-600' : 'text-zinc-400'
-                    }`}
-                  >
-                    {proto.subtitle}
-                  </p>
-
-                  {/* Lista Resumida dos Exercícios da Sequência */}
-                  <div className="mt-3.5 pt-3 border-t border-[#27272a]/60 space-y-1.5">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500 block">
-                      Exercícios na sequência:
-                    </span>
-                    <div className="space-y-1">
-                      {proto.exercises.map((item, idx) => {
-                        const ex = PHYSIOTHERAPY_EXERCISES.find((e) => e.id === item.exercise_id);
-                        if (!ex) return null;
-                        return (
-                          <div
-                            key={idx}
-                            className="flex items-center justify-between text-[11px] font-semibold text-zinc-300"
-                          >
-                            <span className="truncate pr-2">
-                              {idx + 1}. {ex.title}
-                            </span>
-                            <span className="text-[10px] text-zinc-500 shrink-0">
-                              {item.duration_seconds
-                                ? `${item.duration_seconds}s`
-                                : `${item.reps || 10} reps`}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
+            {myPhysioRoutines.length === 0 ? (
+              <div className="p-6 text-center bg-[#141416] border border-dashed border-[#27272a] rounded-3xl space-y-3">
+                <p className="text-xs text-zinc-400 max-w-md mx-auto">
+                  Você ainda não criou nenhum plano personalizado de fisioterapia. Crie o seu
+                  próprio plano com os exercícios que você preferir ou duplique qualquer um dos
+                  protocolos recomendados abaixo!
+                </p>
                 <button
                   type="button"
-                  onClick={() => handleStartProtocol(proto)}
-                  className="w-full py-3 bg-white hover:bg-zinc-200 text-black font-black text-xs rounded-2xl transition active:scale-95 shadow-md flex items-center justify-center gap-2"
+                  onClick={() => {
+                    setEditingRoutine(null);
+                    setIsEditorOpen(true);
+                  }}
+                  className="px-4 py-2 bg-white text-black font-black text-xs rounded-xl shadow inline-flex items-center gap-1.5 active:scale-95 transition"
                 >
-                  <Play className="w-3.5 h-3.5 fill-black" />
-                  <span>Iniciar Sessão Guiada</span>
+                  <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Criar Meu Primeiro Plano</span>
                 </button>
               </div>
-            ))}
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {myPhysioRoutines.map((routine) => (
+                  <div
+                    key={routine.id}
+                    className={`p-5 rounded-3xl border transition flex flex-col justify-between gap-4 relative ${
+                      isLight
+                        ? 'bg-white border-zinc-200 text-black shadow-sm'
+                        : 'bg-[#141416] border-[#27272a] text-white shadow-xl hover:border-zinc-500'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-emerald-400">
+                            Plano Personalizado
+                          </span>
+                          <h3 className="text-base font-black mt-1 leading-snug truncate">
+                            {routine.title}
+                          </h3>
+                          {routine.notes && (
+                            <p className="text-xs text-zinc-400 mt-0.5 line-clamp-2">
+                              {routine.notes}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Menu de Ações do Plano */}
+                        <div className="relative shrink-0">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setActiveMenuRoutineId(
+                                activeMenuRoutineId === routine.id ? null : routine.id
+                              )
+                            }
+                            className="p-1.5 text-zinc-400 hover:text-white rounded-lg transition"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+
+                          {activeMenuRoutineId === routine.id && (
+                            <div className="absolute right-0 top-8 z-30 w-36 bg-[#18181b] border border-[#27272a] rounded-2xl p-1 shadow-2xl space-y-0.5 text-xs">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveMenuRoutineId(null);
+                                  setEditingRoutine(routine);
+                                  setIsEditorOpen(true);
+                                }}
+                                className="w-full px-2.5 py-1.5 text-left rounded-xl hover:bg-zinc-800 text-zinc-200 flex items-center gap-2 font-bold"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                                <span>Editar</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDuplicateMyRoutine(routine)}
+                                className="w-full px-2.5 py-1.5 text-left rounded-xl hover:bg-zinc-800 text-zinc-200 flex items-center gap-2 font-bold"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                                <span>Duplicar</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveMenuRoutineId(null);
+                                  setRoutineToDelete(routine);
+                                }}
+                                className="w-full px-2.5 py-1.5 text-left rounded-xl hover:bg-red-950/70 text-red-400 flex items-center gap-2 font-bold"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Excluir</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Lista de Exercícios do Plano com Toque para Ver Demonstração 3D */}
+                      <div className="mt-3 pt-3 border-t border-[#27272a]/60 space-y-1.5">
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500 block">
+                          Exercícios ({routine.exercises.length}): Toque para ver execução
+                        </span>
+                        <div className="space-y-1">
+                          {routine.exercises.map((item, idx) => {
+                            const isDuration = Boolean(
+                              item.sets[0]?.duration_seconds !== null &&
+                                item.sets[0]?.duration_seconds !== undefined
+                            );
+                            const metric = isDuration
+                              ? `${item.sets[0]?.duration_seconds || 30}s`
+                              : `${item.sets[0]?.reps || 12} reps`;
+
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => handleOpenExercisePreview(item.exercise_template_id)}
+                                className="w-full flex items-center justify-between text-[11px] font-semibold text-zinc-300 hover:text-white p-1 rounded-lg hover:bg-white/5 transition text-left"
+                                title="Toque para ver a demonstração visual deste exercício"
+                              >
+                                <span className="truncate pr-2 flex items-center gap-1.5">
+                                  <Eye className="w-3 h-3 text-zinc-500 shrink-0" />
+                                  <span>
+                                    {idx + 1}. {item.title}
+                                  </span>
+                                </span>
+                                <span className="text-[10px] text-zinc-400 shrink-0 font-mono">
+                                  {item.sets.length}× {metric}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Botão de Iniciar Treino */}
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => handleStartPhysioRoutine(routine)}
+                        className="w-full py-3 bg-white hover:bg-zinc-200 text-black font-black text-xs rounded-2xl transition active:scale-95 shadow-md flex items-center justify-center gap-2"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-black" />
+                        <span>Iniciar Treino</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* SEÇÃO 2: PLANOS RECOMENDADOS PELA CLÍNICA (PROTOCOLOS COMPLETOS) */}
+          <div className="space-y-3 pt-2">
+            <div>
+              <h2 className="text-sm font-black uppercase tracking-wider text-white flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Planos Recomendados pela Clínica ({RECOMMENDED_PHYSIO_ROUTINES.length})</span>
+              </h2>
+              <span className="text-[11px] text-zinc-400">
+                Protocolos prontos elaborados por especialistas com foco em descompressão e postura
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {RECOMMENDED_PHYSIO_ROUTINES.map((routine, protoIdx) => {
+                const protoRaw = PHYSIOTHERAPY_PROTOCOLS[protoIdx];
+
+                return (
+                  <div
+                    key={routine.id}
+                    className={`p-5 rounded-3xl border transition flex flex-col justify-between gap-4 ${
+                      isLight
+                        ? 'bg-white border-zinc-200 text-black hover:border-black'
+                        : 'bg-[#141416] border-[#27272a] text-white hover:border-zinc-500'
+                    } shadow-lg`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span
+                          className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                            isLight ? 'bg-zinc-100 text-zinc-800' : 'bg-[#1c1c1f] text-zinc-300'
+                          }`}
+                        >
+                          {protoRaw?.target_region || 'Reabilitação'}
+                        </span>
+                        <span className="text-[11px] font-black text-zinc-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          ~{protoRaw?.estimated_minutes || 12} min
+                        </span>
+                      </div>
+
+                      <h3 className="text-base font-black mt-2 leading-tight">{routine.title}</h3>
+                      <p
+                        className={`text-xs mt-1 line-clamp-2 ${
+                          isLight ? 'text-zinc-600' : 'text-zinc-400'
+                        }`}
+                      >
+                        {protoRaw?.subtitle || routine.notes}
+                      </p>
+
+                      {/* Lista de Exercícios na Sequência */}
+                      <div className="mt-3.5 pt-3 border-t border-[#27272a]/60 space-y-1.5">
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500 block">
+                          Sequência ({routine.exercises.length}): Toque para ver execução
+                        </span>
+                        <div className="space-y-1">
+                          {routine.exercises.map((item, idx) => {
+                            const isDuration = Boolean(
+                              item.sets[0]?.duration_seconds !== null &&
+                                item.sets[0]?.duration_seconds !== undefined
+                            );
+                            const metric = isDuration
+                              ? `${item.sets[0]?.duration_seconds || 30}s`
+                              : `${item.sets[0]?.reps || 12} reps`;
+
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => handleOpenExercisePreview(item.exercise_template_id)}
+                                className="w-full flex items-center justify-between text-[11px] font-semibold text-zinc-300 hover:text-white p-1 rounded-lg hover:bg-white/5 transition text-left"
+                                title="Toque para ver a demonstração visual deste exercício"
+                              >
+                                <span className="truncate pr-2 flex items-center gap-1.5">
+                                  <Eye className="w-3 h-3 text-zinc-500 shrink-0" />
+                                  <span>
+                                    {idx + 1}. {item.title}
+                                  </span>
+                                </span>
+                                <span className="text-[10px] text-zinc-500 shrink-0 font-mono">
+                                  {item.sets.length}× {metric}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Botões de Ação do Protocolo */}
+                    <div className="space-y-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleStartPhysioRoutine(routine)}
+                        className="w-full py-3 bg-white hover:bg-zinc-200 text-black font-black text-xs rounded-2xl transition active:scale-95 shadow-md flex items-center justify-center gap-2"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-black" />
+                        <span>Iniciar Treino</span>
+                      </button>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleCopyProtocolToMyRoutines(routine)}
+                          className="flex-1 py-2 bg-[#18181b] hover:bg-[#202024] border border-[#27272a] text-zinc-300 hover:text-white font-bold text-[11px] rounded-xl transition flex items-center justify-center gap-1.5"
+                          title="Copiar para Meus Planos para personalizar"
+                        >
+                          <Copy className="w-3 h-3" />
+                          <span>Copiar p/ Meus Planos</span>
+                        </button>
+
+                        {protoRaw && (
+                          <button
+                            type="button"
+                            onClick={() => handleStartProtocolQuickPlayer(protoRaw)}
+                            className="px-3 py-2 bg-[#18181b] hover:bg-[#202024] border border-[#27272a] text-zinc-400 hover:text-white font-bold text-[11px] rounded-xl transition flex items-center gap-1"
+                            title="Player guiado rápido sem salvar treino"
+                          >
+                            <Clock className="w-3 h-3" />
+                            <span>Player Rápido</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
 
+      {/* ======================================================== */}
       {/* ABA 2: BIBLIOTECA DE EXERCÍCIOS DE FISIOTERAPIA */}
+      {/* ======================================================== */}
       {activeTab === 'library' && (
         <div className="space-y-4 animate-in fade-in duration-150">
           {/* Barra de Busca */}
@@ -528,20 +884,21 @@ export const PhysiotherapyView: React.FC = () => {
                 <div className="flex items-center gap-2 pt-1">
                   <button
                     type="button"
-                    onClick={() => handleStartSingleExercise(ex)}
+                    onClick={() => handleOpenExercisePreview(`physio-${ex.id}`)}
                     className="flex-1 py-2.5 bg-white hover:bg-zinc-200 text-black font-black text-xs rounded-xl transition active:scale-95 shadow-md flex items-center justify-center gap-1.5"
                   >
-                    <Play className="w-3 h-3 fill-black" />
-                    <span>Praticar com Timer</span>
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Ver Execução</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setSelectedExerciseForModal(ex)}
-                    className="px-3 py-2.5 bg-[#18181b] hover:bg-[#222226] border border-[#27272a] text-zinc-300 font-bold text-xs rounded-xl transition"
-                    title="Ver instruções completas e cuidados"
+                    onClick={() => handleStartSingleExercise(ex)}
+                    className="px-3 py-2.5 bg-[#18181b] hover:bg-[#222226] border border-[#27272a] text-zinc-300 font-bold text-xs rounded-xl transition flex items-center gap-1"
+                    title="Praticar isoladamente com cronômetro"
                   >
-                    Instruções
+                    <Play className="w-3 h-3 fill-zinc-300" />
+                    <span>Praticar</span>
                   </button>
 
                   {activeWorkout && (
@@ -568,100 +925,83 @@ export const PhysiotherapyView: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL DETALHADO DO EXERCÍCIO */}
-      {selectedExerciseForModal && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-lg bg-[#121214] border border-[#27272a] rounded-3xl p-5 shadow-2xl flex flex-col max-h-[88vh] overflow-hidden text-white">
-            <div className="flex items-start justify-between pb-3 border-b border-[#27272a]">
+      {/* MODAL DE DEMONSTRAÇÃO VISUAL / EXECUÇÃO DO EXERCÍCIO */}
+      {previewTemplate && (
+        <div
+          className="fixed inset-0 z-[140] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPreviewTemplate(null);
+          }}
+        >
+          <div className="w-full max-w-md bg-[#121214] border border-[#27272a] rounded-t-3xl sm:rounded-2xl p-4 shadow-2xl space-y-3 text-white max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-[#27272a]">
               <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
-                  {selectedExerciseForModal.region_label}
+                <h3 className="text-sm font-black text-white">{previewTemplate.title}</h3>
+                <span className="text-[11px] text-zinc-400 capitalize">
+                  {previewTemplate.muscles_pt || previewTemplate.primary_muscle_group}
                 </span>
-                <h3 className="text-base font-black text-white mt-0.5">
-                  {selectedExerciseForModal.title}
-                </h3>
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedExerciseForModal(null)}
-                className="p-1.5 text-zinc-400 hover:text-white rounded-lg transition"
+                onClick={() => setPreviewTemplate(null)}
+                className="p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
+            <ExerciseVisualDemo exercise={previewTemplate} />
+          </div>
+        </div>
+      )}
 
-            <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
-              {/* Objetivo Clínico */}
-              <div className="p-3 bg-[#18181b] rounded-2xl border border-[#27272a]">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
-                  🎯 Objetivo Clínico
-                </span>
-                <p className="text-xs text-zinc-200 leading-relaxed font-semibold">
-                  {selectedExerciseForModal.clinical_objective}
-                </p>
-              </div>
+      {/* MODAL CRIADOR / EDITOR DE PLANOS DE FISIOTERAPIA */}
+      <PhysioRoutineEditorModal
+        routineToEdit={editingRoutine}
+        isOpen={isEditorOpen}
+        onClose={() => {
+          setIsEditorOpen(false);
+          setEditingRoutine(null);
+        }}
+        onSaved={(r) => {
+          showToast(`✓ Plano "${r.title}" salvo com sucesso!`);
+        }}
+      />
 
-              {/* Passo a Passo */}
-              <div className="space-y-2">
-                <span className="text-xs font-black text-white uppercase tracking-wider block">
-                  Instruções de Execução:
-                </span>
-                <div className="space-y-1.5">
-                  {selectedExerciseForModal.steps.map((step, idx) => (
-                    <div
-                      key={idx}
-                      className="p-2.5 bg-[#18181b] rounded-xl border border-[#27272a] text-xs flex items-start gap-2.5"
-                    >
-                      <span className="w-5 h-5 rounded-full bg-white text-black font-black text-[10px] flex items-center justify-center shrink-0">
-                        {idx + 1}
-                      </span>
-                      <span className="text-zinc-300 leading-relaxed">{step}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Respiração & Sensação */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div className="p-3 bg-[#18181b] rounded-2xl border border-[#27272a] space-y-1">
-                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                    <Wind className="w-3.5 h-3.5" /> Como Respirar
-                  </span>
-                  <p className="text-[11px] text-zinc-300 leading-relaxed">
-                    {selectedExerciseForModal.breathing}
-                  </p>
-                </div>
-
-                <div className="p-3 bg-[#18181b] rounded-2xl border border-[#27272a] space-y-1">
-                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                    <AlertCircle className="w-3.5 h-3.5" /> Atenção & Cuidados
-                  </span>
-                  <p className="text-[11px] text-zinc-300 leading-relaxed">
-                    {selectedExerciseForModal.caution}
-                  </p>
-                </div>
-              </div>
+      {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO DE PLANO */}
+      {routineToDelete && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="w-full max-w-xs bg-[#18181b] border border-[#27272a] rounded-2xl p-5 shadow-2xl text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-6 h-6" />
             </div>
-
-            <div className="pt-3 border-t border-[#27272a] flex items-center gap-2">
+            <div>
+              <h3 className="text-sm font-black text-white">Excluir Plano?</h3>
+              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                Tem certeza que deseja excluir o plano <strong>"{routineToDelete.title}"</strong>?
+                Esta ação é irreversível.
+              </p>
+            </div>
+            <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  const ex = selectedExerciseForModal;
-                  setSelectedExerciseForModal(null);
-                  handleStartSingleExercise(ex);
-                }}
-                className="flex-1 py-3 bg-white hover:bg-zinc-200 text-black font-black text-xs rounded-xl transition flex items-center justify-center gap-2"
+                onClick={() => setRoutineToDelete(null)}
+                className="flex-1 py-2 bg-[#27272a] text-zinc-300 font-bold text-xs rounded-xl hover:bg-zinc-700 transition"
               >
-                <Play className="w-3.5 h-3.5 fill-black" />
-                <span>Iniciar este Exercício Agora</span>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteRoutine}
+                className="flex-1 py-2 bg-red-600 text-white font-bold text-xs rounded-xl hover:bg-red-700 transition shadow-md"
+              >
+                Sim, Excluir
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* PLAYER DA SESSÃO TERAPÊUTICA GUIADA (MODAL TELA CHEIA) */}
+      {/* PLAYER DA SESSÃO TERAPÊUTICA GUIADA RÁPIDA (MODAL TELA CHEIA) */}
       {activeSession && (
         <div className="fixed inset-0 z-[140] flex items-center justify-center p-0 sm:p-4 bg-black/95 backdrop-blur-xl animate-in fade-in duration-200 text-white">
           <div className="w-full sm:max-w-lg h-full sm:h-auto sm:max-h-[92vh] bg-[#0c0d12] border-0 sm:border border-[#27272a] rounded-none sm:rounded-3xl p-5 shadow-2xl flex flex-col justify-between overflow-hidden">
@@ -730,7 +1070,9 @@ export const PhysiotherapyView: React.FC = () => {
                             {formatSecondsClock(sessionTimerSeconds)}
                           </span>
                           <span className="text-[11px] font-bold text-zinc-400 block uppercase tracking-wider">
-                            {sessionTimerSeconds === 0 ? 'Concluído! Toque Avançar' : 'Sustente com respiração suave'}
+                            {sessionTimerSeconds === 0
+                              ? 'Concluído! Toque Avançar'
+                              : 'Sustente com respiração suave'}
                           </span>
 
                           <div className="flex items-center justify-center gap-2 pt-2">

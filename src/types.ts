@@ -42,6 +42,8 @@ export interface ExerciseTemplate {
   equipment: EquipmentCategory;
   type: ExerciseType;
   is_custom?: boolean;
+  is_physio?: boolean;
+  physio_data?: PhysiotherapyExercise;
   instructions?: string;
   steps?: string[];
   tips?: string[];
@@ -85,6 +87,7 @@ export interface Workout {
   total_volume_kg: number;
   total_sets: number;
   prs_hit?: number;
+  is_physio?: boolean;
 }
 
 export interface Routine {
@@ -96,6 +99,7 @@ export interface Routine {
   created_at: string;
   updated_at: string;
   order?: number;
+  is_physio?: boolean;
 }
 
 export interface RoutineFolder {

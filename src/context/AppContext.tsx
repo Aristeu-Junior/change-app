@@ -15,6 +15,7 @@ import {
 } from '../types';
 import { DEFAULT_EXERCISES } from '../data/defaultExercises';
 import { LEGACY_DEFAULT_ROUTINE_IDS, RoutinePreset } from '../data/defaultRoutines';
+import { RECOMMENDED_PHYSIO_ROUTINES } from '../data/physiotherapyExercises';
 import {
   playGymTone,
   triggerHaptic,
@@ -114,7 +115,7 @@ interface AppContextType {
   activeWorkout: Workout | null;
   isWorkoutModalOpen: boolean;
   setWorkoutModalOpen: (open: boolean) => void;
-  startWorkout: (routineId?: string, customTitle?: string) => void;
+  startWorkout: (routineOrId?: string | Routine, customTitle?: string) => void;
   finishWorkout: (notes?: string) => Workout | null;
   discardWorkout: () => void;
   deleteWorkout: (workoutId: string) => void;
@@ -1650,25 +1651,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     []
   );
 
-  const startWorkout = (routineId?: string, customTitle?: string) => {
+  const startWorkout = (routineOrId?: string | Routine, customTitle?: string) => {
     let title = customTitle || 'Treino Livre';
     let exercisesToStart: WorkoutExercise[] = [];
+    let routineId: string | null = null;
+    let targetRoutine: Routine | undefined;
 
-    if (routineId) {
-      const routine = routines.find((r) => r.id === routineId);
-      if (routine) {
-        title = routine.title;
-        exercisesToStart = routine.exercises.map((e, eIdx) => ({
-          ...e,
-          id: `we-${Date.now()}-${eIdx}`,
-          notes: e.notes || getMachineAdjustment(e.exercise_template_id, e.title) || undefined,
-          sets: e.sets.map((s, sIdx) => ({
-            ...s,
-            id: `ws-${Date.now()}-${eIdx}-${sIdx}`,
-            completed: false
-          }))
-        }));
-      }
+    if (typeof routineOrId === 'object' && routineOrId !== null) {
+      targetRoutine = routineOrId;
+      routineId = routineOrId.id;
+    } else if (typeof routineOrId === 'string') {
+      routineId = routineOrId;
+      targetRoutine =
+        routines.find((r) => r.id === routineOrId) ||
+        RECOMMENDED_PHYSIO_ROUTINES.find((r) => r.id === routineOrId);
+    }
+
+    if (targetRoutine) {
+      title = targetRoutine.title;
+      exercisesToStart = targetRoutine.exercises.map((e, eIdx) => ({
+        ...e,
+        id: `we-${Date.now()}-${eIdx}`,
+        notes: e.notes || getMachineAdjustment(e.exercise_template_id, e.title) || undefined,
+        sets: e.sets.map((s, sIdx) => ({
+          ...s,
+          id: `ws-${Date.now()}-${eIdx}-${sIdx}`,
+          completed: false
+        }))
+      }));
     }
 
     const newWorkout: Workout = {
@@ -1679,7 +1689,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       exercises: exercisesToStart,
       total_volume_kg: 0,
       total_sets: 0,
-      prs_hit: 0
+      prs_hit: 0,
+      is_physio: targetRoutine?.is_physio
     };
 
     setActiveWorkout(newWorkout);
@@ -1696,10 +1707,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     activeWorkout.exercises.forEach((ex) => {
       ex.sets.forEach((s) => {
-        if (s.completed && s.reps) {
+        if (s.completed) {
           completedSetsCount++;
           const wKg = Number(s.weight_kg) || 0;
-          if (wKg > 0) {
+          if (wKg > 0 && s.reps) {
             const currentPr = updatedPrs[ex.exercise_template_id];
             if (!currentPr || wKg > currentPr.max_weight_kg) {
               prsHit++;

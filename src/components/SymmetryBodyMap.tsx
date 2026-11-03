@@ -62,6 +62,41 @@ const MUSCLE_ID_MAPPINGS: Record<string, string[]> = {
     'lower-back-erectors-left', 'lower-back-ql-left',
     'lower-back-erectors-right', 'lower-back-ql-right', 'spine'
   ],
+  coluna: [
+    'spine', 'lower-back-erectors-left', 'lower-back-erectors-right',
+    'lower-back-ql-left', 'lower-back-ql-right', 'traps-mid-left', 'traps-mid-right'
+  ],
+  cervical: [
+    'traps-upper-left', 'traps-upper-right', 'spine'
+  ],
+  escapulas: [
+    'traps-mid-left', 'traps-mid-right', 'traps-lower-left', 'traps-lower-right',
+    'serratus-anterior-left', 'serratus-anterior-right'
+  ],
+  quadril: [
+    'gluteus-maximus-left', 'gluteus-medius-left',
+    'gluteus-maximus-right', 'gluteus-medius-right',
+    'hip-flexor-left', 'hip-flexor-right'
+  ],
+  joelho: [
+    'quads-left', 'quads-right',
+    'hamstrings-medial-left', 'hamstrings-medial-right',
+    'tibialis-anterior-left', 'tibialis-anterior-right'
+  ],
+  joelhos: [
+    'quads-left', 'quads-right',
+    'hamstrings-medial-left', 'hamstrings-medial-right',
+    'tibialis-anterior-left', 'tibialis-anterior-right'
+  ],
+  ciatico: [
+    'gluteus-maximus-left', 'gluteus-maximus-right',
+    'gluteus-medius-left', 'gluteus-medius-right',
+    'hamstrings-medial-left', 'hamstrings-medial-right'
+  ],
+  piriforme: [
+    'gluteus-maximus-left', 'gluteus-maximus-right',
+    'gluteus-medius-left', 'gluteus-medius-right'
+  ],
 
   // Ombros / Deltoides (Anterior, Lateral e Posterior)
   ombros: [

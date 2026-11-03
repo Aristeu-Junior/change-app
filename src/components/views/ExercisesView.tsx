@@ -95,6 +95,9 @@ export const ExercisesView: React.FC = () => {
     const queryTokens = q.split(/\s+/).filter(Boolean);
 
     return exercises.filter((ex) => {
+      // Exercícios de fisioterapia ficam na aba dedicada de Fisioterapia
+      if (ex.is_physio) return false;
+
       // 1. Busca textual inteligente (multi-termo, sem acento, com sinônimos de pernas/cardio/abs)
       let matchesQuery = true;
       if (queryTokens.length > 0) {

@@ -181,8 +181,11 @@ export const ActiveWorkoutModal: React.FC = () => {
     const map: Record<string, ExerciseTemplate> = {};
     if (!activeWorkout) return map;
     activeWorkout.exercises.forEach((wEx) => {
+      const cleanId = wEx.exercise_template_id.replace(/^physio-/, '');
       const found =
         allTemplates.find((t) => t.id === wEx.exercise_template_id) ||
+        allTemplates.find((t) => t.id === `physio-${cleanId}`) ||
+        allTemplates.find((t) => t.id === cleanId) ||
         allTemplates.find((t) => t.title.toLowerCase() === wEx.title.toLowerCase());
       if (found) {
         map[wEx.id] = found;

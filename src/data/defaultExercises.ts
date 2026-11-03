@@ -1,4 +1,5 @@
 import { ExerciseTemplate } from '../types';
+import { PHYSIOTHERAPY_TEMPLATES } from './physiotherapyExercises';
 
 export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
   {
@@ -3375,5 +3376,6 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "tips": [
       "Puxe com os cotovelos guiando o movimento."
     ]
-  }
+  },
+  ...PHYSIOTHERAPY_TEMPLATES
 ];

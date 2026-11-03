@@ -1,4 +1,10 @@
-import { PhysiotherapyExercise, PhysiotherapyProtocol } from '../types';
+import {
+  PhysiotherapyExercise,
+  PhysiotherapyProtocol,
+  ExerciseTemplate,
+  Routine,
+  WorkoutExercise
+} from '../types';
 
 export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
@@ -575,3 +581,103 @@ export const PHYSIOTHERAPY_PROTOCOLS: PhysiotherapyProtocol[] = [
     ]
   }
 ];
+
+export const PHYSIOTHERAPY_TEMPLATES: ExerciseTemplate[] = PHYSIOTHERAPY_EXERCISES.map((ex) => {
+  let primaryMuscle: any = 'outro';
+  let secondary: any[] = [];
+
+  switch (ex.region) {
+    case 'lombar':
+      primaryMuscle = 'costas';
+      secondary = ['abdomen'];
+      break;
+    case 'quadril':
+      primaryMuscle = 'gluteos';
+      secondary = ['isquiotibiais'];
+      break;
+    case 'joelho':
+      primaryMuscle = 'quadriceps';
+      secondary = ['panturrilha'];
+      break;
+    case 'ombro':
+      primaryMuscle = 'ombros';
+      secondary = ['costas'];
+      break;
+    case 'cervical':
+      primaryMuscle = 'costas';
+      secondary = ['ombros'];
+      break;
+    default:
+      primaryMuscle = 'outro';
+  }
+
+  return {
+    id: `physio-${ex.id}`,
+    title: ex.title,
+    primary_muscle_group: primaryMuscle,
+    secondary_muscle_groups: secondary,
+    equipment: 'peso_corporal',
+    type: ex.execution_type === 'duration' ? 'duration' : 'reps_only',
+    is_custom: false,
+    is_physio: true,
+    physio_data: ex,
+    instructions: `${ex.clinical_objective} Posição: ${ex.position}`,
+    steps: ex.steps,
+    tips: [
+      `🎯 Objetivo Clínico: ${ex.clinical_objective}`,
+      `🌬️ Como Respirar: ${ex.breathing}`,
+      `✨ O que sentir: ${ex.feel_cue}`,
+      `⚠️ Atenção & Cuidados: ${ex.caution}`
+    ],
+    muscles_pt: ex.region_label
+  };
+});
+
+export const RECOMMENDED_PHYSIO_ROUTINES: Routine[] = PHYSIOTHERAPY_PROTOCOLS.map((proto, pIdx) => {
+  const exercises: WorkoutExercise[] = proto.exercises.map((item, idx) => {
+    const ex = PHYSIOTHERAPY_EXERCISES.find((e) => e.id === item.exercise_id);
+    const title = ex ? ex.title : item.exercise_id;
+    const isDuration = ex ? ex.execution_type === 'duration' : Boolean(item.duration_seconds);
+
+    return {
+      id: `re-proto-${proto.id}-${idx}`,
+      exercise_template_id: `physio-${item.exercise_id}`,
+      title,
+      notes: item.notes || (ex ? ex.clinical_objective : undefined),
+      rest_seconds: 45,
+      sets: Array.from({ length: item.sets }).map((_, sIdx) => ({
+        id: `rs-proto-${proto.id}-${idx}-${sIdx}`,
+        index: sIdx,
+        type: 'normal',
+        weight_kg: null,
+        reps: isDuration ? null : (item.reps || (ex ? ex.default_reps : 12)),
+        duration_seconds: isDuration
+          ? item.duration_seconds || (ex ? ex.default_duration_seconds : 30)
+          : null,
+        completed: false
+      }))
+    };
+  });
+
+  return {
+    id: `routine-physio-${proto.id}`,
+    title: proto.title,
+    folder_id: null,
+    notes: `${proto.subtitle}. ${proto.description}`,
+    exercises,
+    created_at: new Date('2026-10-30T10:00:00Z').toISOString(),
+    updated_at: new Date('2026-10-30T10:00:00Z').toISOString(),
+    is_physio: true,
+    order: pIdx
+  };
+});
+
+export const getPhysioExerciseById = (id: string): PhysiotherapyExercise | undefined => {
+  const cleanId = id.startsWith('physio-') ? id.replace(/^physio-/, '') : id;
+  return PHYSIOTHERAPY_EXERCISES.find((e) => e.id === cleanId || `physio-${e.id}` === id);
+};
+
+export const getPhysioTemplateById = (id: string): ExerciseTemplate | undefined => {
+  const cleanId = id.startsWith('physio-') ? id.replace(/^physio-/, '') : id;
+  return PHYSIOTHERAPY_TEMPLATES.find((t) => t.id === id || t.id === `physio-${cleanId}`);
+};
