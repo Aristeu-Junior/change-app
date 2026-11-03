@@ -606,10 +606,10 @@ export const PhysiotherapyView: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Lista de Exercícios do Plano com Toque para Ver Demonstração 3D */}
+                      {/* Lista de Exercícios do Plano com Miniatura 3D e Toque para Ver Demonstração */}
                       <div className="mt-3 pt-3 border-t border-[#27272a]/60 space-y-1.5">
                         <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500 block">
-                          Exercícios ({routine.exercises.length}): Toque para ver execução
+                          Exercícios ({routine.exercises.length}): Toque para ver execução 3D
                         </span>
                         <div className="space-y-1">
                           {routine.exercises.map((item, idx) => {
@@ -620,18 +620,36 @@ export const PhysiotherapyView: React.FC = () => {
                             const metric = isDuration
                               ? `${item.sets[0]?.duration_seconds || 30}s`
                               : `${item.sets[0]?.reps || 12} reps`;
+                            const tpl =
+                              PHYSIOTHERAPY_TEMPLATES.find((t) => t.id === item.exercise_template_id) ||
+                              getPhysioTemplateById(item.exercise_template_id);
+                            const thumbUrl = tpl?.gif_id
+                              ? `https://cdn.jsdelivr.net/gh/omercotkd/exercises-gifs@main/assets/${tpl.gif_id}.gif`
+                              : tpl?.gif_url || null;
 
                             return (
                               <button
                                 key={idx}
                                 type="button"
                                 onClick={() => handleOpenExercisePreview(item.exercise_template_id)}
-                                className="w-full flex items-center justify-between text-[11px] font-semibold text-zinc-300 hover:text-white p-1 rounded-lg hover:bg-white/5 transition text-left"
-                                title="Toque para ver a demonstração visual deste exercício"
+                                className="w-full flex items-center justify-between text-[11px] font-semibold text-zinc-300 hover:text-white p-1.5 rounded-xl hover:bg-white/5 transition text-left gap-2"
+                                title="Toque para ver a demonstração 3D deste exercício"
                               >
-                                <span className="truncate pr-2 flex items-center gap-1.5">
-                                  <Eye className="w-3 h-3 text-zinc-500 shrink-0" />
-                                  <span>
+                                <span className="truncate pr-2 flex items-center gap-2 min-w-0">
+                                  <div className="w-8 h-8 rounded-lg bg-white border border-zinc-700 overflow-hidden shrink-0 flex items-center justify-center">
+                                    {thumbUrl ? (
+                                      <img
+                                        src={thumbUrl}
+                                        alt={item.title}
+                                        loading="lazy"
+                                        decoding="async"
+                                        className="w-full h-full object-cover pointer-events-none select-none"
+                                      />
+                                    ) : (
+                                      <Eye className="w-3.5 h-3.5 text-zinc-700" />
+                                    )}
+                                  </div>
+                                  <span className="truncate">
                                     {idx + 1}. {item.title}
                                   </span>
                                 </span>
@@ -711,10 +729,10 @@ export const PhysiotherapyView: React.FC = () => {
                         {protoRaw?.subtitle || routine.notes}
                       </p>
 
-                      {/* Lista de Exercícios na Sequência */}
+                      {/* Lista de Exercícios na Sequência com Miniatura 3D */}
                       <div className="mt-3.5 pt-3 border-t border-[#27272a]/60 space-y-1.5">
                         <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500 block">
-                          Sequência ({routine.exercises.length}): Toque para ver execução
+                          Sequência ({routine.exercises.length}): Toque para ver execução 3D
                         </span>
                         <div className="space-y-1">
                           {routine.exercises.map((item, idx) => {
@@ -725,18 +743,36 @@ export const PhysiotherapyView: React.FC = () => {
                             const metric = isDuration
                               ? `${item.sets[0]?.duration_seconds || 30}s`
                               : `${item.sets[0]?.reps || 12} reps`;
+                            const tpl =
+                              PHYSIOTHERAPY_TEMPLATES.find((t) => t.id === item.exercise_template_id) ||
+                              getPhysioTemplateById(item.exercise_template_id);
+                            const thumbUrl = tpl?.gif_id
+                              ? `https://cdn.jsdelivr.net/gh/omercotkd/exercises-gifs@main/assets/${tpl.gif_id}.gif`
+                              : tpl?.gif_url || null;
 
                             return (
                               <button
                                 key={idx}
                                 type="button"
                                 onClick={() => handleOpenExercisePreview(item.exercise_template_id)}
-                                className="w-full flex items-center justify-between text-[11px] font-semibold text-zinc-300 hover:text-white p-1 rounded-lg hover:bg-white/5 transition text-left"
-                                title="Toque para ver a demonstração visual deste exercício"
+                                className="w-full flex items-center justify-between text-[11px] font-semibold text-zinc-300 hover:text-white p-1.5 rounded-xl hover:bg-white/5 transition text-left gap-2"
+                                title="Toque para ver a demonstração 3D deste exercício"
                               >
-                                <span className="truncate pr-2 flex items-center gap-1.5">
-                                  <Eye className="w-3 h-3 text-zinc-500 shrink-0" />
-                                  <span>
+                                <span className="truncate pr-2 flex items-center gap-2 min-w-0">
+                                  <div className="w-8 h-8 rounded-lg bg-white border border-zinc-700 overflow-hidden shrink-0 flex items-center justify-center">
+                                    {thumbUrl ? (
+                                      <img
+                                        src={thumbUrl}
+                                        alt={item.title}
+                                        loading="lazy"
+                                        decoding="async"
+                                        className="w-full h-full object-cover pointer-events-none select-none"
+                                      />
+                                    ) : (
+                                      <Eye className="w-3.5 h-3.5 text-zinc-700" />
+                                    )}
+                                  </div>
+                                  <span className="truncate">
                                     {idx + 1}. {item.title}
                                   </span>
                                 </span>
@@ -835,86 +871,117 @@ export const PhysiotherapyView: React.FC = () => {
             })}
           </div>
 
-          {/* Lista de Cards de Exercícios */}
+          {/* Lista de Cards de Exercícios com Miniatura 3D */}
           <div className="space-y-3">
-            {filteredExercises.map((ex) => (
-              <div
-                key={ex.id}
-                className={`p-4 rounded-3xl border transition ${
-                  isLight
-                    ? 'bg-white border-zinc-200 text-black'
-                    : 'bg-[#141416] border-[#27272a] text-white'
-                } space-y-3`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-zinc-300">
-                        {ex.region_label}
-                      </span>
-                      <span className="text-[10px] font-bold text-zinc-400">
-                        {ex.execution_type === 'duration'
-                          ? `⏱ ${ex.default_duration_seconds} seg • ${ex.default_sets} séries`
-                          : `🔁 ${ex.default_reps} reps • ${ex.default_sets} séries`}
-                      </span>
-                    </div>
-                    <h3 className="text-sm font-black text-white mt-1 leading-snug">{ex.title}</h3>
-                    <p className="text-[11px] text-zinc-400 mt-0.5 leading-relaxed">
-                      {ex.clinical_objective}
-                    </p>
-                  </div>
-                </div>
+            {filteredExercises.map((ex) => {
+              const thumbUrl = ex.gif_id
+                ? `https://cdn.jsdelivr.net/gh/omercotkd/exercises-gifs@main/assets/${ex.gif_id}.gif`
+                : ex.gif_url || null;
 
-                <div className="p-3 bg-[#18181b] rounded-2xl border border-[#27272a] space-y-2 text-xs">
-                  <div className="flex items-start gap-2 text-zinc-300">
-                    <Info className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
-                    <span className="text-[11px] leading-relaxed">
-                      <strong>Posição:</strong> {ex.position}
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-2 text-emerald-300">
-                    <Wind className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span className="text-[11px] leading-relaxed">
-                      <strong>O que sentir:</strong> {ex.feel_cue}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Botões de Ação */}
-                <div className="flex items-center gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenExercisePreview(`physio-${ex.id}`)}
-                    className="flex-1 py-2.5 bg-white hover:bg-zinc-200 text-black font-black text-xs rounded-xl transition active:scale-95 shadow-md flex items-center justify-center gap-1.5"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Ver Execução</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleStartSingleExercise(ex)}
-                    className="px-3 py-2.5 bg-[#18181b] hover:bg-[#222226] border border-[#27272a] text-zinc-300 font-bold text-xs rounded-xl transition flex items-center gap-1"
-                    title="Praticar isoladamente com cronômetro"
-                  >
-                    <Play className="w-3 h-3 fill-zinc-300" />
-                    <span>Praticar</span>
-                  </button>
-
-                  {activeWorkout && (
+              return (
+                <div
+                  key={ex.id}
+                  className={`p-4 rounded-3xl border transition ${
+                    isLight
+                      ? 'bg-white border-zinc-200 text-black'
+                      : 'bg-[#141416] border-[#27272a] text-white'
+                  } space-y-3`}
+                >
+                  <div className="flex items-start gap-3.5">
+                    {/* Miniatura 3D Animada à Esquerda */}
                     <button
                       type="button"
-                      onClick={() => handleAddPhysioToWorkout(ex)}
-                      className="px-3 py-2.5 bg-[#18181b] hover:bg-[#222226] border border-[#27272a] text-white font-bold text-xs rounded-xl transition flex items-center gap-1"
-                      title="Adicionar ao treino ativo"
+                      onClick={() => handleOpenExercisePreview(`physio-${ex.id}`)}
+                      className="w-16 h-16 rounded-2xl bg-white border border-zinc-700 overflow-hidden shrink-0 shadow-inner relative group"
+                      title="Toque para ver a demonstração 3D ampliada"
                     >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Ao Treino</span>
+                      {thumbUrl ? (
+                        <img
+                          src={thumbUrl}
+                          alt={ex.title}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover pointer-events-none select-none"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-[#18181b] flex items-center justify-center">
+                          <Activity className="w-5 h-5 text-white" />
+                        </div>
+                      )}
+                      <span className="absolute bottom-0.5 right-0.5 px-1 py-0.2 rounded bg-black/80 text-[8px] font-black text-white uppercase">
+                        3D
+                      </span>
                     </button>
-                  )}
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-zinc-300">
+                          {ex.region_label}
+                        </span>
+                        <span className="text-[10px] font-bold text-zinc-400">
+                          {ex.execution_type === 'duration'
+                            ? `⏱ ${ex.default_duration_seconds} seg • ${ex.default_sets} séries`
+                            : `🔁 ${ex.default_reps} reps • ${ex.default_sets} séries`}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-black text-white mt-1 leading-snug">{ex.title}</h3>
+                      <p className="text-[11px] text-zinc-400 mt-0.5 leading-relaxed">
+                        {ex.clinical_objective}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-[#18181b] rounded-2xl border border-[#27272a] space-y-2 text-xs">
+                    <div className="flex items-start gap-2 text-zinc-300">
+                      <Info className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
+                      <span className="text-[11px] leading-relaxed">
+                        <strong>Posição:</strong> {ex.position}
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-2 text-emerald-300">
+                      <Wind className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <span className="text-[11px] leading-relaxed">
+                        <strong>O que sentir:</strong> {ex.feel_cue}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Botões de Ação */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenExercisePreview(`physio-${ex.id}`)}
+                      className="flex-1 py-2.5 bg-white hover:bg-zinc-200 text-black font-black text-xs rounded-xl transition active:scale-95 shadow-md flex items-center justify-center gap-1.5"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Ver Execução 3D</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleStartSingleExercise(ex)}
+                      className="px-3 py-2.5 bg-[#18181b] hover:bg-[#222226] border border-[#27272a] text-zinc-300 font-bold text-xs rounded-xl transition flex items-center gap-1"
+                      title="Praticar isoladamente com cronômetro"
+                    >
+                      <Play className="w-3 h-3 fill-zinc-300" />
+                      <span>Praticar</span>
+                    </button>
+
+                    {activeWorkout && (
+                      <button
+                        type="button"
+                        onClick={() => handleAddPhysioToWorkout(ex)}
+                        className="px-3 py-2.5 bg-[#18181b] hover:bg-[#222226] border border-[#27272a] text-white font-bold text-xs rounded-xl transition flex items-center gap-1"
+                        title="Adicionar ao treino ativo"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Ao Treino</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {filteredExercises.length === 0 && (
               <div className="p-8 text-center bg-[#121214] border border-[#27272a] rounded-3xl">
@@ -1048,6 +1115,9 @@ export const PhysiotherapyView: React.FC = () => {
                   const currentItem = activeSession.exercises[activeSession.currentIndex];
                   const ex = currentItem.exercise;
                   const isDuration = ex.execution_type === 'duration';
+                  const playerGifUrl = ex.gif_id
+                    ? `https://cdn.jsdelivr.net/gh/omercotkd/exercises-gifs@main/assets/${ex.gif_id}.gif`
+                    : ex.gif_url || null;
 
                   return (
                     <div className="space-y-4 max-w-sm mx-auto">
@@ -1062,6 +1132,17 @@ export const PhysiotherapyView: React.FC = () => {
                           {currentItem.notes || ex.clinical_objective}
                         </p>
                       </div>
+
+                      {/* Boneco 3D Animado em Tempo Real no Player */}
+                      {playerGifUrl && (
+                        <div className="w-40 h-40 mx-auto rounded-3xl bg-white border border-zinc-700 overflow-hidden shadow-xl flex items-center justify-center">
+                          <img
+                            src={playerGifUrl}
+                            alt={ex.title}
+                            className="w-full h-full object-contain pointer-events-none select-none"
+                          />
+                        </div>
+                      )}
 
                       {/* Display do Cronômetro / Contagem */}
                       {isDuration ? (

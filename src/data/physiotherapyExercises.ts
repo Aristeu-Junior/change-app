@@ -10,6 +10,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'knee-to-chest-single',
     title: 'Abraço Unilateral de Joelho (Knee to Chest)',
+    gif_id: '1709',
     region: 'lombar',
     region_label: 'Coluna & Lombar',
     clinical_objective: 'Descompressão das raízes nervosas lombares (L4-S1) e alívio da tensão na fáscia toracolombar.',
@@ -32,6 +33,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'knee-to-chest-double',
     title: 'Abraço Bilateral de Joelhos (Double Knee to Chest)',
+    gif_id: '1418',
     region: 'lombar',
     region_label: 'Coluna & Lombar',
     clinical_objective: 'Abertura passiva dos forames neurais intervertebrais e relaxamento profundo dos paravertebrais.',
@@ -54,6 +56,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'straight-leg-raise-90',
     title: 'Elevação de Perna Estendida a 90° em L (Straight Leg Raise)',
+    gif_id: '1002',
     region: 'quadril',
     region_label: 'Quadril & Pernas',
     clinical_objective: 'Controle motor lombo-pélvico, ativação isolada de quadríceps sem estresse patelar e flexibilidade neural.',
@@ -76,6 +79,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'hamstring-stretch-band-90',
     title: 'Alongamento de Isquiotibiais 90° com Faixa/Toalha',
+    gif_id: '1576',
     region: 'quadril',
     region_label: 'Quadril & Pernas',
     clinical_objective: 'Restauração do comprimento da cadeia miofascial posterior sem sobrecarga discal.',
@@ -98,6 +102,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'legs-up-the-wall-90',
     title: 'Pernas Elevadas na Parede a 90° (Viparita Karani)',
+    gif_id: '0865',
     region: 'lombar',
     region_label: 'Coluna & Lombar',
     clinical_objective: 'Drenagem circulatória dos membros inferiores e descompressão por gravidade reversa da coluna.',
@@ -120,6 +125,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'piriformis-figure-4',
     title: 'Alongamento de Piriforme em 4 (Figura 4 Deitado)',
+    gif_id: '1710',
     region: 'quadril',
     region_label: 'Quadril & Pernas',
     clinical_objective: 'Descompressão e relaxamento do músculo piriforme para alívio imediato de ciatalgia e dor no quadril.',
@@ -142,6 +148,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'cat-cow-mobility',
     title: 'Gato-Camelo / Cat-Cow (Mobilidade Vertebral)',
+    gif_id: '1363',
     region: 'lombar',
     region_label: 'Coluna & Lombar',
     clinical_objective: 'Restauração da mobilidade segmentar intervertebral torácica e lombar com sincronização respiratória.',
@@ -164,6 +171,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'bird-dog-core',
     title: 'Perdigueiro / Bird-Dog (Estabilidade Lombo-Pélvica)',
+    gif_id: '1512',
     region: 'lombar',
     region_label: 'Coluna & Lombar',
     clinical_objective: 'Ativação dos estabilizadores profundos (multífidos e transverso) com carga compressiva discal mínima.',
@@ -186,6 +194,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'glute-bridge-pelvic-tilt',
     title: 'Ponte de Glúteo com Báscula Pélvica',
+    gif_id: '1422',
     region: 'quadril',
     region_label: 'Quadril & Pernas',
     clinical_objective: 'Reeducação pélvica, despertar da musculatura glútea inibida e descompressão da sínfise púbica.',
@@ -208,6 +217,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'lumbar-twist-knees',
     title: 'Rotação Lombar Deitado (Torção Suave de Tronco)',
+    gif_id: '3639',
     region: 'lombar',
     region_label: 'Coluna & Lombar',
     clinical_objective: 'Mobilização passiva dos ligamentos e discos intervertebrais com relaxamento do quadrado lombar.',
@@ -231,6 +241,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'childs-pose-decompression',
     title: 'Posição da Criança / Child\'s Pose (Descompressão)',
+    gif_id: '1346',
     region: 'lombar',
     region_label: 'Coluna & Lombar',
     clinical_objective: 'Alongamento axial da coluna vertebral, tração passiva das facetas articulares e alívio do estresse.',
@@ -253,6 +264,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'sphinx-mckenzie-extension',
     title: 'Extensão Suave de Tronco / Posição da Esfinge (Método McKenzie)',
+    gif_id: '1362',
     region: 'lombar',
     region_label: 'Coluna & Lombar',
     clinical_objective: 'Centralização de desvios discais posteriores (hérnias e protusões) e alívio de dor irradiada.',
@@ -275,6 +287,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'clamshell-hip-stability',
     title: 'Ostra / Clamshell Deitado de Lado',
+    gif_id: '0710',
     region: 'quadril',
     region_label: 'Quadril & Pernas',
     clinical_objective: 'Fortalecimento do glúteo médio e rotadores externos para estabilização femoropatelar e prevenção de valgo dinâmico.',
@@ -297,6 +310,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'dead-bug-therapeutic',
     title: 'Dead Bug Terapêutico (Controle Motor Lombo-Pélvico)',
+    gif_id: '0276',
     region: 'lombar',
     region_label: 'Coluna & Lombar',
     clinical_objective: 'Fortalecimento do core profundo e controle da transição lombo-sacra em cadeia cinética aberta.',
@@ -319,6 +333,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'vmo-terminal-knee-extension',
     title: 'Extensão Terminal de Joelho com Rolo/Toalha (Isometria de VMO)',
+    gif_id: '1548',
     region: 'joelho',
     region_label: 'Joelhos & Pernas',
     clinical_objective: 'Ativação seletiva do vasto medial oblíquo (VMO) para centralização e rastreamento da patela.',
@@ -341,6 +356,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'codman-pendulum-shoulder',
     title: 'Pêndulo de Codman para Ombro',
+    gif_id: '0669',
     region: 'ombro',
     region_label: 'Ombros & Escápulas',
     clinical_objective: 'Mobilização decoaptativa da articulação glenoumeral sem ativação muscular defensiva.',
@@ -363,6 +379,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'shoulder-external-rotation-side',
     title: 'Rotação Externa de Ombro Deitado de Lado',
+    gif_id: '0863',
     region: 'ombro',
     region_label: 'Ombros & Escápulas',
     clinical_objective: 'Fortalecimento dos rotadores externos do manguito rotador (infraespinal e redondo menor).',
@@ -385,6 +402,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'wall-slide-scapular',
     title: 'Deslizamento Escapular na Parede (Wall Slide)',
+    gif_id: '1017',
     region: 'ombro',
     region_label: 'Ombros & Escápulas',
     clinical_objective: 'Ativação do serrátil anterior e trapézio inferior para reeducação do ritmo escapuloumeral.',
@@ -407,6 +425,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'ankle-dorsiflexion-wall',
     title: 'Mobilidade de Tornozelo na Parede (Dorsiflexão)',
+    gif_id: '1377',
     region: 'joelho',
     region_label: 'Joelhos & Pernas',
     clinical_objective: 'Aumento da amplitude de dorsiflexão talocrural para redução de sobrecarga patelar e lombar.',
@@ -430,6 +449,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'doorway-pectoral-stretch',
     title: 'Alongamento de Peitoral no Vão da Porta',
+    gif_id: '1271',
     region: 'cervical',
     region_label: 'Cervical & Postura',
     clinical_objective: 'Inibição e alongamento do peitoral menor para correção de postura cifótica e anteriorização de ombros.',
@@ -452,6 +472,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'neck-trapezius-stretch',
     title: 'Alongamento Suave de Trapézio e Cervical',
+    gif_id: '0716',
     region: 'cervical',
     region_label: 'Cervical & Postura',
     clinical_objective: 'Desativação de pontos-gatilho miofasciais no trapézio superior e alívio de cefaleias tensionais.',
@@ -474,6 +495,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'kneeling-hip-flexor-psoas',
     title: 'Alongamento de Psoas e Flexores de Quadril',
+    gif_id: '1564',
     region: 'quadril',
     region_label: 'Quadril & Pernas',
     clinical_objective: 'Alongamento do iliopsoas encurtado por longos períodos na posição sentada, reduzindo hiperlordose lombar.',
@@ -496,6 +518,7 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
   {
     id: 'pelvic-tilt-supine',
     title: 'Báscula Pélvica Isolada (Pelvic Tilt Deitado)',
+    gif_id: '3147',
     region: 'lombar',
     region_label: 'Coluna & Lombar',
     clinical_objective: 'Consciência corporal lombo-pélvica, alívio de espasmos nos eretores da espinha e ativação do transverso.',
@@ -514,6 +537,29 @@ export const PHYSIOTHERAPY_EXERCISES: PhysiotherapyExercise[] = [
     feel_cue: 'Sensação de controle e massagem suave no cóccix e sacro.',
     caution: 'O movimento é suave e sutil; não tire o quadril do solo.',
     breathing: 'Solte o ar ao colar a lombar no chão e inspire ao arquear suavemente.'
+  },
+  {
+    id: 'seated-sciatic-nerve-flossing',
+    title: 'Mobilização Neural do Nervo Ciático Sentado',
+    gif_id: '1511',
+    region: 'lombar',
+    region_label: 'Coluna & Lombar',
+    clinical_objective: 'Deslizamento neurodinâmico suave do nervo ciático sem estresse de tensão neural excessiva.',
+    execution_type: 'reps',
+    default_reps: 10,
+    default_sets: 3,
+    unilateral: true,
+    position: 'Sentado na borda de uma cadeira firme.',
+    steps: [
+      'Sente-se na cadeira com as mãos apoiadas nas coxas.',
+      'Ao estender o joelho da perna afetada à frente (puxando a ponta do pé para cima), olhe simultaneamente para o teto (extensão cervical).',
+      'Ao dobrar o joelho voltando o pé para baixo da cadeira, abaixe o queixo em direção ao peito (flexão cervical).',
+      'O movimento combinado faz o nervo deslizar livremente em vez de ser esticado nas duas pontas ao mesmo tempo.',
+      'Realize o movimento como um balanço sincronizado e calmo.'
+    ],
+    feel_cue: 'Sensação de liberação progressiva na parte posterior da coxa sem choque ou pontada.',
+    caution: 'NUNCA estique a perna e abaixe a cabeça ao mesmo tempo em fase aguda de ciatalgia.',
+    breathing: 'Inspire ao estender a perna e olhar para cima; expire ao dobrar a perna e olhar para baixo.'
   }
 ];
 
@@ -614,6 +660,8 @@ export const PHYSIOTHERAPY_TEMPLATES: ExerciseTemplate[] = PHYSIOTHERAPY_EXERCIS
   return {
     id: `physio-${ex.id}`,
     title: ex.title,
+    gif_id: ex.gif_id,
+    gif_url: ex.gif_url,
     primary_muscle_group: primaryMuscle,
     secondary_muscle_groups: secondary,
     equipment: 'peso_corporal',

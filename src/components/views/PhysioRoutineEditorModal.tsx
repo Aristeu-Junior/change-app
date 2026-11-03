@@ -326,6 +326,11 @@ export const PhysioRoutineEditorModal: React.FC<PhysioRoutineEditorModalProps> =
                     PHYSIOTHERAPY_TEMPLATES.find((t) => t.id === ex.exercise_template_id) ||
                     PHYSIOTHERAPY_TEMPLATES.find((t) => `physio-${t.id}` === ex.exercise_template_id);
                   const physioData = getPhysioExerciseById(ex.exercise_template_id);
+                  const thumbUrl = physioData?.gif_id
+                    ? `https://cdn.jsdelivr.net/gh/omercotkd/exercises-gifs@main/assets/${physioData.gif_id}.gif`
+                    : tpl?.gif_id
+                    ? `https://cdn.jsdelivr.net/gh/omercotkd/exercises-gifs@main/assets/${tpl.gif_id}.gif`
+                    : null;
                   const isDuration = Boolean(ex.sets[0]?.duration_seconds !== null && ex.sets[0]?.duration_seconds !== undefined);
                   const currentMetric = isDuration
                     ? `${ex.sets[0]?.duration_seconds || 30}s`
@@ -336,24 +341,40 @@ export const PhysioRoutineEditorModal: React.FC<PhysioRoutineEditorModalProps> =
                       key={ex.id || exIdx}
                       className="p-3.5 bg-[#18181b] border border-[#27272a] rounded-2xl space-y-2.5"
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-emerald-400">
-                              {physioData?.region_label || 'Fisioterapia'}
-                            </span>
-                            <span className="text-[10px] font-bold text-zinc-400">
-                              {isDuration ? '⏱ Isometria / Tempo' : '🔁 Repetições'}
-                            </span>
+                      <div className="flex items-start justify-between gap-2.5">
+                        <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                          <div className="w-11 h-11 rounded-xl bg-white border border-zinc-700 overflow-hidden shrink-0 flex items-center justify-center">
+                            {thumbUrl ? (
+                              <img
+                                src={thumbUrl}
+                                alt={ex.title}
+                                loading="lazy"
+                                decoding="async"
+                                className="w-full h-full object-cover pointer-events-none select-none"
+                              />
+                            ) : (
+                              <Activity className="w-4 h-4 text-zinc-700" />
+                            )}
                           </div>
-                          <h4 className="text-xs font-black text-white mt-1 leading-snug">
-                            {ex.title}
-                          </h4>
-                          {ex.notes && (
-                            <p className="text-[10px] text-zinc-400 truncate mt-0.5">
-                              {ex.notes}
-                            </p>
-                          )}
+
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-emerald-400">
+                                {physioData?.region_label || 'Fisioterapia'}
+                              </span>
+                              <span className="text-[10px] font-bold text-zinc-400">
+                                {isDuration ? '⏱ Isometria / Tempo' : '🔁 Repetições'}
+                              </span>
+                            </div>
+                            <h4 className="text-xs font-black text-white mt-1 leading-snug">
+                              {ex.title}
+                            </h4>
+                            {ex.notes && (
+                              <p className="text-[10px] text-zinc-400 truncate mt-0.5">
+                                {ex.notes}
+                              </p>
+                            )}
+                          </div>
                         </div>
 
                         <div className="flex items-center gap-1 shrink-0">
@@ -526,36 +547,58 @@ export const PhysioRoutineEditorModal: React.FC<PhysioRoutineEditorModalProps> =
               </div>
             </div>
 
-            {/* Lista dos Exercícios para Selecionar */}
+            {/* Lista dos Exercícios para Selecionar com Miniatura 3D */}
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-              {filteredPickerExercises.map((ex) => (
-                <div
-                  key={ex.id}
-                  onClick={() => handleSelectPhysioExercise(ex)}
-                  className="p-3 bg-[#18181b] hover:bg-[#202024] border border-[#27272a] rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition active:scale-[0.98]"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-emerald-400">
-                        {ex.region_label}
-                      </span>
-                      <span className="text-[10px] font-bold text-zinc-400">
-                        {ex.execution_type === 'duration'
-                          ? `⏱ ${ex.default_duration_seconds}s • ${ex.default_sets} séries`
-                          : `🔁 ${ex.default_reps} reps • ${ex.default_sets} séries`}
-                      </span>
-                    </div>
-                    <h4 className="text-xs font-black text-white mt-1 leading-snug">{ex.title}</h4>
-                    <p className="text-[10px] text-zinc-400 truncate mt-0.5">
-                      {ex.clinical_objective}
-                    </p>
-                  </div>
+              {filteredPickerExercises.map((ex) => {
+                const thumbUrl = ex.gif_id
+                  ? `https://cdn.jsdelivr.net/gh/omercotkd/exercises-gifs@main/assets/${ex.gif_id}.gif`
+                  : ex.gif_url || null;
 
-                  <div className="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center shrink-0 shadow">
-                    <Plus className="w-4 h-4 stroke-[2.5]" />
+                return (
+                  <div
+                    key={ex.id}
+                    onClick={() => handleSelectPhysioExercise(ex)}
+                    className="p-3 bg-[#18181b] hover:bg-[#202024] border border-[#27272a] rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-12 h-12 rounded-xl bg-white border border-zinc-700 overflow-hidden shrink-0 flex items-center justify-center">
+                        {thumbUrl ? (
+                          <img
+                            src={thumbUrl}
+                            alt={ex.title}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover pointer-events-none select-none"
+                          />
+                        ) : (
+                          <Activity className="w-4 h-4 text-zinc-700" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-emerald-400">
+                            {ex.region_label}
+                          </span>
+                          <span className="text-[10px] font-bold text-zinc-400">
+                            {ex.execution_type === 'duration'
+                              ? `⏱ ${ex.default_duration_seconds}s • ${ex.default_sets} séries`
+                              : `🔁 ${ex.default_reps} reps • ${ex.default_sets} séries`}
+                          </span>
+                        </div>
+                        <h4 className="text-xs font-black text-white mt-1 leading-snug">{ex.title}</h4>
+                        <p className="text-[10px] text-zinc-400 truncate mt-0.5">
+                          {ex.clinical_objective}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center shrink-0 shadow">
+                      <Plus className="w-4 h-4 stroke-[2.5]" />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {filteredPickerExercises.length === 0 && (
                 <div className="p-8 text-center text-xs text-zinc-400">

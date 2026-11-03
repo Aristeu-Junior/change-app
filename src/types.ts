@@ -158,6 +158,8 @@ export type PhysioRegion = 'lombar' | 'quadril' | 'joelho' | 'ombro' | 'cervical
 export interface PhysiotherapyExercise {
   id: string;
   title: string;
+  gif_id: string;
+  gif_url?: string;
   region: PhysioRegion;
   region_label: string;
   clinical_objective: string;

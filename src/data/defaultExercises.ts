@@ -2540,7 +2540,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0573",
+    "gif_id": "0598",
     "muscles_pt": "Adutor Longo, Adutor Magno, Adutor Curto, Grácil, Pernas",
     "instructions": "Exercício fundamental para fortalecimento e hipertrofia da parte interna das coxas (adutores).",
     "steps": [
@@ -2561,7 +2561,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0575",
+    "gif_id": "0597",
     "muscles_pt": "Glúteo Médio, Glúteo Mínimo, Glúteo Máximo, Pernas",
     "instructions": "Variação inclinada da abdutora para maior ativação e recrutamento das fibras superiores do glúteo médio.",
     "steps": [
@@ -2584,7 +2584,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0583",
+    "gif_id": "0599",
     "muscles_pt": "Bíceps Femoral, Semitendíneo, Semimembranoso, Posterior de Coxa, Pernas",
     "instructions": "Excelente para corrigir assimetrias de força e volume entre as pernas nos isquiotibiais.",
     "steps": [
@@ -2608,7 +2608,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0584",
+    "gif_id": "3195",
     "muscles_pt": "Bíceps Femoral, Semitendíneo, Posterior de Coxa, Pernas",
     "instructions": "Execução unilateral na mesa flexora deitada, isolando a contração de cada perna individualmente.",
     "steps": [
@@ -2631,7 +2631,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0586",
+    "gif_id": "0582",
     "muscles_pt": "Bíceps Femoral, Semitendíneo, Posterior de Coxa, Pernas",
     "instructions": "Trabalho unilateral de flexão de joelho em pé com foco no pico de contração dos posteriores.",
     "steps": [
@@ -2655,7 +2655,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0757",
+    "gif_id": "0770",
     "muscles_pt": "Quadríceps, Glúteo Máximo, Pernas, Coxas",
     "instructions": "Agachamento guiado na máquina Smith proporcionando estabilidade para alta sobrecarga no quadríceps e glúteos.",
     "steps": [
@@ -2678,7 +2678,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0758",
+    "gif_id": "0768",
     "muscles_pt": "Quadríceps, Glúteo Máximo, Glúteo Médio, Pernas",
     "instructions": "Variação do búlgaro na barra guiada eliminando o desequilíbrio e maximizando a sobrecarga na coxa dianteira.",
     "steps": [
@@ -2701,7 +2701,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0759",
+    "gif_id": "0769",
     "muscles_pt": "Quadríceps, Glúteos, Posterior, Pernas",
     "instructions": "Afundo estático com trajetória vertical fixa, seguro e potente para desenvolvimento de pernas.",
     "steps": [
@@ -2724,7 +2724,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0587",
+    "gif_id": "2611",
     "muscles_pt": "Quadríceps, Glúteo Máximo, Pernas",
     "instructions": "Empurrada de pernas em plano horizontal, muito confortável para a lombar e eficiente para quadríceps.",
     "steps": [
@@ -2746,7 +2746,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0760",
+    "gif_id": "3562",
     "muscles_pt": "Glúteo Máximo, Glúteo Médio, Pernas, Posterior",
     "instructions": "Aparelho específico para elevação de quadril, garantindo conforto nas cristas ilíacas e carga máxima no glúteo.",
     "steps": [
@@ -2769,7 +2769,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0576",
+    "gif_id": "0228",
     "muscles_pt": "Glúteo Máximo, Glúteo Médio, Pernas",
     "instructions": "Extensão de quadril no cabo com caneleira ou alça no tornozelo para isolamento de glúteo.",
     "steps": [
@@ -2792,7 +2792,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "peso_corporal",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0577",
+    "gif_id": "2286",
     "muscles_pt": "Glúteo Máximo, Glúteo Médio, Pernas",
     "instructions": "Exercício clássico de quatro apoios no colchonete com caneleira para elevação de perna.",
     "steps": [
@@ -2812,7 +2812,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0761",
+    "gif_id": "0773",
     "muscles_pt": "Gastrocnêmio, Sóleo, Panturrilhas, Pernas",
     "instructions": "Elevação plantar com a barra do Smith nos ombros e a ponta dos pés apoiada em um step.",
     "steps": [
@@ -2832,7 +2832,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "squat",
-    "gif_id": "0762",
+    "gif_id": "1383",
     "muscles_pt": "Gastrocnêmio, Sóleo, Panturrilhas, Pernas",
     "instructions": "Elevação de calcanhares no aparelho de agachamento Hack com ombros apoiados.",
     "steps": [
@@ -2852,7 +2852,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "peso_corporal",
     "type": "reps_only",
     "animation_type": "squat",
-    "gif_id": "0763",
+    "gif_id": "1396",
     "muscles_pt": "Tibial Anterior, Frente da Canela, Pernas",
     "instructions": "Fortalecimento do tibial anterior, prevenindo canelite e protegendo os joelhos.",
     "steps": [
@@ -2875,7 +2875,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "distance_duration",
     "animation_type": "squat",
-    "gif_id": "0685",
+    "gif_id": "2138",
     "muscles_pt": "Cardiovascular, Quadríceps, Glúteos, Panturrilhas",
     "instructions": "Cardio de baixo impacto para condicionamento cardiorrespiratório e aquecimento.",
     "steps": [
@@ -2898,7 +2898,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "distance_duration",
     "animation_type": "squat",
-    "gif_id": "0686",
+    "gif_id": "0798",
     "muscles_pt": "Cardiovascular, Membros Inferiores, Lombar Protegida",
     "instructions": "Bicicleta com encosto ergonômico, ideal para treinos longos com total suporte para a coluna.",
     "steps": [
@@ -2921,7 +2921,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "distance_duration",
     "animation_type": "squat",
-    "gif_id": "0687",
+    "gif_id": "2141",
     "muscles_pt": "Cardiovascular, Glúteos, Pernas, Braços",
     "instructions": "Exercício aeróbico sem impacto articular unindo movimento de pernas e braços em harmonia.",
     "steps": [
@@ -2945,7 +2945,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "duration",
     "animation_type": "squat",
-    "gif_id": "0688",
+    "gif_id": "2311",
     "muscles_pt": "Cardiovascular, Glúteos, Quadríceps, Panturrilhas",
     "instructions": "Subida contínua de degraus de alta queima calórica e grande solicitação de glúteos e pernas.",
     "steps": [
@@ -2969,7 +2969,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "distance_duration",
     "animation_type": "pull_up",
-    "gif_id": "0689",
+    "gif_id": "0160",
     "muscles_pt": "Cardiovascular, Dorsais, Pernas, Core, Braços",
     "instructions": "Cardio completo para o corpo inteiro combinando empurrão de pernas e puxada de tronco.",
     "steps": [
@@ -2992,7 +2992,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "outro",
     "type": "duration",
     "animation_type": "squat",
-    "gif_id": "0690",
+    "gif_id": "2612",
     "muscles_pt": "Cardiovascular, Panturrilhas, Agilidade, Ombros",
     "instructions": "Treino cardiovascular dinâmico que melhora ritmo, agilidade e condicionamento.",
     "steps": [
@@ -3014,7 +3014,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "distance_duration",
     "animation_type": "squat",
-    "gif_id": "0691",
+    "gif_id": "2331",
     "muscles_pt": "Cardiovascular Intenso, Pernas, Peitoral, Dorsal",
     "instructions": "Bicicleta com resistência a ar para treinos de condicionamento de alta potência.",
     "steps": [
@@ -3058,7 +3058,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "peso_corporal",
     "type": "duration",
     "animation_type": "bench_press",
-    "gif_id": "2136",
+    "gif_id": "0705",
     "muscles_pt": "Oblíquos, Quadrado Lombar, Glúteo Médio, Core",
     "instructions": "Isometria lateral para sustentação e fortalecimento dos oblíquos e estabilizadores da pelve.",
     "steps": [
@@ -3079,7 +3079,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "peso_corporal",
     "type": "duration",
     "animation_type": "bench_press",
-    "gif_id": "2137",
+    "gif_id": "3147",
     "muscles_pt": "Transverso do Abdômen, Linha de Cintura, Core Profundo",
     "instructions": "Exercício isométrico clássico para afinar a linha de cintura e fortalecer o transverso abdominal.",
     "steps": [
@@ -3103,7 +3103,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "peso_corporal",
     "type": "duration",
     "animation_type": "pull_up",
-    "gif_id": "2138",
+    "gif_id": "0688",
     "muscles_pt": "Dorsais, Descompressão da Coluna, Antebraços, Pegada",
     "instructions": "Ficar pendurado na barra fixa pelo tempo determinado para descomprimir as vértebras e reforçar a pegada.",
     "steps": [
@@ -3125,7 +3125,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "peso_corporal",
     "type": "duration",
     "animation_type": "squat",
-    "gif_id": "2139",
+    "gif_id": "0624",
     "muscles_pt": "Quadríceps, Glúteos, Resistência de Pernas",
     "instructions": "Agachamento estático encostado na parede com joelhos a 90 graus sustentando o tempo estipulado.",
     "steps": [
@@ -3149,7 +3149,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "peso_corporal",
     "type": "duration",
     "animation_type": "bench_press",
-    "gif_id": "2140",
+    "gif_id": "3419",
     "muscles_pt": "Reto Abdominal, Iliopsoas, Tríceps, Ombros",
     "instructions": "Sustentação isométrica do corpo com pernas estendidas à frente formando um ângulo reto 'L'.",
     "steps": [
@@ -3171,7 +3171,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "peso_corporal",
     "type": "duration",
     "animation_type": "squat",
-    "gif_id": "2141",
+    "gif_id": "3013",
     "muscles_pt": "Glúteo Máximo, Isquiotibiais, Lombar",
     "instructions": "Sustentação estática no topo da elevação de quadril para ativação e força dos glúteos.",
     "steps": [
@@ -3191,7 +3191,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "peso_corporal",
     "type": "duration",
     "animation_type": "bench_press",
-    "gif_id": "2142",
+    "gif_id": "3420",
     "muscles_pt": "Reto Abdominal, Transverso, Core",
     "instructions": "Sustentação ginástica em formato de canoa com lombar colada ao chão.",
     "steps": [
@@ -3232,7 +3232,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "peso_corporal",
     "type": "reps_only",
     "animation_type": "bench_press",
-    "gif_id": "0002",
+    "gif_id": "0872",
     "muscles_pt": "Reto Abdominal Inferior, Pelve",
     "instructions": "Enrolamento da pelve em direção ao peito com foco na porção inferior do abdômen.",
     "steps": [
@@ -3255,7 +3255,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0298",
+    "gif_id": "0576",
     "muscles_pt": "Peitoral Maior, Tríceps, Deltoide Anterior",
     "instructions": "Supino guiado convergente acompanhando a mecânica articular do peitoral.",
     "steps": [
@@ -3278,7 +3278,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0299",
+    "gif_id": "1299",
     "muscles_pt": "Peitoral Superior, Deltoide Anterior, Tríceps",
     "instructions": "Supino inclinado na máquina articulada para foco na porção clavicular do peito.",
     "steps": [
@@ -3301,7 +3301,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "maquina",
     "type": "weight_reps",
     "animation_type": "pull_up",
-    "gif_id": "0300",
+    "gif_id": "1350",
     "muscles_pt": "Grande Dorsal, Rombóides, Trapézio, Bíceps",
     "instructions": "Remada com peito apoiado no banco, poupando a lombar e focando no miolo das costas.",
     "steps": [
@@ -3323,7 +3323,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0301",
+    "gif_id": "0171",
     "muscles_pt": "Peitoral Maior, Peitoral Superior",
     "instructions": "Crucifixo nos cabos com polias na altura média gerando tensão contínua no peitoral.",
     "steps": [
@@ -3343,7 +3343,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "bench_press",
-    "gif_id": "0302",
+    "gif_id": "1724",
     "muscles_pt": "Tríceps Cabeça Longa, Tríceps Braquial",
     "instructions": "Extensão acima da cabeça na polia média com corda para máximo alongamento da cabeça longa do tríceps.",
     "steps": [
@@ -3365,7 +3365,7 @@ export const DEFAULT_EXERCISES: ExerciseTemplate[] = [
     "equipment": "polia",
     "type": "weight_reps",
     "animation_type": "pull_up",
-    "gif_id": "0303",
+    "gif_id": "0202",
     "muscles_pt": "Deltoide Posterior, Rombóides, Trapézio",
     "instructions": "Crucifixo inverso nos cabos cruzados para foco no deltoide posterior.",
     "steps": [
