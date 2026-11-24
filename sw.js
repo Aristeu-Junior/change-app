@@ -1,4 +1,4 @@
-const CACHE_NAME = 'change-workout-v37';
+const CACHE_NAME = 'change-workout-v38';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -20,8 +20,14 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Deixa chamadas ao Supabase irem direto pela rede sem interceptação
-  if (url.hostname.includes('supabase.co')) {
+  // Deixa chamadas ao Supabase, vídeos em streaming (HTTP Range/206) e YouTube irem direto pela rede
+  if (
+    url.hostname.includes('supabase.co') ||
+    url.hostname.includes('youtube') ||
+    url.hostname.includes('ytimg.com') ||
+    event.request.destination === 'video' ||
+    event.request.headers.has('range')
+  ) {
     return;
   }
 
