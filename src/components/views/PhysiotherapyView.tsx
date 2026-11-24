@@ -24,7 +24,8 @@ import {
   ChevronRight,
   Eye,
   AlertTriangle,
-  FolderPlus
+  FolderPlus,
+  Film
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import {
@@ -51,6 +52,8 @@ import {
 } from '../../utils/calc';
 import { PhysioRoutineEditorModal } from './PhysioRoutineEditorModal';
 import { ExerciseVisualDemo } from '../ExerciseVisualDemo';
+import { StandardExerciseVideoPlayer } from '../StandardExerciseVideoPlayer';
+import { ExerciseVideoManagerModal } from '../ExerciseVideoManagerModal';
 
 const REGION_FILTERS: { label: string; value: PhysioRegion | 'all' }[] = [
   { label: 'Todos', value: 'all' },
@@ -64,6 +67,8 @@ const REGION_FILTERS: { label: string; value: PhysioRegion | 'all' }[] = [
 export const PhysiotherapyView: React.FC = () => {
   const {
     theme,
+    isCurrentUserAdmin,
+    getExerciseVideo,
     activeWorkout,
     addExerciseToWorkout,
     setWorkoutModalOpen,
@@ -87,6 +92,7 @@ export const PhysiotherapyView: React.FC = () => {
 
   // Modal de Demonstração Visual de Execução (3D / Biomecânica / Anatomia)
   const [previewTemplate, setPreviewTemplate] = useState<ExerciseTemplate | null>(null);
+  const [videoManagerTarget, setVideoManagerTarget] = useState<ExerciseTemplate | null>(null);
 
   // Estados da Sessão Terapêutica Guiada Rápida (Player Interno Opcional)
   const [activeSession, setActiveSession] = useState<{
@@ -877,6 +883,8 @@ export const PhysiotherapyView: React.FC = () => {
               const thumbUrl = ex.gif_id
                 ? `https://cdn.jsdelivr.net/gh/omercotkd/exercises-gifs@main/assets/${ex.gif_id}.gif`
                 : ex.gif_url || null;
+              const physioTplId = `physio-${ex.id}`;
+              const physioVideoMeta = getExerciseVideo(physioTplId);
 
               return (
                 <div
@@ -923,6 +931,12 @@ export const PhysiotherapyView: React.FC = () => {
                             ? `⏱ ${ex.default_duration_seconds} seg • ${ex.default_sets} séries`
                             : `🔁 ${ex.default_reps} reps • ${ex.default_sets} séries`}
                         </span>
+                        {physioVideoMeta && (
+                          <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 inline-flex items-center gap-1">
+                            <Film className="w-2.5 h-2.5" />
+                            Vídeo
+                          </span>
+                        )}
                       </div>
                       <h3 className="text-sm font-black text-white mt-1 leading-snug">{ex.title}</h3>
                       <p className="text-[11px] text-zinc-400 mt-0.5 leading-relaxed">
@@ -954,8 +968,29 @@ export const PhysiotherapyView: React.FC = () => {
                       className="flex-1 py-2.5 bg-white hover:bg-zinc-200 text-black font-black text-xs rounded-xl transition active:scale-95 shadow-md flex items-center justify-center gap-1.5"
                     >
                       <Eye className="w-3.5 h-3.5" />
-                      <span>Ver Execução 3D</span>
+                      <span>{physioVideoMeta ? 'Ver Vídeo / 3D' : 'Ver Execução 3D'}</span>
                     </button>
+
+                    {isCurrentUserAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const tpl =
+                            PHYSIOTHERAPY_TEMPLATES.find((t) => t.id === physioTplId) ||
+                            getPhysioTemplateById(physioTplId);
+                          if (tpl) setVideoManagerTarget(tpl);
+                        }}
+                        className={`px-3 py-2.5 rounded-xl border text-xs font-bold flex items-center gap-1 transition ${
+                          physioVideoMeta
+                            ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
+                            : 'bg-[#18181b] hover:bg-[#222226] border-[#27272a] text-zinc-300'
+                        }`}
+                        title={physioVideoMeta ? 'Editar vídeo padronizado' : 'Adicionar vídeo padronizado'}
+                      >
+                        <Film className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">{physioVideoMeta ? 'Editar Vídeo' : '+ Vídeo'}</span>
+                      </button>
+                    )}
 
                     <button
                       type="button"
@@ -1115,6 +1150,7 @@ export const PhysiotherapyView: React.FC = () => {
                   const currentItem = activeSession.exercises[activeSession.currentIndex];
                   const ex = currentItem.exercise;
                   const isDuration = ex.execution_type === 'duration';
+                  const sessionVideoMeta = getExerciseVideo(`physio-${ex.id}`);
                   const playerGifUrl = ex.gif_id
                     ? `https://cdn.jsdelivr.net/gh/omercotkd/exercises-gifs@main/assets/${ex.gif_id}.gif`
                     : ex.gif_url || null;
@@ -1133,15 +1169,22 @@ export const PhysiotherapyView: React.FC = () => {
                         </p>
                       </div>
 
-                      {/* Boneco 3D Animado em Tempo Real no Player */}
-                      {playerGifUrl && (
-                        <div className="w-40 h-40 mx-auto rounded-3xl bg-white border border-zinc-700 overflow-hidden shadow-xl flex items-center justify-center">
-                          <img
-                            src={playerGifUrl}
-                            alt={ex.title}
-                            className="w-full h-full object-contain pointer-events-none select-none"
-                          />
-                        </div>
+                      {/* Vídeo Real Padronizado (se cadastrado) ou Boneco 3D Animado em Tempo Real no Player */}
+                      {sessionVideoMeta ? (
+                        <StandardExerciseVideoPlayer
+                          videoMeta={sessionVideoMeta}
+                          exerciseTitle={ex.title}
+                        />
+                      ) : (
+                        playerGifUrl && (
+                          <div className="w-40 h-40 mx-auto rounded-3xl bg-white border border-zinc-700 overflow-hidden shadow-xl flex items-center justify-center">
+                            <img
+                              src={playerGifUrl}
+                              alt={ex.title}
+                              className="w-full h-full object-contain pointer-events-none select-none"
+                            />
+                          </div>
+                        )
                       )}
 
                       {/* Display do Cronômetro / Contagem */}
@@ -1260,6 +1303,22 @@ export const PhysiotherapyView: React.FC = () => {
             )}
           </div>
         </div>
+      )}
+
+      {/* Modal de Cadastro e Padronização de Vídeo em Fisioterapia (Admin) */}
+      {videoManagerTarget && (
+        <ExerciseVideoManagerModal
+          exercise={videoManagerTarget}
+          isOpen={Boolean(videoManagerTarget)}
+          onClose={() => setVideoManagerTarget(null)}
+          onSaved={(savedMeta) => {
+            showToast(
+              savedMeta
+                ? `✓ Vídeo padronizado salvo em "${videoManagerTarget.title}"!`
+                : `✓ Vídeo removido de "${videoManagerTarget.title}".`
+            );
+          }}
+        />
       )}
     </div>
   );

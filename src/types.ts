@@ -34,6 +34,25 @@ export type ExerciseType =
 
 export type SetType = 'normal' | 'warmup' | 'dropset' | 'failure';
 
+export type ExerciseVideoSourceType = 'cloud_blob' | 'direct_url' | 'youtube';
+export type ExerciseVideoFitMode = 'contain' | 'cover';
+
+export interface ExerciseVideoMetadata {
+  exercise_id: string;
+  source_type: ExerciseVideoSourceType;
+  video_url?: string;
+  youtube_id?: string;
+  chunk_count?: number;
+  mime_type?: string;
+  fit_mode: ExerciseVideoFitMode;
+  trim_start_sec?: number;
+  trim_end_sec?: number;
+  poster_data_url?: string;
+  duration_sec?: number;
+  updated_by?: string;
+  updated_at: string;
+}
+
 export interface ExerciseTemplate {
   id: string;
   title: string;
@@ -51,6 +70,7 @@ export interface ExerciseTemplate {
   animation_type?: string;
   gif_id?: string;
   gif_url?: string;
+  video_meta?: ExerciseVideoMetadata;
 }
 
 export interface WorkoutSet {

@@ -6,6 +6,7 @@ import {
   Routine,
   RoutineFolder,
   ExerciseTemplate,
+  ExerciseVideoMetadata,
   UserProfile,
   UserSettings,
   PersonalRecord,
@@ -51,6 +52,10 @@ import {
   saveDeviceSession,
   clearDeviceSession
 } from '../utils/deviceSession';
+import {
+  getCachedExerciseVideosIndex,
+  fetchExerciseVideosIndexFromCloud
+} from '../services/exerciseVideos';
 
 interface RestTimerState {
   isActive: boolean;
@@ -149,8 +154,13 @@ interface AppContextType {
   moveFolder: (folderId: number, direction: 'up' | 'down') => void;
   addFolderWithPreset: (folderTitle: string, routinePresets: RoutinePreset[]) => void;
 
-  // Exercícios
+  // Exercícios & Vídeos Padronizados Globais
   exercises: ExerciseTemplate[];
+  exerciseVideos: Record<string, ExerciseVideoMetadata>;
+  getExerciseVideo: (exerciseId?: string) => ExerciseVideoMetadata | undefined;
+  upsertExerciseVideoLocal: (meta: ExerciseVideoMetadata) => void;
+  removeExerciseVideoLocal: (exerciseId: string) => void;
+  refreshExerciseVideos: () => Promise<void>;
   addCustomExercise: (exercise: Omit<ExerciseTemplate, 'id' | 'is_custom'>) => void;
   deleteCustomExercise: (id: string) => void;
 
@@ -543,7 +553,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
-  const [exercises, setExercises] = useState<ExerciseTemplate[]>(() => {
+  const [rawExercises, setExercises] = useState<ExerciseTemplate[]>(() => {
     try {
       const saved = localStorage.getItem(`change_${currentUser.id}_exercises`);
       const synced = syncExercisesWithDefaults(saved ? JSON.parse(saved) : null);
@@ -553,6 +563,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return DEFAULT_EXERCISES;
     }
   });
+
+  const [exerciseVideos, setExerciseVideos] = useState<Record<string, ExerciseVideoMetadata>>(() =>
+    getCachedExerciseVideosIndex()
+  );
+
+  const refreshExerciseVideos = useCallback(async () => {
+    const cloudIndex = await fetchExerciseVideosIndexFromCloud();
+    setExerciseVideos(cloudIndex);
+  }, []);
+
+  useEffect(() => {
+    refreshExerciseVideos();
+  }, [refreshExerciseVideos]);
+
+  const upsertExerciseVideoLocal = useCallback((meta: ExerciseVideoMetadata) => {
+    setExerciseVideos((prev) => ({
+      ...prev,
+      [meta.exercise_id]: meta
+    }));
+  }, []);
+
+  const removeExerciseVideoLocal = useCallback((exerciseId: string) => {
+    setExerciseVideos((prev) => {
+      const next = { ...prev };
+      delete next[exerciseId];
+      return next;
+    });
+  }, []);
+
+  const getExerciseVideo = useCallback(
+    (exerciseId?: string) => {
+      if (!exerciseId) return undefined;
+      return (
+        exerciseVideos[exerciseId] ||
+        exerciseVideos[`physio-${exerciseId}`] ||
+        exerciseVideos[exerciseId.replace(/^physio-/, '')]
+      );
+    },
+    [exerciseVideos]
+  );
+
+  const exercises = useMemo(() => {
+    return rawExercises.map((ex) => {
+      const vMeta =
+        exerciseVideos[ex.id] ||
+        exerciseVideos[`physio-${ex.id}`] ||
+        exerciseVideos[ex.id.replace(/^physio-/, '')];
+      return vMeta ? { ...ex, video_meta: vMeta } : ex;
+    });
+  }, [rawExercises, exerciseVideos]);
 
   const [personalRecords, setPersonalRecords] = useState<Record<string, PersonalRecord>>(() => {
     try {
@@ -795,8 +855,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [folders, currentUser.id]);
 
   useEffect(() => {
-    localStorage.setItem(userKey('exercises'), JSON.stringify(exercises));
-  }, [exercises, currentUser.id]);
+    localStorage.setItem(userKey('exercises'), JSON.stringify(rawExercises));
+  }, [rawExercises, currentUser.id]);
 
   useEffect(() => {
     localStorage.setItem(userKey('prs'), JSON.stringify(personalRecords));
@@ -819,15 +879,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return false;
     }
     setCloudStatus('syncing');
-    const ok = await pushUserToCloud(currentUser, {
-      workouts,
-      routines,
-      folders,
-      exercises,
-      personalRecords,
-      measurements,
-      settings
-    });
+    const [ok] = await Promise.all([
+      pushUserToCloud(currentUser, {
+        workouts,
+        routines,
+        folders,
+        exercises: rawExercises,
+        personalRecords,
+        measurements,
+        settings
+      }),
+      refreshExerciseVideos()
+    ]);
     setCloudStatus(ok ? 'synced' : 'error');
     return ok;
   };
@@ -2293,7 +2356,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       workouts,
       routines,
       folders,
-      exercises,
+      exercises: rawExercises,
+      exerciseVideos,
       personalRecords,
       measurements,
       waterLogs,
@@ -2387,6 +2451,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       moveFolder,
       addFolderWithPreset,
       exercises,
+      exerciseVideos,
+      getExerciseVideo,
+      upsertExerciseVideoLocal,
+      removeExerciseVideoLocal,
+      refreshExerciseVideos,
       addCustomExercise,
       deleteCustomExercise,
       personalRecords,
@@ -2426,6 +2495,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       routines,
       folders,
       exercises,
+      exerciseVideos,
+      getExerciseVideo,
+      upsertExerciseVideoLocal,
+      removeExerciseVideoLocal,
+      refreshExerciseVideos,
       personalRecords,
       measurements,
       waterLogs,

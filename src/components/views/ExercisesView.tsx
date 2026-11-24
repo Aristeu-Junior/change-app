@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Check,
   BookmarkPlus,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Film
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ExerciseTemplate, MuscleGroup, Routine, WorkoutExercise } from '../../types';
@@ -20,6 +21,7 @@ import { ExerciseSearchModal } from '../ExerciseSearchModal';
 import { ExerciseVisualDemo } from '../ExerciseVisualDemo';
 import { RoutineEditorModal } from './RoutineEditorModal';
 import { MachineAdjustmentModal } from '../MachineAdjustmentModal';
+import { ExerciseVideoManagerModal } from '../ExerciseVideoManagerModal';
 
 const MUSCLE_FILTERS: { label: string; value: MuscleGroup | 'pernas' | 'all' }[] = [
   { label: 'Todos', value: 'all' },
@@ -65,6 +67,7 @@ export const ExercisesView: React.FC = () => {
     routines,
     saveRoutine,
     theme,
+    isCurrentUserAdmin,
     getMachineAdjustment,
     saveMachineAdjustment
   } = useApp();
@@ -73,7 +76,9 @@ export const ExercisesView: React.FC = () => {
 
   const [query, setQuery] = useState('');
   const [selectedMuscle, setSelectedMuscle] = useState<MuscleGroup | 'pernas' | 'all'>('all');
+  const [videoFilter, setVideoFilter] = useState<'all' | 'with_video' | 'without_video'>('all');
   const [selectedDetailExercise, setSelectedDetailExercise] = useState<ExerciseTemplate | null>(null);
+  const [videoManagerTarget, setVideoManagerTarget] = useState<ExerciseTemplate | null>(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false);
 
@@ -127,9 +132,23 @@ export const ExercisesView: React.FC = () => {
         }
       }
 
-      return matchesQuery && matchesMuscle;
+      // 3. Filtro administrativo de status de vídeo padronizado
+      let matchesVideo = true;
+      if (videoFilter === 'with_video') {
+        matchesVideo = Boolean(ex.video_meta);
+      } else if (videoFilter === 'without_video') {
+        matchesVideo = !ex.video_meta;
+      }
+
+      return matchesQuery && matchesMuscle && matchesVideo;
     });
-  }, [exercises, query, selectedMuscle]);
+  }, [exercises, query, selectedMuscle, videoFilter]);
+
+  const videoStats = useMemo(() => {
+    const nonPhysio = exercises.filter((e) => !e.is_physio);
+    const withVideo = nonPhysio.filter((e) => Boolean(e.video_meta)).length;
+    return { total: nonPhysio.length, withVideo, withoutVideo: nonPhysio.length - withVideo };
+  }, [exercises]);
 
   // Histórico de séries realizadas deste exercício
   const exerciseHistory = useMemo(() => {
@@ -295,12 +314,15 @@ export const ExercisesView: React.FC = () => {
       </button>
 
       {/* Busca de Exercícios */}
-      <div className="relative">
+      <search className="relative">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
         <input
-          type="text"
+          type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          autoCorrect="off"
+          autoCapitalize="none"
+          spellCheck={false}
           placeholder={`Buscar entre os ${exercises.length} exercícios ou músculos...`}
           className={`w-full rounded-xl pl-10 pr-4 py-2.5 text-xs transition focus:outline-none border ${
             isLight
@@ -310,13 +332,47 @@ export const ExercisesView: React.FC = () => {
         />
         {query && (
           <button
+            type="button"
             onClick={() => setQuery('')}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
           >
             <X className="w-4 h-4" />
           </button>
         )}
-      </div>
+      </search>
+
+      {/* Filtro Rápido de Vídeos Padronizados (Visível para Administradores) */}
+      {isCurrentUserAdmin && (
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          <span className="text-[10px] font-black uppercase tracking-wider text-zinc-500 mr-1 shrink-0 flex items-center gap-1">
+            <Film className="w-3 h-3" /> Vídeos:
+          </span>
+          {(
+            [
+              { id: 'all', label: `Todos (${videoStats.total})` },
+              { id: 'with_video', label: `Com Vídeo (${videoStats.withVideo})` },
+              { id: 'without_video', label: `Sem Vídeo (${videoStats.withoutVideo})` }
+            ] as const
+          ).map((vf) => (
+            <button
+              key={vf.id}
+              type="button"
+              onClick={() => setVideoFilter(vf.id)}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition border ${
+                videoFilter === vf.id
+                  ? isLight
+                    ? 'bg-black text-white border-black'
+                    : 'bg-white text-black border-white'
+                  : isLight
+                  ? 'bg-zinc-100 text-zinc-600 border-zinc-200 hover:text-black'
+                  : 'bg-[#141416] text-zinc-400 border-[#27272a] hover:text-white'
+              }`}
+            >
+              {vf.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Filtros de Músculos */}
       <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0 no-scrollbar">
@@ -382,12 +438,18 @@ export const ExercisesView: React.FC = () => {
                   <div className="flex items-center gap-1.5">
                     <h4 className={`text-xs font-bold truncate ${isLight ? 'text-zinc-900' : 'text-white'}`}>{ex.title}</h4>
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <span className="text-[10px] font-semibold text-zinc-400 capitalize">
                       {ex.primary_muscle_group}
                     </span>
                     <span className="text-zinc-600">•</span>
                     <span className="text-[10px] text-zinc-500 capitalize">{ex.equipment}</span>
+                    {ex.video_meta && (
+                      <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 inline-flex items-center gap-1">
+                        <Film className="w-2.5 h-2.5" />
+                        Vídeo
+                      </span>
+                    )}
                     {ex.is_custom && (
                       <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-zinc-800 text-white">
                         Custom
@@ -397,8 +459,8 @@ export const ExercisesView: React.FC = () => {
                 </div>
               </div>
 
-              {/* Recorde Exato e Botão Adicionar ao Treino (sem botão Ver 3D) */}
-              <div className="flex items-center gap-2 shrink-0">
+              {/* Recorde Exato + Botão Admin Vídeo + Botão Adicionar ao Treino */}
+              <div className="flex items-center gap-1.5 shrink-0">
                 {pr && (
                   <div className="flex flex-col items-end mr-1">
                     <div className={`flex items-center gap-1 text-xs font-black ${isLight ? 'text-zinc-900' : 'text-white'}`}>
@@ -407,6 +469,26 @@ export const ExercisesView: React.FC = () => {
                     </div>
                     <span className="text-[10px] text-zinc-400">{pr.max_reps} reps</span>
                   </div>
+                )}
+
+                {isCurrentUserAdmin && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setVideoManagerTarget(ex);
+                    }}
+                    className={`p-2 rounded-xl border text-[10px] font-bold flex items-center justify-center transition active:scale-95 ${
+                      ex.video_meta
+                        ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
+                        : isLight
+                        ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700'
+                        : 'bg-[#18181b] hover:bg-zinc-800 border-[#27272a] text-zinc-400 hover:text-white'
+                    }`}
+                    title={ex.video_meta ? 'Editar vídeo padronizado' : 'Adicionar vídeo padronizado'}
+                  >
+                    <Film className="w-3.5 h-3.5" />
+                  </button>
                 )}
 
                 <button
@@ -696,6 +778,22 @@ export const ExercisesView: React.FC = () => {
             saveMachineAdjustment(selectedDetailExercise.id, newNote);
             saveMachineAdjustment(selectedDetailExercise.title, newNote);
             showToast('✓ Regulagem do aparelho salva com sucesso!');
+          }}
+        />
+      )}
+
+      {/* Modal Rápido de Gerenciamento de Vídeo Padronizado (Admin) */}
+      {videoManagerTarget && (
+        <ExerciseVideoManagerModal
+          exercise={videoManagerTarget}
+          isOpen={Boolean(videoManagerTarget)}
+          onClose={() => setVideoManagerTarget(null)}
+          onSaved={(savedMeta) => {
+            showToast(
+              savedMeta
+                ? `✓ Vídeo padronizado salvo em "${videoManagerTarget.title}"!`
+                : `✓ Vídeo removido de "${videoManagerTarget.title}".`
+            );
           }}
         />
       )}

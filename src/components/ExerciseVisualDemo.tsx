@@ -6,6 +6,9 @@ import {
   Dumbbell,
   User,
   Video,
+  Film,
+  Plus,
+  Edit2,
   Sparkles,
   RotateCcw,
   Zap,
@@ -16,6 +19,8 @@ import {
 import { ExerciseTemplate } from '../types';
 import { useApp } from '../context/AppContext';
 import { SymmetryBodyMap } from './SymmetryBodyMap';
+import { StandardExerciseVideoPlayer } from './StandardExerciseVideoPlayer';
+import { ExerciseVideoManagerModal } from './ExerciseVideoManagerModal';
 
 interface ExerciseVisualDemoProps {
   exercise: ExerciseTemplate;
@@ -31,14 +36,27 @@ interface CadencePhase {
 }
 
 export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise }) => {
-  const { theme } = useApp();
+  const { theme, isCurrentUserAdmin, getExerciseVideo } = useApp();
   const isLight = theme === 'light';
 
+  const videoMeta = getExerciseVideo(exercise.id) || exercise.video_meta;
+  const hasRealVideo = Boolean(videoMeta);
+
   const [isPlaying, setIsPlaying] = useState(true);
-  const [viewMode, setViewMode] = useState<'video' | 'anatomy'>('video');
+  const [viewMode, setViewMode] = useState<'real_video' | 'video' | 'anatomy'>(() =>
+    hasRealVideo ? 'real_video' : 'video'
+  );
   const [gifLoaded, setGifLoaded] = useState(false);
   const [gifError, setGifError] = useState(false);
   const [activePreset, setActivePreset] = useState<CadencePreset>('hypertrophy');
+  const [isVideoManagerOpen, setIsVideoManagerOpen] = useState(false);
+
+  // Sempre que mudar de exercício (ou quando um vídeo for adicionado/removido), prioriza a aba Vídeo se existir
+  useEffect(() => {
+    setGifLoaded(false);
+    setGifError(false);
+    setViewMode(hasRealVideo ? 'real_video' : 'video');
+  }, [exercise.id, hasRealVideo]);
 
   // URL do GIF do Boneco 3D
   const gifUrl = exercise.gif_id
@@ -353,14 +371,34 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
     <div className={`rounded-2xl overflow-hidden flex flex-col shadow-2xl border transition-colors ${
       isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#141416] border-[#27272a]'
     }`}>
-      {/* Seletor Superior: Boneco 3D vs Anatomia */}
-      <div className={`flex items-center justify-between p-2.5 border-b ${
+      {/* Seletor Superior: Vídeo Real (quando existir) + Boneco 3D + Anatomia + Ação Admin */}
+      <div className={`flex items-center justify-between gap-2 p-2.5 border-b flex-wrap ${
         isLight ? 'bg-white border-zinc-200' : 'bg-[#000000] border-[#27272a]'
       }`}>
         <div className={`flex items-center gap-1 p-1 rounded-xl border ${
           isLight ? 'bg-zinc-100 border-zinc-200' : 'bg-[#18181b] border-[#27272a]'
         }`}>
+          {hasRealVideo && (
+            <button
+              type="button"
+              onClick={() => setViewMode('real_video')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                viewMode === 'real_video'
+                  ? isLight
+                    ? 'bg-black text-white shadow-md'
+                    : 'bg-white text-black shadow-md'
+                  : isLight
+                  ? 'text-zinc-600 hover:text-black'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <Film className="w-3.5 h-3.5" />
+              <span>Vídeo</span>
+            </button>
+          )}
+
           <button
+            type="button"
             onClick={() => setViewMode('video')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
               viewMode === 'video'
@@ -377,6 +415,7 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
           </button>
 
           <button
+            type="button"
             onClick={() => setViewMode('anatomy')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
               viewMode === 'anatomy'
@@ -392,15 +431,59 @@ export const ExerciseVisualDemo: React.FC<ExerciseVisualDemoProps> = ({ exercise
             <span>Anatomia</span>
           </button>
         </div>
+
+        {/* Botão Exclusivo para Administradores Cadastrarem / Padronizarem o Vídeo */}
+        {isCurrentUserAdmin && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsVideoManagerOpen(true);
+            }}
+            className={`px-2.5 py-1.5 rounded-xl border text-[11px] font-black flex items-center gap-1.5 transition active:scale-95 ${
+              isLight
+                ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-300 text-zinc-900'
+                : 'bg-[#18181b] hover:bg-zinc-800 border-[#27272a] text-white'
+            }`}
+            title="Adicionar ou editar vídeo padronizado de execução para todos os alunos"
+          >
+            {hasRealVideo ? (
+              <>
+                <Edit2 className="w-3 h-3" />
+                <span>Editar Vídeo</span>
+              </>
+            ) : (
+              <>
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Vídeo</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
 
-      {/* Janela de Renderização */}
+      {/* Janela de Renderização Padronizada */}
       <div className={`p-3.5 flex flex-col items-center justify-center border-b ${
         isLight ? 'bg-zinc-100 border-zinc-200' : 'bg-black border-[#27272a]'
       }`}>
-        {viewMode === 'video' && render3dVideo()}
+        {viewMode === 'real_video' && videoMeta && (
+          <StandardExerciseVideoPlayer videoMeta={videoMeta} exerciseTitle={exercise.title} />
+        )}
+        {(viewMode === 'video' || (viewMode === 'real_video' && !videoMeta)) && render3dVideo()}
         {viewMode === 'anatomy' && renderAnatomyMap()}
       </div>
+
+      {/* Modal de Cadastro e Padronização de Vídeo (Apenas Admin) */}
+      {isCurrentUserAdmin && isVideoManagerOpen && (
+        <ExerciseVideoManagerModal
+          exercise={exercise}
+          isOpen={isVideoManagerOpen}
+          onClose={() => setIsVideoManagerOpen(false)}
+          onSaved={(savedMeta) => {
+            setViewMode(savedMeta ? 'real_video' : 'video');
+          }}
+        />
+      )}
 
       {/* Informações Anatômicas e Instruções Biomecânicas */}
       <div className="p-4 space-y-4 text-left">
