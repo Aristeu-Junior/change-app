@@ -33,6 +33,8 @@ export interface FolderPreset {
   title: string;
   tag: string;
   description: string;
+  /** Exclusivo dos administradores (Aristeu e Vitória): não aparece para os demais usuários. */
+  adminOnly?: boolean;
   routines: RoutinePreset[];
 }
 
@@ -259,6 +261,7 @@ export const POPULAR_FOLDER_PRESETS: FolderPreset[] = [
   },
   {
     id: 'folder-hipertrofia-5-dias',
+    adminOnly: true,
     title: 'Hipertrofia 5 Dias (Pernas / Push / Pull / Superior / Braço)',
     tag: '5 Treinos',
     description: 'Segunda pernas, terça push, quarta pull, quinta superior (ombro e costas) e sexta braço. Progressão dupla e 1h10–1h20 por sessão.',

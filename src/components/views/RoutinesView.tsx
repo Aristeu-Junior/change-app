@@ -1083,7 +1083,7 @@ export const RoutinesView: React.FC = () => {
                 Toque para adicionar a pasta completa com todos os treinos da divisão já organizados dentro dela:
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                {POPULAR_FOLDER_PRESETS.map((fPreset) => (
+                {POPULAR_FOLDER_PRESETS.filter((f) => !f.adminOnly || isCurrentUserAdmin).map((fPreset) => (
                   <div
                     key={fPreset.id}
                     className={`p-3 rounded-xl border transition flex flex-col justify-between gap-2.5 ${
