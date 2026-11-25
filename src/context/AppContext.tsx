@@ -15,7 +15,13 @@ import {
   WaterTrackerConfig
 } from '../types';
 import { DEFAULT_EXERCISES } from '../data/defaultExercises';
-import { LEGACY_DEFAULT_ROUTINE_IDS, RoutinePreset } from '../data/defaultRoutines';
+import {
+  LEGACY_DEFAULT_ROUTINE_IDS,
+  RoutinePreset,
+  ADMIN_SEED_FOLDER,
+  ADMIN_SEED_FOLDER_ID,
+  ADMIN_SEED_VERSION
+} from '../data/defaultRoutines';
 import { RECOMMENDED_PHYSIO_ROUTINES } from '../data/physiotherapyExercises';
 import {
   playGymTone,
@@ -2265,6 +2271,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
   };
+
+  // Treino pessoal do Aristeu e da Vitória: criado direto na conta (uma única vez), sem aparecer como sugestão
+  useEffect(() => {
+    if (!isCurrentUserAdmin) return;
+    const seedFlag = `change_${currentUser.id}_seed_${ADMIN_SEED_VERSION}`;
+    try {
+      if (localStorage.getItem(seedFlag)) return;
+    } catch {
+      return;
+    }
+    const nowIso = new Date().toISOString();
+    const seededRoutines: Routine[] = ADMIN_SEED_FOLDER.routines.map((preset, rIdx) => ({
+      id: `seed-${preset.id}`,
+      title: preset.title,
+      notes: `${preset.subtitle}. ${preset.description}`,
+      folder_id: ADMIN_SEED_FOLDER_ID,
+      order: rIdx,
+      exercises: preset.exercises.map((pEx, exIdx) => ({
+        id: `re-seed-${preset.id}-${exIdx}`,
+        exercise_template_id: pEx.exercise_template_id,
+        title: pEx.title,
+        rest_seconds: 90,
+        sets: Array.from({ length: pEx.setsCount }).map((_, sIdx) => ({
+          id: `rs-seed-${preset.id}-${exIdx}-${sIdx}`,
+          index: sIdx,
+          type: 'normal' as const,
+          weight_kg: pEx.weightKg > 0 ? pEx.weightKg : null,
+          reps: pEx.reps,
+          completed: false
+        }))
+      })),
+      created_at: nowIso,
+      updated_at: nowIso
+    }));
+    const seedIds = new Set(seededRoutines.map((r) => r.id));
+    const nextRoutines = [...seededRoutines, ...routines.filter((r) => !seedIds.has(r.id))];
+    const nextFolders = folders.some((f) => f.id === ADMIN_SEED_FOLDER_ID)
+      ? folders
+      : [...folders, { id: ADMIN_SEED_FOLDER_ID, title: ADMIN_SEED_FOLDER.title, index: folders.length }];
+    setRoutines(nextRoutines);
+    setFolders(nextFolders);
+    localStorage.setItem(userKey('routines'), JSON.stringify(nextRoutines));
+    localStorage.setItem(userKey('folders'), JSON.stringify(nextFolders));
+    localStorage.setItem(seedFlag, '1');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser.id, isCurrentUserAdmin]);
 
   const addFolderWithPreset = (folderTitle: string, routinePresets: RoutinePreset[]) => {
     const newFolderId = Date.now();
