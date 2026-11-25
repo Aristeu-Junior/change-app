@@ -264,14 +264,14 @@ export const POPULAR_FOLDER_PRESETS: FolderPreset[] = [
  * Não é sugestão: é criado direto nas contas deles como rotinas normais, uma única vez
  * (veja o efeito de "seed" no AppContext). IDs fixos evitam duplicar entre aparelhos/nuvem.
  */
-export const ADMIN_SEED_VERSION = 'hipertrofia-5d-v1';
+export const ADMIN_SEED_VERSION = 'hipertrofia-5d-v2';
 export const ADMIN_SEED_FOLDER_ID = 9005;
 export const ADMIN_SEED_FOLDER: FolderPreset =
 {
   id: 'folder-hipertrofia-5-dias',
   title: 'Hipertrofia 5 Dias (Pernas / Push / Pull / Superior / Braço)',
   tag: '5 Treinos',
-  description: 'Segunda pernas, terça push, quarta pull, quinta superior (ombro e costas) e sexta braço. Progressão dupla e 1h10–1h20 por sessão.',
+  description: 'Segunda pernas, terça push, quarta pull, quinta superior (ombro e costas) e sexta braço. Progressão dupla e cerca de 1h por sessão.',
   routines: [
     {
       id: 'preset-h5-pernas',
@@ -285,8 +285,7 @@ export const ADMIN_SEED_FOLDER: FolderPreset =
         { exercise_template_id: 'leg-extension', title: 'Cadeira Extensora', setsCount: 3, reps: 12, weightKg: 0 },
         { exercise_template_id: 'lunges-dumbbell', title: 'Afundo / Passada com Halteres (Lunges)', setsCount: 3, reps: 10, weightKg: 0 },
         { exercise_template_id: 'hip-thrust-barbell', title: 'Elevação Pélvica com Barra (Hip Thrust)', setsCount: 3, reps: 10, weightKg: 0 },
-        { exercise_template_id: 'abductor-machine', title: 'Cadeira Abdutora', setsCount: 3, reps: 15, weightKg: 0 },
-        { exercise_template_id: 'standing-calf-raise', title: 'Gêmeos em Pé (Elevação de Calcanhares)', setsCount: 4, reps: 12, weightKg: 0 }
+        { exercise_template_id: 'standing-calf-raise', title: 'Gêmeos em Pé (Elevação de Calcanhares)', setsCount: 3, reps: 12, weightKg: 0 }
       ]
     },
     {
@@ -297,7 +296,6 @@ export const ADMIN_SEED_FOLDER: FolderPreset =
       description: 'Peito inclinado primeiro, ombro lateral com volume e tríceps no fim. Descanso de 2 min nos compostos.',
       exercises: [
         { exercise_template_id: 'incline-chest-press-machine', title: 'Supino Inclinado na Máquina Articulada', setsCount: 4, reps: 8, weightKg: 0 },
-        { exercise_template_id: 'dumbbell-fly-flat', title: 'Crucifixo Reto com Halteres', setsCount: 3, reps: 12, weightKg: 0 },
         { exercise_template_id: 'arnold-press-dumbbells', title: 'Desenvolvimento Arnold com Halteres (Arnold Press)', setsCount: 3, reps: 10, weightKg: 0 },
         { exercise_template_id: 'lateral-raise-cable-low', title: 'Elevação Lateral na Polia Baixa', setsCount: 4, reps: 12, weightKg: 0 },
         { exercise_template_id: 'peck-deck-machine-fly', title: 'Peck Deck / Voador / Butterfly', setsCount: 3, reps: 12, weightKg: 0 },
@@ -315,7 +313,6 @@ export const ADMIN_SEED_FOLDER: FolderPreset =
         { exercise_template_id: 'lat-pulldown', title: 'Puxada Frontal na Polia (Lat Pulldown)', setsCount: 4, reps: 8, weightKg: 0 },
         { exercise_template_id: 'seated-cable-row', title: 'Remada Baixa na Polia com Triângulo', setsCount: 3, reps: 8, weightKg: 0 },
         { exercise_template_id: 'machine-row', title: 'Remada Articulada na Máquina (Pegada Neutra)', setsCount: 3, reps: 10, weightKg: 0 },
-        { exercise_template_id: 'straight-arm-pulldown-cable', title: 'Pull-down com Braços Estendidos no Cabo', setsCount: 3, reps: 12, weightKg: 0 },
         { exercise_template_id: 'peck-deck-rear-delt-reverse-fly', title: 'Crucifixo Inverso no Peck Deck / Máquina', setsCount: 3, reps: 12, weightKg: 0 },
         { exercise_template_id: 'biceps-curl-cable-low', title: 'Rosca Bayesiana (Cabo / Polia Baixa)', setsCount: 3, reps: 10, weightKg: 0 },
         { exercise_template_id: 'biceps-hammer-curl-dumbbell', title: 'Rosca Martelo com Halteres', setsCount: 3, reps: 10, weightKg: 0 }
@@ -333,8 +330,7 @@ export const ADMIN_SEED_FOLDER: FolderPreset =
         { exercise_template_id: 'incline-dumbbell-press', title: 'Supino Inclinado com Halteres', setsCount: 3, reps: 10, weightKg: 0 },
         { exercise_template_id: 'one-arm-dumbbell-row-saw', title: 'Remada Unilateral com Halter (Serrote)', setsCount: 3, reps: 10, weightKg: 0 },
         { exercise_template_id: 'lateral-raise-dumbbell', title: 'Elevação Lateral com Halteres', setsCount: 3, reps: 15, weightKg: 0 },
-        { exercise_template_id: 'face-pull-cable-rope', title: 'Face Pull na Polia Alta com Corda', setsCount: 3, reps: 15, weightKg: 0 },
-        { exercise_template_id: 'cable-crunch-kneeling', title: 'Abdominal na Polia Alta com Corda (Cable Crunch)', setsCount: 3, reps: 12, weightKg: 0 }
+        { exercise_template_id: 'face-pull-cable-rope', title: 'Face Pull na Polia Alta com Corda', setsCount: 3, reps: 15, weightKg: 0 }
       ]
     },
     {
@@ -344,12 +340,11 @@ export const ADMIN_SEED_FOLDER: FolderPreset =
       tag: 'Hipertrofia 5D',
       description: 'Dia de braço isolado. Última série dos isoladores até a falha.',
       exercises: [
-        { exercise_template_id: 'biceps-zottman-curl', title: 'Rosca Africana (Rosca Zottman)', setsCount: 4, reps: 10, weightKg: 0 },
-        { exercise_template_id: 'triceps-skullcrusher-ez-bar', title: 'Tríceps Testa com Barra W (Skullcrusher)', setsCount: 4, reps: 10, weightKg: 0 },
+        { exercise_template_id: 'biceps-zottman-curl', title: 'Rosca Africana (Rosca Zottman)', setsCount: 3, reps: 10, weightKg: 0 },
+        { exercise_template_id: 'triceps-skullcrusher-ez-bar', title: 'Tríceps Testa com Barra W (Skullcrusher)', setsCount: 3, reps: 10, weightKg: 0 },
         { exercise_template_id: 'biceps-preacher-curl-machine', title: 'Rosca Scott na Máquina', setsCount: 3, reps: 10, weightKg: 0 },
         { exercise_template_id: 'triceps-katana-extension', title: 'Tríceps Katana na Polia (Katana Extension)', setsCount: 3, reps: 12, weightKg: 0 },
         { exercise_template_id: 'biceps-pinwheel-hammer-curl', title: 'Rosca Martelo Cruzada no Peito (Pinwheel Curl)', setsCount: 3, reps: 12, weightKg: 0 },
-        { exercise_template_id: 'triceps-bench-dips', title: 'Tríceps Mergulho no Banco (Bench Dips)', setsCount: 3, reps: 12, weightKg: 0 },
         { exercise_template_id: 'forearm-wrist-curl-barbell', title: 'Rosca Punho no Banco (Flexão de Punho)', setsCount: 3, reps: 15, weightKg: 0 }
       ]
     }

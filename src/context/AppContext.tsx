@@ -2292,7 +2292,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         id: `re-seed-${preset.id}-${exIdx}`,
         exercise_template_id: pEx.exercise_template_id,
         title: pEx.title,
-        rest_seconds: 90,
+        rest_seconds: 75,
         sets: Array.from({ length: pEx.setsCount }).map((_, sIdx) => ({
           id: `rs-seed-${preset.id}-${exIdx}-${sIdx}`,
           index: sIdx,
